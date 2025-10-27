@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -51,4 +52,33 @@ class PriceServiceTest {
         }
     }
 
+
+
+
+    @Test
+    @DisplayName("Should filter ticks using a flexible Predicate (anonymous class)")
+    void givenTicks_whenFilterByPredicate_thenReturnsFilteredTicks() {
+        // Given: A PriceService (this time, it needs to be instantiated in the test)
+        PriceService priceService = new PriceService();
+
+        // And a Predicate, written as an anonymous class, to find "kraken" ticks
+        //BEFORE:
+        // Predicate<PriceTick> krakenPredicate = new Predicate<PriceTick>() {
+        //     @Override
+        //     public boolean test(PriceTick tick) {
+        //         return "kraken".equals(tick.exchange().id());
+        //     }
+        // };
+
+        // AFTER (Refactored to a Lambda):
+        Predicate<PriceTick> krakenPredicate = tick -> "kraken".equals(tick.exchange().id());
+
+        // When: We call our NEW, non-existent filter method
+        // This line will NOT compile
+        List<PriceTick> krakenTicks = priceService.filter(allTicks, krakenPredicate);
+
+        // Then: The result should be correct
+        assertEquals(1, krakenTicks.size(), "Should find the 1 kraken tick");
+        assertEquals("kraken", krakenTicks.get(0).exchange().id());
+    }
 }
