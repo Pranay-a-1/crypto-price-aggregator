@@ -1,4 +1,17 @@
 package com.cryptoArb.domain;
 
-public record Exchange() {
+public class Exchange {
+
+    private final String id;
+
+    public Exchange(String id) {
+        this.id = id;
+    }
+
+    public String getId() {
+        return this.id;
+    }
+
+
+
 }
