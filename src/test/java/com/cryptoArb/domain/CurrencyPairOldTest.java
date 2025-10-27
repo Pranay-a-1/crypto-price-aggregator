@@ -5,18 +5,18 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class CurrencyPairTest {
+class CurrencyPairOldTest {
 
     @Test
-    @DisplayName("Should correctly create a CurrencyPair and verify its properties")
+    @DisplayName("Should correctly create a CurrencyPair_old and verify its properties")
     void givenBaseAndQuote_whenCreateCurrencyPair_thenPropertiesAreSet() {
         // Given: We have a base currency and a quote currency
         String baseCurrency = "BTC";
         String quoteCurrency = "USD";
 
-        // When: We create a new CurrencyPair
+        // When: We create a new CurrencyPair_old
         // This line will NOT compile, which is what we want!
-        CurrencyPair pair = new CurrencyPair(baseCurrency, quoteCurrency);
+        CurrencyPair_old pair = new CurrencyPair_old(baseCurrency, quoteCurrency);
 
         // Then: The getters should return the correct values
         assertEquals(baseCurrency, pair.getBase(), "The base currency should be BTC");
@@ -25,11 +25,11 @@ class CurrencyPairTest {
 
 
     @Test
-    @DisplayName("Should correctly test for equality between two CurrencyPair objects")
+    @DisplayName("Should correctly test for equality between two CurrencyPair_old objects")
     void givenTwoEqualCurrencyPairs_whenCheckEquals_thenReturnsTrue() {
         // Given: Two separate instances with the same values
-        CurrencyPair pair1 = new CurrencyPair("BTC", "USD");
-        CurrencyPair pair2 = new CurrencyPair("BTC", "USD");
+        CurrencyPair_old pair1 = new CurrencyPair_old("BTC", "USD");
+        CurrencyPair_old pair2 = new CurrencyPair_old("BTC", "USD");
 
         // When: We check for equality
         boolean areEqual = pair1.equals(pair2);
@@ -42,9 +42,9 @@ class CurrencyPairTest {
     @DisplayName("Should correctly test for inequality")
     void givenTwoDifferentCurrencyPairs_whenCheckEquals_thenReturnsFalse() {
         // Given: Two different pairs
-        CurrencyPair pair1 = new CurrencyPair("BTC", "USD");
-        CurrencyPair pair2 = new CurrencyPair("ETH", "USD");
-        CurrencyPair pair3 = new CurrencyPair("BTC", "EUR");
+        CurrencyPair_old pair1 = new CurrencyPair_old("BTC", "USD");
+        CurrencyPair_old pair2 = new CurrencyPair_old("ETH", "USD");
+        CurrencyPair_old pair3 = new CurrencyPair_old("BTC", "EUR");
 
         // When / Then
         assertFalse(pair1.equals(pair2), "Should be false for different base currency");

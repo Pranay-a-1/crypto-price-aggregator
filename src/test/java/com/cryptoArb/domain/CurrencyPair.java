@@ -3,22 +3,20 @@ package com.cryptoArb.domain;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import javax.swing.*;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-class CurrencyPair_2_recordTest {
+class CurrencyPairTest {
 
 
     @Test
-    @DisplayName("Should correctly create a CurrencyPair and verify its properties")
+    @DisplayName("Should correctly create a CurrencyPair_old and verify its properties")
     void givenBaseAndQuote_whenCreateCurrencyPair_thenPropertiesAreSet() {
         // Given
         String baseCurrency = "BTC";
         String quoteCurrency = "USD";
 
         // When
-        CurrencyPair_2_record pair = new CurrencyPair_2_record(baseCurrency, quoteCurrency);
+        CurrencyPair pair = new CurrencyPair(baseCurrency, quoteCurrency);
 
         // Then: Use the new accessor methods
         assertEquals(baseCurrency, pair.base(), "The base currency should be BTC");
@@ -28,11 +26,11 @@ class CurrencyPair_2_recordTest {
 
 
     @Test
-    @DisplayName("Should correctly test for equality between two CurrencyPair objects")
+    @DisplayName("Should correctly test for equality between two CurrencyPair_old objects")
     void givenTwoEqualCurrencyPairs_whenCheckEquals_thenReturnsTrue() {
         // Given
-        CurrencyPair_2_record pair1 = new CurrencyPair_2_record("BTC", "USD");
-        CurrencyPair_2_record pair2 = new CurrencyPair_2_record("BTC", "USD");
+        CurrencyPair pair1 = new CurrencyPair("BTC", "USD");
+        CurrencyPair pair2 = new CurrencyPair("BTC", "USD");
 
         // When / Then
         // NO CHANGE NEEDED! The record's .equals() works perfectly.
@@ -44,8 +42,8 @@ class CurrencyPair_2_recordTest {
     @DisplayName("Should correctly test for inequality")
     void givenTwoDifferentCurrencyPairs_whenCheckEquals_thenReturnsFalse() {
         // ... (Given)
-        CurrencyPair_2_record pair1 = new CurrencyPair_2_record("BTC", "USD");
-        CurrencyPair_2_record pair2 = new CurrencyPair_2_record("ETH", "USD");
+        CurrencyPair pair1 = new CurrencyPair("BTC", "USD");
+        CurrencyPair pair2 = new CurrencyPair("ETH", "USD");
 
         // When / Then
         // NO CHANGE NEEDED! This test still passes.
@@ -58,10 +56,10 @@ class CurrencyPair_2_recordTest {
     @DisplayName("Should provide a useful toString() representation")
     void givenPair_whenCallToString_thenReturnsCorrectFormat() {
         // Given
-        CurrencyPair_2_record pair = new CurrencyPair_2_record("BTC", "USD");
+        CurrencyPair pair = new CurrencyPair("BTC", "USD");
 
         // When
-        String expected = "CurrencyPair_2_record[base='BTC', quote='USD']";
+        String expected = "CurrencyPair[base='BTC', quote='USD']";
 
         // Then
         assertEquals(expected, pair.toString());

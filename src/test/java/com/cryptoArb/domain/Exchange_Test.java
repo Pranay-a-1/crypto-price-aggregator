@@ -5,20 +5,20 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class Exchange_2_recordTest {
+class Exchange_Test {
 
     @Test
-    @DisplayName("Should create an Exchange and verify its ID")
+    @DisplayName("Should create an Exchange_old and verify its ID")
     void givenExchangeId_whenCreateExchange_thenIdIsSet() {
         // Given: An exchange's unique identifier
         String exchangeId = "coinbase";
 
-        // When: We create a new Exchange object
+        // When: We create a new Exchange_old object
         // This line will NOT compile
-        Exchange_2_record exchange = new Exchange_2_record(exchangeId);
+        Exchange exchange = new Exchange(exchangeId);
 
         // Then: The getId() method should return the correct ID
-        assertEquals(exchangeId, exchange.Id(), "The exchange ID should be set correctly");
+        assertEquals(exchangeId, exchange.id(), "The exchange ID should be set correctly");
     }
 
 }

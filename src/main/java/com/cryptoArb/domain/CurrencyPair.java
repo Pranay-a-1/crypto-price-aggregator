@@ -1,37 +1,20 @@
 package com.cryptoArb.domain;
 
-public class CurrencyPair {
 
-    private final String base;
-    private final String quote;
-
-    public CurrencyPair(String base, String quote) {
-        this.base = base;
-        this.quote = quote;
-    }
-
-    public String getBase() {
-        return base;
-    }
-
-    public String getQuote() {
-        return quote;
-    }
-
+/**
+ * Represents an immutable currency pair (e.g., BTC/USD).
+ * As a record, this automatically includes:
+ * - A public constructor (CurrencyPair_old(String base, String quote))
+ * - Public accessor methods (base() and quote())
+ * - Implementations for equals(), hashCode(), and toString()
+ */
+public record CurrencyPair(String base, String quote) {
     @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        CurrencyPair that = (CurrencyPair) o;
-        return base.equals(that.base) && quote.equals(that.quote);
+    public String toString() {
+        return "CurrencyPair[" +
+                "base='" + base + '\'' +
+                ", quote='" + quote + '\'' +
+                ']';
     }
-
-    @Override
-    public int hashCode() {
-        int result = base.hashCode();
-        result = 31 * result + quote.hashCode();
-        return result;
-    }
+    // The body can be empty for this simple case.
 }
