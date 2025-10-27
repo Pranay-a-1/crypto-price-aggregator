@@ -81,4 +81,37 @@ class PriceServiceTest {
         assertEquals(1, krakenTicks.size(), "Should find the 1 kraken tick");
         assertEquals("kraken", krakenTicks.get(0).exchange().id());
     }
+
+
+
+
+
+    @Test
+    @DisplayName("Should filter by multiple criteria using Predicate.and()")
+    void givenTicks_whenFilterByExchangeAndPrice_thenReturnsSpecificTick() {
+        // Given: A PriceService
+        PriceService priceService = new PriceService();
+
+        // And: A simple Predicate for the exchange
+        Predicate<PriceTick> coinbasePredicate =
+                tick -> "coinbase".equals(tick.exchange().id());
+
+        // And: A simple Predicate for the price
+        // (Our mock data has coinbase ticks at 50001 and 50003 ask)
+        Predicate<PriceTick> pricePredicate =
+                tick -> tick.askPrice() < 50002;
+
+        // When: We compose these predicates
+        // This is the new behavior we are testing
+        Predicate<PriceTick> combinedPredicate = coinbasePredicate.and(pricePredicate);
+
+        // And: We use our *existing* filter method
+        List<PriceTick> result = priceService.filter(allTicks, combinedPredicate);
+
+        // Then: We should get only the 1 tick that matches *both*
+        assertEquals(1, result.size(), "Should only find one matching tick");
+
+        // We can be extra-specific and check the timestamp
+        assertEquals(1000L, result.get(0).timestamp(), "Should be the first coinbase tick");
+    }
 }
