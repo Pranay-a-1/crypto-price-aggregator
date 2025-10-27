@@ -7,6 +7,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -113,5 +115,86 @@ class PriceServiceTest {
 
         // We can be extra-specific and check the timestamp
         assertEquals(1000L, result.get(0).timestamp(), "Should be the first coinbase tick");
+    }
+
+
+
+
+
+    // We need a few more CurrencyPairs for this test
+    private CurrencyPair ethUsd = new CurrencyPair("ETH", "USD");
+    private CurrencyPair btcEur = new CurrencyPair("BTC", "EUR");
+
+    @Test
+    @DisplayName("Should sort ticks by pair, then by ascending ask price")
+    void givenUnsortedTicks_whenSortByPairAndPrice_thenReturnsSortedList() {
+        // Given: An unsorted list of ticks
+        // Note: We use new ArrayList<>(List.of(...)) so it's mutable (sortable)
+        List<PriceTick> unsortedTicks = new ArrayList<>(List.of(
+                new PriceTick(ethUsd, coinbase, 1000L, 3000, 3001),  // ETH/USD
+                new PriceTick(btcUsd, coinbase, 1001L, 50002, 50003), // BTC/USD (High Price)
+                new PriceTick(btcEur, kraken, 1002L, 45000, 45001),  // BTC/EUR
+                new PriceTick(btcUsd, kraken, 1003L, 50000, 50001)   // BTC/USD (Low Price)
+        ));
+
+        // When: We apply our sorting logic (this is the part we'll build)
+        // ... (This is the "Red" part - we haven't sorted it yet!) ...
+
+        // Then: The list should be sorted
+        // 1. BTC/EUR (alphabetically "BTC/EUR" comes before "BTC/USD")
+        // 2. BTC/USD (Low Price)
+        // 3. BTC/USD (High Price)
+        // 4. ETH/USD
+
+//        // --- NEW CODE BELOW ---
+//
+//        // When: We define our composite sorting logic
+//        // 1. First, sort by the pair's base currency (e.g., "BTC")
+//        Comparator<PriceTick> comparator = Comparator
+//                .comparing(tick -> tick.pair().base());
+//
+//        // 2. Next, sort by the pair's quote currency (e.g., "EUR" vs "USD")
+//        comparator = comparator
+//                .thenComparing(tick -> tick.pair().quote());
+//
+//
+//        // 3. Finally, sort by the ask price (lowest to highest)
+//        comparator = comparator
+//                .thenComparing(PriceTick::askPrice);
+//
+//        // And we apply the sort to our list
+//        unsortedTicks.sort(comparator);
+//
+//        // --- END OF NEW CODE ---
+
+//      --- NEW "GREEN" CODE ---
+
+        // BEFORE (Using Lambdas, which is also fine):
+        // Comparator<PriceTick> byPair = Comparator.comparing(tick -> tick.pair());
+        // Comparator<PriceTick> byAskPrice = Comparator.comparing(tick -> tick.askPrice());
+        // When: We define our composite sorting logic
+
+        // 1. Create a Comparator that extracts the CurrencyPair from a PriceTick
+        // We use a "method reference" PriceTick::pair
+        Comparator<PriceTick> byPair = Comparator.comparing(PriceTick::pair);
+
+        // 2. Create a Comparator that extracts the askPrice
+        Comparator<PriceTick> byAskPrice = Comparator.comparing(PriceTick::askPrice);
+
+        // 3. Chain them together!
+        Comparator<PriceTick> compositeComparator = byPair.thenComparing(byAskPrice);
+
+        // And we apply the sort
+        unsortedTicks.sort(compositeComparator);
+
+        // --- END OF NEW CODE ---
+
+        // Then: The list should be sorted
+        // (These assertions will now PASS)
+        assertEquals(btcEur, unsortedTicks.get(0).pair(), "First should be BTC/EUR");
+        assertEquals(btcUsd, unsortedTicks.get(1).pair(), "Second should be BTC/USD (Low)");
+        assertEquals(50001, unsortedTicks.get(1).askPrice(), "Second should be BTC/USD (Low)");
+        assertEquals(btcUsd, unsortedTicks.get(2).pair(), "Third should be BTC/USD (High)");
+        assertEquals(ethUsd, unsortedTicks.get(3).pair(), "Fourth should be ETH/USD");
     }
 }

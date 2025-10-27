@@ -7,4 +7,7 @@ public record PriceTick(
         double bidPrice,
         double askPrice
 ) {
+
+
+
 }
