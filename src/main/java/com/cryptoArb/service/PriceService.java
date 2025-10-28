@@ -12,7 +12,9 @@ public class PriceService {
     /**
      * Filters a list of ticks and returns only those from Coinbase.
      * This is a simple, hard-coded implementation for our TDD cycle.
+     * @deprecated Hard-coded logic, replaced by {@link #filter(List, Predicate)}
      */
+    @Deprecated
     public List<PriceTick> filterCoinbaseTicks_old(List<PriceTick> allTicks) {
 
         // 1. Create a new empty list to hold the results
@@ -74,6 +76,9 @@ public class PriceService {
     /**
      * Filters a list of ticks using a provided Predicate.
      * This is our new, flexible "behavior parameterized" method.
+     * @param allTicks  The complete list of ticks to filter.
+     * @param predicate The condition to test each tick against.
+     * @return A new list containing only the ticks that passed the test.
      */
     public List<PriceTick> filter(List<PriceTick> allTicks, Predicate<PriceTick> predicate) {
 
