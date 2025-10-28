@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -28,9 +29,9 @@ class PriceServiceTest {
     void setUp() {
         // Create a list of mixed ticks before each test
         allTicks = List.of(
-                new PriceTick(btcUsd, coinbase, 1000L, 50000, 50001),
-                new PriceTick(btcUsd, kraken, 1001L, 49999, 50000),
-                new PriceTick(btcUsd, coinbase, 1002L, 50002, 50003)
+                new PriceTick(btcUsd, coinbase, 1000L, new BigDecimal("50000"), new BigDecimal("50001")),
+                new PriceTick(btcUsd, kraken, 1001L, new BigDecimal("49999"), new BigDecimal("50000")),
+                new PriceTick(btcUsd, coinbase, 1002L, new BigDecimal("50002"), new BigDecimal("50003"))
         );
     }
 
@@ -101,7 +102,7 @@ class PriceServiceTest {
         // And: A simple Predicate for the price
         // (Our mock data has coinbase ticks at 50001 and 50003 ask)
         Predicate<PriceTick> pricePredicate =
-                tick -> tick.askPrice() < 50002;
+                tick -> tick.askPrice().compareTo(new BigDecimal("50002")) < 0;
 
         // When: We compose these predicates
         // This is the new behavior we are testing
@@ -131,10 +132,10 @@ class PriceServiceTest {
         // Given: An unsorted list of ticks
         // Note: We use new ArrayList<>(List.of(...)) so it's mutable (sortable)
         List<PriceTick> unsortedTicks = new ArrayList<>(List.of(
-                new PriceTick(ethUsd, coinbase, 1000L, 3000, 3001),  // ETH/USD
-                new PriceTick(btcUsd, coinbase, 1001L, 50002, 50003), // BTC/USD (High Price)
-                new PriceTick(btcEur, kraken, 1002L, 45000, 45001),  // BTC/EUR
-                new PriceTick(btcUsd, kraken, 1003L, 50000, 50001)   // BTC/USD (Low Price)
+                new PriceTick(ethUsd, coinbase, 1000L, new BigDecimal("3000"), new BigDecimal("3001")),  // ETH/USD
+                new PriceTick(btcUsd, coinbase, 1001L, new BigDecimal("50002"), new BigDecimal("50003")), // BTC/USD (High Price)
+                new PriceTick(btcEur, kraken, 1002L, new BigDecimal("45000"), new BigDecimal("45001")),  // BTC/EUR
+                new PriceTick(btcUsd, kraken, 1003L, new BigDecimal("50000"), new BigDecimal("50001"))   // BTC/USD (Low Price)
         ));
 
         // When: We apply our sorting logic (this is the part we'll build)
@@ -193,7 +194,7 @@ class PriceServiceTest {
         // (These assertions will now PASS)
         assertEquals(btcEur, unsortedTicks.get(0).pair(), "First should be BTC/EUR");
         assertEquals(btcUsd, unsortedTicks.get(1).pair(), "Second should be BTC/USD (Low)");
-        assertEquals(50001, unsortedTicks.get(1).askPrice(), "Second should be BTC/USD (Low)");
+        assertEquals(new BigDecimal("50001"), unsortedTicks.get(1).askPrice(), "Second should be BTC/USD (Low)");
         assertEquals(btcUsd, unsortedTicks.get(2).pair(), "Third should be BTC/USD (High)");
         assertEquals(ethUsd, unsortedTicks.get(3).pair(), "Fourth should be ETH/USD");
     }

@@ -3,6 +3,7 @@ package com.cryptoArb.domain;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,8 +18,9 @@ class PriceTickTest {
         CurrencyPair pair = new CurrencyPair("BTC", "USD");
         Exchange exchange = new Exchange("coinbase");
         long timestamp = Instant.now().toEpochMilli();
-        double bidPrice = 50000.00;
-        double askPrice = 50000.50;
+        // Use BigDecimal for prices
+        BigDecimal bidPrice = new BigDecimal("50000.00");
+        BigDecimal askPrice = new BigDecimal("50000.50");
 
         // When
         PriceTick tick = new PriceTick(pair, exchange, timestamp, bidPrice, askPrice);

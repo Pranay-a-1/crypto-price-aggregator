@@ -1,11 +1,13 @@
 package com.cryptoArb.domain;
 
+import java.math.BigDecimal;
+
 public record PriceTick(
         CurrencyPair pair,
         Exchange exchange,
         long timestamp,
-        double bidPrice,
-        double askPrice
+        BigDecimal bidPrice,
+        BigDecimal askPrice
 ) {
 
 
