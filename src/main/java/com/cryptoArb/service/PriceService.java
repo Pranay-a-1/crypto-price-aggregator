@@ -1,9 +1,10 @@
 package com.cryptoArb.service;
 
+import com.cryptoArb.domain.ConsolidatedPrice;
+import com.cryptoArb.domain.CurrencyPair;
 import com.cryptoArb.domain.PriceTick;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -118,6 +119,175 @@ public class PriceService {
     }
 
 
+    /**
+     * Aggregates a list of raw price ticks into a map, where each currency pair
+     * maps to its consolidated price (best bid, best ask, etc.).
+     *
+     * @param ticks A list of PriceTick objects from various exchanges.
+     * @return A Map of CurrencyPair to its corresponding ConsolidatedPrice.
+     */
+    public Map<CurrencyPair, ConsolidatedPrice> aggregatePrices(List<PriceTick> ticks) {
+        // We group all ticks by their currency pair.
+        // The result is a Map<CurrencyPair, List<PriceTick>>
+        // We then transform that map into our final Map<CurrencyPair, ConsolidatedPrice>
+        return ticks.stream()
+                .collect(Collectors.groupingBy(
+                        PriceTick::pair, // Group by the CurrencyPair
+                        // For each group (List<PriceTick>), we need to convert it into a ConsolidatedPrice
+                        // collectingAndThen allows us to first collect into a List, then transform that List
+                        Collectors.collectingAndThen( // As a downstream collector...
+                                Collectors.toList(),     // ...first collect ticks into a List
+                                this::buildConsolidatedPriceFromList // ...then pass that list to a helper ( old way : ticksList -> buildConsolidatedPriceFromList(ticksList)
+                        )
 
+                ));
+    }
+
+
+    /**
+     * A helper method to convert a list of ticks (for a *single* currency pair)
+     * into one ConsolidatedPrice object.
+     *
+     * @param ticksForPair A list of ticks, all for the same CurrencyPair.
+     * @return A ConsolidatedPrice object.
+     */
+    private ConsolidatedPrice buildConsolidatedPriceFromList(List<PriceTick> ticksForPair) {
+        // Find the tick with the HIGHEST bid price
+        PriceTick bestBidTick = ticksForPair.stream()
+                .max(Comparator.comparing(PriceTick::bidPrice))
+                .orElseThrow(); // We assume the list is not empty based on groupingBy
+
+        // Find the tick with the LOWEST ask price
+        PriceTick bestAskTick = ticksForPair.stream()
+                .min(Comparator.comparing(PriceTick::askPrice))
+                .orElseThrow();
+
+        // Find the tick with the LATEST timestamp
+        PriceTick latestTick = ticksForPair.stream()
+                .max(Comparator.comparing(PriceTick::timestamp)) // old way: (t1, t2) -> t1.timestamp().compareTo(t2.timestamp()) or Comparator.comparingLong(t -> t.timestamp().toEpochMilli())
+                .orElseThrow();
+
+        // Get the currency pair (they are all the same)
+        CurrencyPair pair = ticksForPair.get(0).pair();
+
+        // Create and return the new consolidated price
+        return new ConsolidatedPrice(
+                pair,
+                latestTick.timestamp(),
+                bestBidTick.bidPrice(),
+                bestBidTick.exchange().id(), // Get the exchange from the best bid tick
+                bestAskTick.askPrice(),
+                bestAskTick.exchange().id()  // Get the exchange from the best ask tick
+        );
+    }
+
+
+
+
+
+// --- TRADITIONAL AGGREGATION METHODS (For Reference) ---
+
+    /**
+     * TRADITIONAL, loop-based implementation of aggregatePrices.
+     * This is for educational reference to understand what the Streams version does.
+     *
+     * @deprecated Use {@link #aggregatePrices(List)} for the modern implementation.
+     */
+    @Deprecated
+    public Map<CurrencyPair, ConsolidatedPrice> aggregatePrices_traditional(List<PriceTick> ticks) {
+        // 1. Create an intermediate map to group ticks by pair
+        //    This is what `Collectors.groupingBy` does for us.
+        Map<CurrencyPair, List<PriceTick>> mapOfTicksPerPair = new HashMap<>();
+
+        // 2. Loop through every single tick
+        for (PriceTick tick : ticks) {
+            CurrencyPair pair = tick.pair();
+
+            // 3. Check if we have seen this pair before
+            if (!mapOfTicksPerPair.containsKey(pair)) {
+                // If not, create a new empty list for it
+                mapOfTicksPerPair.put(pair, new ArrayList<>());
+            }
+
+            // 4. Add the current tick to its pair's list
+            mapOfTicksPerPair.get(pair).add(tick);
+        }
+
+        // 5. Now, create the final map we want to return
+        Map<CurrencyPair, ConsolidatedPrice> finalConsolidatedMap = new HashMap<>();
+
+        // 6. Loop through our intermediate map (one entry for each pair)
+        //    This is what `Collectors.collectingAndThen` handles for us.
+        // sample entry: BTC/USD -> [tick1, tick2, tick3...]
+        // sample entrySet: Set<Map.Entry<CurrencyPair, List<PriceTick>>>
+        for (Map.Entry<CurrencyPair, List<PriceTick>> entry : mapOfTicksPerPair.entrySet()) {
+            CurrencyPair pair = entry.getKey();
+            List<PriceTick> ticksForThisPair = entry.getValue();
+
+            // 7. Call our traditional helper to find the best bid/ask for this pair
+            ConsolidatedPrice consolidatedPrice = buildConsolidatedPriceFromList_traditional(ticksForThisPair);
+
+            // 8. Add the final object to our result map
+            finalConsolidatedMap.put(pair, consolidatedPrice);
+        }
+
+        // 9. Return the completed map
+        return finalConsolidatedMap;
+    }
+
+    /**
+     * TRADITIONAL, loop-based helper to find best bid/ask/latest time from a list.
+     *
+     * @deprecated Use the Stream-based helper {@link #buildConsolidatedPriceFromList(List)}
+     */
+    @Deprecated
+    private ConsolidatedPrice buildConsolidatedPriceFromList_traditional(List<PriceTick> ticksForPair) {
+        // We can't do anything if the list is empty (this shouldn't happen)
+        if (ticksForPair == null || ticksForPair.isEmpty()) {
+            return null;
+        }
+
+        // 1. Assume the first tick is the "best" to start
+        //    This is what `max()` and `min()` do internally.
+        PriceTick bestBidTick = ticksForPair.get(0);
+        PriceTick bestAskTick = ticksForPair.get(0);
+        PriceTick latestTick = ticksForPair.get(0);
+
+        // 2. Loop through all the *other* ticks for this pair
+        //    (We can skip the first tick, so we start i = 1)
+        for (int i = 1; i < ticksForPair.size(); i++) {
+            PriceTick currentTick = ticksForPair.get(i);
+
+            // 3. Check for a new best bid (HIGHEST)
+            //    (compareTo > 0 means currentTick.bidPrice is LARGER)
+            if (currentTick.bidPrice().compareTo(bestBidTick.bidPrice()) > 0) {
+                bestBidTick = currentTick;
+            }
+
+            // 4. Check for a new best ask (LOWEST)
+            //    (compareTo < 0 means currentTick.askPrice is SMALLER)
+            if (currentTick.askPrice().compareTo(bestAskTick.askPrice()) < 0) {
+                bestAskTick = currentTick;
+            }
+
+            // 5. Check for a new latest timestamp
+            if (currentTick.timestamp().isAfter(latestTick.timestamp())) {
+                latestTick = currentTick;
+            }
+        }
+
+        // 6. Get the pair (they are all the same, so we can use any tick)
+        CurrencyPair pair = latestTick.pair();
+
+        // 7. Create and return the new consolidated price
+        return new ConsolidatedPrice(
+                pair,
+                latestTick.timestamp(),
+                bestBidTick.bidPrice(),
+                bestBidTick.exchange().id(),
+                bestAskTick.askPrice(),
+                bestAskTick.exchange().id()
+        );
+    }
 
 }

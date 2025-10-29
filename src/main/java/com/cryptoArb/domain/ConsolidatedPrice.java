@@ -1,6 +1,7 @@
 package com.cryptoArb.domain;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 /**
  * Represents the best bid/ask price for a pair, aggregated from all exchanges.
@@ -14,7 +15,7 @@ import java.math.BigDecimal;
  */
 public record ConsolidatedPrice(
         CurrencyPair pair,
-        long timestamp,
+        Instant timestamp,
         BigDecimal bestBid,
         String bestBidExchange,
         BigDecimal bestAsk,

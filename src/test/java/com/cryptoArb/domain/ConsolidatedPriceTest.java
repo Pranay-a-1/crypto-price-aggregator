@@ -16,7 +16,7 @@ class ConsolidatedPriceTest {
     void givenPriceData_whenCreateConsolidatedPrice_thenPropertiesAreSet() {
         // Given
         CurrencyPair pair = new CurrencyPair("BTC", "USD");
-        long timestamp = Instant.now().toEpochMilli();
+        Instant timestamp = Instant.now();
         BigDecimal bestBid = new BigDecimal("50000.00");
         String bestBidExchange = "kraken";
         BigDecimal bestAsk = new BigDecimal("50001.50");

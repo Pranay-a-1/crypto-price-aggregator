@@ -1,5 +1,6 @@
 package com.cryptoArb.service;
 
+import com.cryptoArb.domain.ConsolidatedPrice;
 import com.cryptoArb.domain.CurrencyPair;
 import com.cryptoArb.domain.Exchange;
 import com.cryptoArb.domain.PriceTick;
@@ -12,9 +13,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PriceServiceTest {
 
@@ -23,11 +26,15 @@ class PriceServiceTest {
     private Exchange coinbase = new Exchange("coinbase");
     private Exchange kraken = new Exchange("kraken");
     private CurrencyPair btcUsd = new CurrencyPair("BTC", "USD");
+    private CurrencyPair ethUsd = new CurrencyPair("ETH", "USD");
 
     // 2. Define our timestamps as Instant objects
     private Instant ts1 = Instant.ofEpochMilli(1000L);
     private Instant ts2 = Instant.ofEpochMilli(1001L);
     private Instant ts3 = Instant.ofEpochMilli(1002L);
+    private Instant ts4 = Instant.ofEpochMilli(1003L);
+    private Instant ts5 = Instant.ofEpochMilli(1004L);
+    private Instant ts6 = Instant.ofEpochMilli(1005L);
 
     private List<PriceTick> allTicks;
 
@@ -35,9 +42,21 @@ class PriceServiceTest {
     void setUp() {
         // Create a list of mixed ticks before each test
         allTicks = List.of(
+                // --- BTC/USD Ticks ---
+                // Tick 1 (ts1): Coinbase, Bid: 50000, Ask: 50001
                 new PriceTick(btcUsd, coinbase, ts1, new BigDecimal("50000"), new BigDecimal("50001")),
-                new PriceTick(btcUsd, kraken, ts2, new BigDecimal("49999"), new BigDecimal("50000")),
-                new PriceTick(btcUsd, coinbase, ts3, new BigDecimal("50002"), new BigDecimal("50003"))
+                // Tick 2 (ts2): Kraken, Bid: 50002 (Best Bid), Ask: 50003
+                new PriceTick(btcUsd, kraken, ts2, new BigDecimal("50002"), new BigDecimal("50003")),
+                // Tick 3 (ts3): Coinbase, Bid: 50001, Ask: 50000 (Best Ask)
+                new PriceTick(btcUsd, coinbase, ts3, new BigDecimal("50001"), new BigDecimal("50000")),
+
+                // --- ETH/USD Ticks ---
+                // Tick 4 (ts4): Kraken, Bid: 3000 (Best Bid), Ask: 3002
+                new PriceTick(ethUsd, kraken, ts4, new BigDecimal("3000"), new BigDecimal("3002")),
+                // Tick 5 (ts5): Coinbase, Bid: 2999, Ask: 3001 (Best Ask)
+                new PriceTick(ethUsd, coinbase, ts5, new BigDecimal("2999"), new BigDecimal("3001")),
+                // Tick 6 (ts6): Coinbase, Bid: 2998, Ask: 3003
+                new PriceTick(ethUsd, coinbase, ts6, new BigDecimal("2998"), new BigDecimal("3003"))
         );
     }
 
@@ -53,7 +72,8 @@ class PriceServiceTest {
         List<PriceTick> coinbaseTicks = priceService.filterCoinbaseTicks(allTicks);
 
         // Then: The resulting list should only have the 2 coinbase ticks
-        assertEquals(2, coinbaseTicks.size(), "Should only be 2 Coinbase ticks");
+        // FIX: We now have 4 coinbase ticks in our new list
+        assertEquals(4, coinbaseTicks.size(), "Should now be 4 Coinbase ticks");
 
         // And we can double-check that they are ALL from coinbase
         for (PriceTick tick : coinbaseTicks) {
@@ -86,9 +106,11 @@ class PriceServiceTest {
         // This line will NOT compile
         List<PriceTick> krakenTicks = priceService.filter(allTicks, krakenPredicate);
 
-        // Then: The result should be correct
-        assertEquals(1, krakenTicks.size(), "Should find the 1 kraken tick");
+// Then:
+        // FIX: We now have 2 kraken ticks in our new list
+        assertEquals(2, krakenTicks.size(), "Should find the 2 kraken ticks");
         assertEquals("kraken", krakenTicks.get(0).exchange().id());
+        assertEquals("kraken", krakenTicks.get(1).exchange().id());
     }
 
 
@@ -117,11 +139,20 @@ class PriceServiceTest {
         // And: We use our *existing* filter method
         List<PriceTick> result = priceService.filter(allTicks, combinedPredicate);
 
-        // Then: We should get only the 1 tick that matches *both*
-        assertEquals(1, result.size(), "Should only find one matching tick");
+//        System.out.println("Filtered Ticks: ");
+//        for (PriceTick tick : result) {
+//            System.out.println(" - " + tick.pair() + " | " + tick.exchange().id() + " | Ask: " + tick.askPrice());
+//        }
 
-        // We can be extra-specific and check the timestamp
-        assertEquals(ts1, result.get(0).timestamp(), "Should be the first coinbase tick");
+        // Then:
+        // FIX: The predicate correctly matches 4 ticks (ts1, ts3, ts5, ts6)
+        assertEquals(4, result.size(), "Should find four matching ticks");
+
+        // Add more robust checks to ensure we have the *right* 3 ticks
+        assertTrue(result.stream().anyMatch(t -> t.timestamp().equals(ts1)), "Missing ts1 tick");
+        assertTrue(result.stream().anyMatch(t -> t.timestamp().equals(ts3)), "Missing ts3 tick");
+        assertTrue(result.stream().anyMatch(t -> t.timestamp().equals(ts5)), "Missing ts5 tick");
+        assertTrue(result.stream().anyMatch(t -> t.timestamp().equals(ts6)), "Missing ts6 tick");
     }
 
 
@@ -129,8 +160,7 @@ class PriceServiceTest {
 
 
     // We need a few more CurrencyPairs for this test
-    private CurrencyPair ethUsd = new CurrencyPair("ETH", "USD");
-    private CurrencyPair btcEur = new CurrencyPair("BTC", "EUR");
+    private final CurrencyPair btcEur = new CurrencyPair("BTC", "EUR");
 
     @Test
     @DisplayName("Should sort ticks by pair, then by ascending ask price")
@@ -204,4 +234,39 @@ class PriceServiceTest {
         assertEquals(btcUsd, unsortedTicks.get(2).pair(), "Third should be BTC/USD (High)");
         assertEquals(ethUsd, unsortedTicks.get(3).pair(), "Fourth should be ETH/USD");
     }
+
+    @Test
+    @DisplayName("Should aggregate a list of ticks into consolidated prices per pair")
+    void givenTicks_whenAggregatePrices_thenReturnsMapOfConsolidatedPrices() {
+        // Given
+        PriceService priceService = new PriceService();
+        // (allTicks is provided by setUp)
+
+        // When
+        // This line will NOT COMPILE (RED)
+        Map<CurrencyPair, ConsolidatedPrice> consolidatedMap = priceService.aggregatePrices(allTicks);
+
+        // Then
+        // We expect two entries in our map, one for BTC/USD and one for ETH/USD
+        assertEquals(2, consolidatedMap.size(), "Map should contain 2 currency pairs");
+
+        // --- Verify BTC/USD ---
+        ConsolidatedPrice btcPrice = consolidatedMap.get(btcUsd);
+        assertEquals(btcUsd, btcPrice.pair());
+        assertEquals(new BigDecimal("50002"), btcPrice.bestBid(), "BTC Best Bid is incorrect");
+        assertEquals("kraken", btcPrice.bestBidExchange(), "BTC Best Bid Exchange is incorrect");
+        assertEquals(new BigDecimal("50000"), btcPrice.bestAsk(), "BTC Best Ask is incorrect");
+        assertEquals("coinbase", btcPrice.bestAskExchange(), "BTC Best Ask Exchange is incorrect");
+        assertEquals(ts3, btcPrice.timestamp(), "Timestamp should be the *latest* for that pair"); // ts3 is latest for BTC
+
+        // --- Verify ETH/USD ---
+        ConsolidatedPrice ethPrice = consolidatedMap.get(ethUsd);
+        assertEquals(ethUsd, ethPrice.pair());
+        assertEquals(new BigDecimal("3000"), ethPrice.bestBid(), "ETH Best Bid is incorrect");
+        assertEquals("kraken", ethPrice.bestBidExchange(), "ETH Best Bid Exchange is incorrect");
+        assertEquals(new BigDecimal("3001"), ethPrice.bestAsk(), "ETH Best Ask is incorrect");
+        assertEquals("coinbase", ethPrice.bestAskExchange(), "ETH Best Ask Exchange is incorrect");
+        assertEquals(ts6, ethPrice.timestamp(), "Timestamp should be the *latest* for that pair"); // ts6 is latest for ETH
+    }
+
 }
