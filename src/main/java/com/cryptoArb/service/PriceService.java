@@ -145,6 +145,25 @@ public class PriceService {
 
 
     /**
+     * Aggregates a list of raw price ticks using a PARALLEL stream.
+     * This is for our Phase 2 benchmark.
+     *
+     * @param ticks A list of PriceTick objects.
+     * @return A Map of CurrencyPair to its corresponding ConsolidatedPrice.
+     */
+    public Map<CurrencyPair, ConsolidatedPrice> aggregatePricesParallel(List<PriceTick> ticks) {
+        return ticks.parallelStream() // <-- PARALLEL stream
+                .collect(Collectors.groupingBy(
+                        PriceTick::pair,
+                        Collectors.collectingAndThen(
+                                Collectors.toList(),
+                                this::buildConsolidatedPriceFromList
+                        )
+                ));
+    }
+
+
+    /**
      * A helper method to convert a list of ticks (for a *single* currency pair)
      * into one ConsolidatedPrice object.
      *
