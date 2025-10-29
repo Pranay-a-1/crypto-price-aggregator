@@ -16,7 +16,10 @@ class PriceTickOldTest {
         // Given: All the data needed for a price tick
         CurrencyPair_old pair = new CurrencyPair_old("BTC", "USD");
         Exchange_old exchangeOld = new Exchange_old("coinbase");
-        long timestamp = Instant.now().toEpochMilli();
+        // --- This is the key change ---
+        // We now want to use an Instant object directly, not a long
+        Instant timestamp = Instant.now();
+        // --- End of change ---
         // Use BigDecimal for prices
         BigDecimal bidPrice = new BigDecimal("50000.00");
         BigDecimal askPrice = new BigDecimal("50000.50");

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -23,15 +24,20 @@ class PriceServiceTest {
     private Exchange kraken = new Exchange("kraken");
     private CurrencyPair btcUsd = new CurrencyPair("BTC", "USD");
 
+    // 2. Define our timestamps as Instant objects
+    private Instant ts1 = Instant.ofEpochMilli(1000L);
+    private Instant ts2 = Instant.ofEpochMilli(1001L);
+    private Instant ts3 = Instant.ofEpochMilli(1002L);
+
     private List<PriceTick> allTicks;
 
     @BeforeEach
     void setUp() {
         // Create a list of mixed ticks before each test
         allTicks = List.of(
-                new PriceTick(btcUsd, coinbase, 1000L, new BigDecimal("50000"), new BigDecimal("50001")),
-                new PriceTick(btcUsd, kraken, 1001L, new BigDecimal("49999"), new BigDecimal("50000")),
-                new PriceTick(btcUsd, coinbase, 1002L, new BigDecimal("50002"), new BigDecimal("50003"))
+                new PriceTick(btcUsd, coinbase, ts1, new BigDecimal("50000"), new BigDecimal("50001")),
+                new PriceTick(btcUsd, kraken, ts2, new BigDecimal("49999"), new BigDecimal("50000")),
+                new PriceTick(btcUsd, coinbase, ts3, new BigDecimal("50002"), new BigDecimal("50003"))
         );
     }
 
@@ -115,7 +121,7 @@ class PriceServiceTest {
         assertEquals(1, result.size(), "Should only find one matching tick");
 
         // We can be extra-specific and check the timestamp
-        assertEquals(1000L, result.get(0).timestamp(), "Should be the first coinbase tick");
+        assertEquals(ts1, result.get(0).timestamp(), "Should be the first coinbase tick");
     }
 
 
@@ -132,10 +138,10 @@ class PriceServiceTest {
         // Given: An unsorted list of ticks
         // Note: We use new ArrayList<>(List.of(...)) so it's mutable (sortable)
         List<PriceTick> unsortedTicks = new ArrayList<>(List.of(
-                new PriceTick(ethUsd, coinbase, 1000L, new BigDecimal("3000"), new BigDecimal("3001")),  // ETH/USD
-                new PriceTick(btcUsd, coinbase, 1001L, new BigDecimal("50002"), new BigDecimal("50003")), // BTC/USD (High Price)
-                new PriceTick(btcEur, kraken, 1002L, new BigDecimal("45000"), new BigDecimal("45001")),  // BTC/EUR
-                new PriceTick(btcUsd, kraken, 1003L, new BigDecimal("50000"), new BigDecimal("50001"))   // BTC/USD (Low Price)
+                new PriceTick(ethUsd, coinbase, Instant.ofEpochMilli(1000L), new BigDecimal("3000"), new BigDecimal("3001")),  // ETH/USD
+                new PriceTick(btcUsd, coinbase, Instant.ofEpochMilli(1001L), new BigDecimal("50002"), new BigDecimal("50003")), // BTC/USD (High Price)
+                new PriceTick(btcEur, kraken, Instant.ofEpochMilli(1002L), new BigDecimal("45000"), new BigDecimal("45001")),  // BTC/EUR
+                new PriceTick(btcUsd, kraken, Instant.ofEpochMilli(1003L), new BigDecimal("50000"), new BigDecimal("50001"))   // BTC/USD (Low Price)
         ));
 
         // When: We apply our sorting logic (this is the part we'll build)

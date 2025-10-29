@@ -1,6 +1,7 @@
 package com.cryptoArb.domain;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 /**
  * Represents a price snapshot from a specific exchange.
@@ -15,7 +16,7 @@ import java.math.BigDecimal;
 public record PriceTick(
         CurrencyPair pair,
         Exchange exchange,
-        long timestamp,
+        Instant timestamp,
         BigDecimal bidPrice, // Changed from double
         BigDecimal askPrice  // Changed from double
 ) {
