@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,7 +16,7 @@ class ArbitrageOpportunityTest {
     void givenOppData_whenCreateArbitrageOpportunity_thenPropertiesAreSet() {
         // Given
         CurrencyPair pair = new CurrencyPair("BTC", "USD");
-        long timestamp = Instant.now().toEpochMilli();
+        Instant timestamp = Instant.now(); // 3. Changed from long
 
         String buyExchange = "kraken";
         BigDecimal buyPrice = new BigDecimal("49999.00"); // Buy low
@@ -31,8 +32,7 @@ class ArbitrageOpportunityTest {
                 buyExchange,
                 buyPrice,
                 sellExchange,
-                sellPrice,
-                profitPercentage
+                sellPrice
         );
 
         // Then
@@ -42,6 +42,33 @@ class ArbitrageOpportunityTest {
         assertEquals(buyPrice, opportunity.buyPrice());
         assertEquals(sellExchange, opportunity.sellExchange());
         assertEquals(sellPrice, opportunity.sellPrice());
-        assertEquals(profitPercentage, opportunity.profitPercentage());
+    }
+
+
+    @Test
+    @DisplayName("Should correctly calculate the profit percentage")
+    void givenPrices_whenCalculateProfit_thenReturnsCorrectPercentage() {
+        // Given: Buy at 2999, Sell at 3000
+        ArbitrageOpportunity opportunity = new ArbitrageOpportunity(
+                new CurrencyPair("ETH", "USD"),
+                Instant.now(),
+                "coinbase",
+                new BigDecimal("2999"), // buyPrice
+                "kraken",
+                new BigDecimal("3000"));  // sellPrice
+
+        // (3000 - 2999) / 2999 = 1 / 2999 = 0.0003334...
+        // Our test expects 0.0333 (as a percentage * 100, that's 0.0333%)
+        BigDecimal expectedProfit = new BigDecimal("0.00033344");
+
+        // When
+        BigDecimal actualProfit = opportunity.profitPercentage();
+
+        // Then
+        // We scale the result for comparison, just like in our service test
+        assertEquals(
+                expectedProfit.setScale(8, RoundingMode.HALF_UP),
+                actualProfit.setScale(8, RoundingMode.HALF_UP)
+        );
     }
 }
