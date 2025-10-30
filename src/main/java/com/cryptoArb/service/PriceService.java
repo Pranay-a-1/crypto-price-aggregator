@@ -201,7 +201,23 @@ public class PriceService {
     }
 
 
+    /**
+     * Aggregates a list of ticks and finds the consolidated price for a specific pair.
+     *
+     * @param ticks A list of PriceTick objects from various exchanges.
+     * @param pair  The CurrencyPair to find.
+     * @return An Optional containing the ConsolidatedPrice if found, or Optional.empty() if not.
+     */
+    public Optional<ConsolidatedPrice> getConsolidatedPriceForPair(List<PriceTick> ticks, CurrencyPair pair) {
+        // 1. Run our existing aggregation logic
+        Map<CurrencyPair, ConsolidatedPrice> consolidatedPrices = this.aggregatePrices(ticks);
 
+        // 2. Get the result from the map (which could be null)
+        ConsolidatedPrice result = consolidatedPrices.get(pair);
+
+        // 3. Wrap the result in an Optional.
+        return Optional.ofNullable(result);
+    }
 
 
 // --- TRADITIONAL AGGREGATION METHODS (For Reference) ---

@@ -10,10 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,9 +34,12 @@ class PriceServiceTest {
     private Instant ts6 = Instant.ofEpochMilli(1005L);
 
     private List<PriceTick> allTicks;
+    private PriceService priceService;
+
 
     @BeforeEach
     void setUp() {
+        priceService = new PriceService();
         // Create a list of mixed ticks before each test
         allTicks = List.of(
                 // --- BTC/USD Ticks ---
@@ -106,7 +106,7 @@ class PriceServiceTest {
         // This line will NOT compile
         List<PriceTick> krakenTicks = priceService.filter(allTicks, krakenPredicate);
 
-// Then:
+        // Then:
         // FIX: We now have 2 kraken ticks in our new list
         assertEquals(2, krakenTicks.size(), "Should find the 2 kraken ticks");
         assertEquals("kraken", krakenTicks.get(0).exchange().id());
@@ -238,8 +238,6 @@ class PriceServiceTest {
     @Test
     @DisplayName("Should aggregate a list of ticks into consolidated prices per pair")
     void givenTicks_whenAggregatePrices_thenReturnsMapOfConsolidatedPrices() {
-        // Given
-        PriceService priceService = new PriceService();
         // (allTicks is provided by setUp)
 
         // When
@@ -267,6 +265,40 @@ class PriceServiceTest {
         assertEquals(new BigDecimal("3001"), ethPrice.bestAsk(), "ETH Best Ask is incorrect");
         assertEquals("coinbase", ethPrice.bestAskExchange(), "ETH Best Ask Exchange is incorrect");
         assertEquals(ts6, ethPrice.timestamp(), "Timestamp should be the *latest* for that pair"); // ts6 is latest for ETH
+    }
+
+
+
+
+    @Test
+    @DisplayName("Should return Optional of consolidated price for an existing pair")
+    void shouldReturnOptionalOfPriceForExistingPair() {
+        // GIVEN: A known currency pair from our 'allTicks' data
+        CurrencyPair btcUsd = new CurrencyPair("BTC", "USD");
+
+        // WHEN: We get the consolidated price for that pair, passing in the ticks
+        Optional<ConsolidatedPrice> result = priceService.getConsolidatedPriceForPair(allTicks, btcUsd);
+
+        // THEN: The Optional should be present and contain the correct data
+        assertTrue(result.isPresent(), "Optional should not be empty");
+        assertEquals(btcUsd, result.get().pair(), "Currency pair should match");
+        // Values below are from the setUp data
+        assertEquals(new BigDecimal("50000"), result.get().bestAsk(), "Best ask should be correct"); // from ts3
+        assertEquals(new BigDecimal("50002"), result.get().bestBid(), "Best bid should be correct"); // from ts2
+    }
+
+    @Test
+    @DisplayName("Should return empty Optional for a non-existent pair")
+    void shouldReturnEmptyOptionalForNonExistentPair() {
+        // GIVEN: A currency pair that is not in our data
+        CurrencyPair ethJpy = new CurrencyPair("ETH", "JPY");
+
+
+        // WHEN: We get the consolidated price for that pair, passing in the ticks
+        Optional<ConsolidatedPrice> result = priceService.getConsolidatedPriceForPair(allTicks, ethJpy);
+
+        // THEN: The Optional should be empty
+        assertTrue(result.isEmpty(), "Optional should be empty");
     }
 
 }
