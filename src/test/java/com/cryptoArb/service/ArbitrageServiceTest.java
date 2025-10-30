@@ -3,6 +3,7 @@ package com.cryptoArb.service;
 import com.cryptoArb.domain.ArbitrageOpportunity;
 import com.cryptoArb.domain.ConsolidatedPrice;
 import com.cryptoArb.domain.CurrencyPair;
+import com.cryptoArb.domain.Exchange;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -32,9 +33,9 @@ class ArbitrageServiceTest {
                 btcUsd,
                 now,
                 new BigDecimal("50000"), // bestBid
-                "kraken",                // bestBidExchange
+                new Exchange("kraken"),                // bestBidExchange
                 new BigDecimal("50001"), // bestAsk
-                "coinbase"               // bestAskExchange
+                new Exchange("coinbase")               // bestAskExchange
         );
 
         // 2. An arbitrage opportunity: Best Bid (3000) > Best Ask (2999)
@@ -43,9 +44,9 @@ class ArbitrageServiceTest {
                 ethUsd,
                 now,
                 new BigDecimal("3000"), // bestBid
-                "kraken",               // bestBidExchange
+                new Exchange("kraken"),               // bestBidExchange
                 new BigDecimal("2999"), // bestAsk
-                "coinbase"              // bestAskExchange
+                new Exchange("coinbase")             // bestAskExchange
         );
 
         Map<CurrencyPair, ConsolidatedPrice> priceMap = Map.of(
@@ -71,11 +72,11 @@ class ArbitrageServiceTest {
         assertEquals(now, opportunity.timestamp());
 
         // We BUY at the LOWEST ASK
-        assertEquals("coinbase", opportunity.buyExchange());
+        assertEquals("coinbase", opportunity.buyExchange().id());
         assertEquals(new BigDecimal("2999"), opportunity.buyPrice());
 
         // We SELL at the HIGHEST BID
-        assertEquals("kraken", opportunity.sellExchange());
+        assertEquals("kraken", opportunity.sellExchange().id());
         assertEquals(new BigDecimal("3000"), opportunity.sellPrice());
 
         // Verify the profit calculation: (sell - buy) / buy
@@ -99,9 +100,9 @@ class ArbitrageServiceTest {
                 btcUsd,
                 now,
                 new BigDecimal("50000"), // bestBid
-                "kraken",                // bestBidExchange
+                new Exchange("kraken"),                // bestBidExchange
                 new BigDecimal("50001"), // bestAsk
-                "coinbase"               // bestAskExchange
+                new Exchange("coinbase")               // bestAskExchange
         );
 
         Map<CurrencyPair, ConsolidatedPrice> priceMap = Map.of(btcUsd, btcPrice);

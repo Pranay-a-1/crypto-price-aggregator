@@ -18,9 +18,9 @@ class ConsolidatedPriceTest {
         CurrencyPair pair = new CurrencyPair("BTC", "USD");
         Instant timestamp = Instant.now();
         BigDecimal bestBid = new BigDecimal("50000.00");
-        String bestBidExchange = "kraken";
+        Exchange bestBidExchange = new Exchange("kraken");
         BigDecimal bestAsk = new BigDecimal("50001.50");
-        String bestAskExchange = "coinbase";
+        Exchange bestAskExchange = new Exchange("coinbase");
 
         // When
         // This line will fail to compile (RED)

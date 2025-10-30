@@ -18,9 +18,9 @@ class ArbitrageOpportunityTest {
         CurrencyPair pair = new CurrencyPair("BTC", "USD");
         Instant timestamp = Instant.now(); // 3. Changed from long
 
-        String buyExchange = "kraken";
+        Exchange buyExchange = new Exchange("kraken"); //"kraken";
         BigDecimal buyPrice = new BigDecimal("49999.00"); // Buy low
-        String sellExchange = "coinbase";
+        Exchange sellExchange = new Exchange("coinbase");
         BigDecimal sellPrice = new BigDecimal("50001.00"); // Sell high
         BigDecimal profitPercentage = new BigDecimal("0.004"); // (50001 - 49999) / 49999
 
@@ -52,9 +52,9 @@ class ArbitrageOpportunityTest {
         ArbitrageOpportunity opportunity = new ArbitrageOpportunity(
                 new CurrencyPair("ETH", "USD"),
                 Instant.now(),
-                "coinbase",
+                new Exchange("coinbase"),
                 new BigDecimal("2999"), // buyPrice
-                "kraken",
+                new Exchange("kraken"),
                 new BigDecimal("3000"));  // sellPrice
 
         // (3000 - 2999) / 2999 = 1 / 2999 = 0.0003334...

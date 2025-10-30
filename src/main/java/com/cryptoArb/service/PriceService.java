@@ -198,9 +198,9 @@ public class PriceService {
                 pair,
                 latestTick.timestamp(),
                 bestBidTick.bidPrice(),
-                bestBidTick.exchange().id(), // Get the exchange from the best bid tick
+                bestBidTick.exchange(), // Get the exchange from the best bid tick
                 bestAskTick.askPrice(),
-                bestAskTick.exchange().id()  // Get the exchange from the best ask tick
+                bestAskTick.exchange()  // Get the exchange from the best ask tick
         );
     }
 
@@ -345,9 +345,9 @@ public class PriceService {
                 pair,
                 latestTick.timestamp(),
                 bestBidTick.bidPrice(),
-                bestBidTick.exchange().id(),
+                bestBidTick.exchange(),
                 bestAskTick.askPrice(),
-                bestAskTick.exchange().id()
+                bestAskTick.exchange()
         );
     }
 

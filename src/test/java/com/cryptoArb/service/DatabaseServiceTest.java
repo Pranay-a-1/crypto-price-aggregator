@@ -1,5 +1,6 @@
 package com.cryptoArb.service;
 
+import com.cryptoArb.domain.ArbitrageOpportunity;
 import com.cryptoArb.domain.CurrencyPair;
 import com.cryptoArb.domain.Exchange;
 import com.cryptoArb.domain.PriceTick;
@@ -60,8 +61,23 @@ class DatabaseServiceTest {
             );
             """;
 
+        String createArbTableSql = """
+            CREATE TABLE IF NOT EXISTS arbitrage_opportunity (
+                id SERIAL PRIMARY KEY,
+                base_currency VARCHAR(10) NOT NULL,
+                quote_currency VARCHAR(10) NOT NULL,
+                timestamp TIMESTAMPTZ NOT NULL,
+                buy_exchange VARCHAR(50) NOT NULL,
+                buy_price DECIMAL(20, 8) NOT NULL,
+                sell_exchange VARCHAR(50) NOT NULL,
+                sell_price DECIMAL(20, 8) NOT NULL,
+                profit_percentage DECIMAL(10, 5) NOT NULL
+            );
+            """;
+
         try (Statement stmt = testConnection.createStatement()) {
-            stmt.execute(createTableSql);
+            stmt.execute(createTableSql); // This one is from before
+            stmt.execute(createArbTableSql); // This is the new one
         }
     }
 
@@ -121,4 +137,60 @@ class DatabaseServiceTest {
             assertFalse(rs.next(), "More than one record was found");
         }
     }
+
+
+    @Test
+    @DisplayName("Should save an ArbitrageOpportunity to the database")
+    void shouldSaveArbitrageOpportunityAndAllowRetrieval() throws SQLException {
+        // --- Given ---
+        // A sample ArbitrageOpportunity object
+        ArbitrageOpportunity opportunity = new ArbitrageOpportunity(
+                new CurrencyPair("ETH", "USD"),
+                Instant.parse("2025-11-01T10:00:00Z"),
+                new Exchange("kraken"),
+                new BigDecimal("4000.10"),
+                new Exchange("binance"),
+                new BigDecimal("4005.15")
+        );
+
+        // --- When ---
+        // We call our (non-existent) save method
+        // (This line will fail to compile!)
+        databaseService.saveOpportunity(opportunity);
+
+        // --- Then ---
+        // We use our test-only connection to verify
+        String verifySql = "SELECT * FROM arbitrage_opportunity WHERE buy_exchange = 'kraken'";
+        try (Statement stmt = testConnection.createStatement();
+             ResultSet rs = stmt.executeQuery(verifySql)) {
+
+            assertTrue(rs.next(), "No data was found in the arbitrage_opportunity table");
+
+            // Verify all columns
+            assertEquals("ETH", rs.getString("base_currency"));
+            assertEquals("USD", rs.getString("quote_currency"));
+            assertEquals("kraken", rs.getString("buy_exchange"));
+            assertEquals("binance", rs.getString("sell_exchange"));
+
+            // Use compareTo for BigDecimal assertions, just as we learned!
+            assertEquals(0,
+                    new BigDecimal("4000.10").compareTo(rs.getBigDecimal("buy_price")),
+                    "Buy price numerical value mismatch");
+            assertEquals(0,
+                    new BigDecimal("4005.15").compareTo(rs.getBigDecimal("sell_price")),
+                    "Sell price numerical value mismatch");
+            assertEquals(0,
+                    new BigDecimal("0.00126").compareTo(rs.getBigDecimal("profit_percentage")),
+                    "Profit percentage numerical value mismatch");
+
+            // Verify timestamp
+            Instant dbTimestamp = rs.getTimestamp("timestamp").toInstant();
+            assertEquals(opportunity.timestamp(), dbTimestamp);
+
+            assertFalse(rs.next(), "More than one record was found");
+        }
+    }
+
+
+
 }

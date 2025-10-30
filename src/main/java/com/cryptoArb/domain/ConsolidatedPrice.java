@@ -17,8 +17,8 @@ public record ConsolidatedPrice(
         CurrencyPair pair,
         Instant timestamp,
         BigDecimal bestBid,
-        String bestBidExchange,
+        Exchange bestBidExchange,
         BigDecimal bestAsk,
-        String bestAskExchange
+        Exchange bestAskExchange
 ) {
 }

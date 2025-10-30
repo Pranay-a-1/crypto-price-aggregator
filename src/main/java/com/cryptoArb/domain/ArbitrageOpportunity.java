@@ -18,9 +18,9 @@ import java.time.Instant;
 public record ArbitrageOpportunity(
         CurrencyPair pair,
         Instant timestamp,
-        String buyExchange,
+        Exchange buyExchange,
         BigDecimal buyPrice,
-        String sellExchange,
+        Exchange sellExchange,
         BigDecimal sellPrice
 ) {
 

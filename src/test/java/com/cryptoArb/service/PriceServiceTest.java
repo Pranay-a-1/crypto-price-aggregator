@@ -254,18 +254,18 @@ class PriceServiceTest {
         ConsolidatedPrice btcPrice = consolidatedMap.get(btcUsd);
         assertEquals(btcUsd, btcPrice.pair());
         assertEquals(new BigDecimal("50002"), btcPrice.bestBid(), "BTC Best Bid is incorrect");
-        assertEquals("kraken", btcPrice.bestBidExchange(), "BTC Best Bid Exchange is incorrect");
+        assertEquals("kraken", btcPrice.bestBidExchange().id(), "BTC Best Bid Exchange is incorrect");
         assertEquals(new BigDecimal("50000"), btcPrice.bestAsk(), "BTC Best Ask is incorrect");
-        assertEquals("coinbase", btcPrice.bestAskExchange(), "BTC Best Ask Exchange is incorrect");
+        assertEquals("coinbase", btcPrice.bestAskExchange().id(), "BTC Best Ask Exchange is incorrect");
         assertEquals(ts3, btcPrice.timestamp(), "Timestamp should be the *latest* for that pair"); // ts3 is latest for BTC
 
         // --- Verify ETH/USD ---
         ConsolidatedPrice ethPrice = consolidatedMap.get(ethUsd);
         assertEquals(ethUsd, ethPrice.pair());
         assertEquals(new BigDecimal("3000"), ethPrice.bestBid(), "ETH Best Bid is incorrect");
-        assertEquals("kraken", ethPrice.bestBidExchange(), "ETH Best Bid Exchange is incorrect");
+        assertEquals("kraken", ethPrice.bestBidExchange().id(), "ETH Best Bid Exchange is incorrect");
         assertEquals(new BigDecimal("3001"), ethPrice.bestAsk(), "ETH Best Ask is incorrect");
-        assertEquals("coinbase", ethPrice.bestAskExchange(), "ETH Best Ask Exchange is incorrect");
+        assertEquals("coinbase", ethPrice.bestAskExchange().id(), "ETH Best Ask Exchange is incorrect");
         assertEquals(ts6, ethPrice.timestamp(), "Timestamp should be the *latest* for that pair"); // ts6 is latest for ETH
     }
 
