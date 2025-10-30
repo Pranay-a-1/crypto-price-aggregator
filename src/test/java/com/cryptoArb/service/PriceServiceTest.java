@@ -9,9 +9,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,15 +45,15 @@ class PriceServiceTest {
         // Create a list of mixed ticks before each test
         allTicks = List.of(
                 // --- BTC/USD Ticks ---
-                // Tick 1 (ts1): Coinbase, Bid: 50000, Ask: 50001
+                // Tick 1 (ts1): Coinbase, Bid: 50000, Ask: 50001 , timeDate ("2023-01-01T10:00:01Z")
                 new PriceTick(btcUsd, coinbase, ts1, new BigDecimal("50000"), new BigDecimal("50001")),
-                // Tick 2 (ts2): Kraken, Bid: 50002 (Best Bid), Ask: 50003
+                // Tick 2 (ts2): Kraken, Bid: 50002 (Best Bid), Ask: 50003, timeDate ("2023-01-01T10:00:02Z")
                 new PriceTick(btcUsd, kraken, ts2, new BigDecimal("50002"), new BigDecimal("50003")),
-                // Tick 3 (ts3): Coinbase, Bid: 50001, Ask: 50000 (Best Ask)
+                // Tick 3 (ts3): Coinbase, Bid: 50001, Ask: 50000 (Best Ask), timeDate ("2023-01-01T10:00:03Z")
                 new PriceTick(btcUsd, coinbase, ts3, new BigDecimal("50001"), new BigDecimal("50000")),
 
                 // --- ETH/USD Ticks ---
-                // Tick 4 (ts4): Kraken, Bid: 3000 (Best Bid), Ask: 3002
+                // Tick 4 (ts4): Kraken, Bid: 3000 (Best Bid), Ask: 3002, timeDate ("2023-01-01T10:00:04Z")
                 new PriceTick(ethUsd, kraken, ts4, new BigDecimal("3000"), new BigDecimal("3002")),
                 // Tick 5 (ts5): Coinbase, Bid: 2999, Ask: 3001 (Best Ask)
                 new PriceTick(ethUsd, coinbase, ts5, new BigDecimal("2999"), new BigDecimal("3001")),
@@ -299,6 +301,33 @@ class PriceServiceTest {
 
         // THEN: The Optional should be empty
         assertTrue(result.isEmpty(), "Optional should be empty");
+    }
+
+
+    @Test
+    @DisplayName("Should filter out stale ticks older than maxAge")
+    void givenTicks_whenFilterStale_thenReturnsFreshTicks() {
+        // GIVEN: A "current time" relative to our test data (ts6 is the newest)
+        Instant currentTime = Instant.ofEpochMilli(1005L);
+
+        // And a max age of 2 milliseconds
+        Duration maxAge = Duration.ofMillis(2);
+
+        // WHEN: We filter the list of all ticks
+        List<PriceTick> freshTicks = priceService.filterStaleTicks(allTicks, currentTime, maxAge);
+
+        // THEN: The list should only contain ticks that are 2ms old or newer
+        // ts4 (age 2ms), ts5 (age 1ms), and ts6 (age 0ms) should be kept.
+        assertEquals(3, freshTicks.size(), "Should only have 3 fresh ticks");
+
+        // And we can be extra sure by checking the timestamps
+        List<Instant> freshTimestamps = freshTicks.stream()
+                .map(PriceTick::timestamp)
+                .collect(Collectors.toList());
+
+        assertTrue(freshTimestamps.contains(ts4), "Missing ts4 tick");
+        assertTrue(freshTimestamps.contains(ts5), "Missing ts5 tick");
+        assertTrue(freshTimestamps.contains(ts6), "Missing ts6 tick");
     }
 
 }

@@ -4,6 +4,8 @@ import com.cryptoArb.domain.ConsolidatedPrice;
 import com.cryptoArb.domain.CurrencyPair;
 import com.cryptoArb.domain.PriceTick;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -147,8 +149,10 @@ public class PriceService {
     /**
      * Aggregates a list of raw price ticks using a PARALLEL stream.
      * This is for our Phase 2 benchmark.
+     * when not to use parallel streams:
+     * - When working with small datasets where the overhead of managing parallel threads outweighs the benefits.
      *
-     * @param ticks A list of PriceTick objects.
+     *  @param ticks A list of PriceTick objects.
      * @return A Map of CurrencyPair to its corresponding ConsolidatedPrice.
      */
     public Map<CurrencyPair, ConsolidatedPrice> aggregatePricesParallel(List<PriceTick> ticks) {
@@ -210,13 +214,35 @@ public class PriceService {
      */
     public Optional<ConsolidatedPrice> getConsolidatedPriceForPair(List<PriceTick> ticks, CurrencyPair pair) {
         // 1. Run our existing aggregation logic
-        Map<CurrencyPair, ConsolidatedPrice> consolidatedPrices = this.aggregatePrices(ticks);
+        Map<CurrencyPair, ConsolidatedPrice> consolidatedPrices = this.aggregatePricesParallel(ticks);
 
         // 2. Get the result from the map (which could be null)
         ConsolidatedPrice result = consolidatedPrices.get(pair);
 
         // 3. Wrap the result in an Optional.
         return Optional.ofNullable(result);
+    }
+
+
+    /**
+     * Filters a list of ticks, removing any that are older than the maxAge.
+     *
+     * @param ticks       The list of PriceTick objects.
+     * @param currentTime The current time to compare against.
+     * @param maxAge      The maximum allowed duration (age) for a tick to be considered fresh.
+     * @return A new list containing only the fresh ticks.
+     */
+    public List<PriceTick> filterStaleTicks(List<PriceTick> ticks, Instant currentTime, Duration maxAge) {
+        return ticks.stream()
+                .filter(tick -> {
+                    // Calculate the tick's age
+                    Duration age = Duration.between(tick.timestamp(), currentTime);
+
+                    // Keep it only if its age is less than or equal to the maxAge.
+                    // compareTo returns 0 if equal, -1 if less, 1 if greater.
+                    return age.compareTo(maxAge) <= 0;
+                })
+                .collect(Collectors.toList());
     }
 
 
