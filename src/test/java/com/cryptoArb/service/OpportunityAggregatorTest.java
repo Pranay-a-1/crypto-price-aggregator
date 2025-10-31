@@ -33,6 +33,86 @@ class OpportunityAggregatorTest {
     }
 
 
+    /**
+     * Here's a simple non-concurrent test that will pass since it avoids race conditions by running everything in a single thread
+     *
+     * It runs sequentially in a single thread
+     * There are no race conditions since there's no concurrent access
+     * Each addOpportunity call completes before the next one begins
+     *
+     */
+    @Test
+    @DisplayName("Should successfully add opportunities in a single thread")
+    void testSequentialAdditions() {
+        // Arrange
+        opportunityAggregator = new OpportunityAggregator();
+        int numberOfOpportunities = 1000;
+
+        // Act
+        for (int i = 0; i < numberOfOpportunities; i++) {
+            opportunityAggregator.addOpportunity(createDummyOpportunity());
+        }
+
+        // Assert
+        assertEquals(numberOfOpportunities, opportunityAggregator.getOpportunityCount(),
+                "All opportunities should be added successfully in single thread");
+        assertFalse(opportunityAggregator.getOpportunities().isEmpty(),
+                "Opportunities list should not be empty");
+    }
+
+
+    /**
+     *
+     * The below test fails intermittently due to race conditions in OpportunityAggregator.
+     * Each thread adds an opportunity concurrently, and without proper synchronization,
+     * some additions are lost, resulting in fewer than 1000 total opportunities.
+     * This test demonstrates the need for thread-safe data structures or synchronization
+     * mechanisms in the OpportunityAggregator implementation.
+     */
+    @Test
+    @DisplayName("Should demonstrate race condition with simple thread pool without using ExecutorService and CountDownLatch")
+    void testSimpleConcurrentAdditions() throws InterruptedException {
+        // --- Arrange ---
+        int numThreads = 10; // Using fewer threads for clarity
+        int tasksPerThread = 100; // Each thread will add 100 opportunities meaning total 1000 tasks
+        int totalExpectedTasks = numThreads * tasksPerThread; // 1000 total tasks
+
+        opportunityAggregator = new OpportunityAggregator();
+        Thread[] threads = new Thread[numThreads]; // Array to hold thread references
+
+        // --- Act ---
+        // Create and start threads
+        for (int i = 0; i < numThreads; i++) {
+            threads[i] = new Thread(() -> {
+                // Each thread adds multiple opportunities
+                for (int j = 0; j < tasksPerThread; j++) {
+                    opportunityAggregator.addOpportunity(createDummyOpportunity());
+                }
+            });
+            threads[i].start();
+        }
+
+        // Wait for all threads to complete
+        for (Thread thread : threads) {
+            thread.join();
+        }
+
+        // --- Assert ---
+        // Due to race condition, actual count will likely be less than expected
+        assertEquals(totalExpectedTasks, opportunityAggregator.getOpportunityCount(),
+                "Lost writes due to race condition");
+    }
+
+
+
+    /**
+     *
+     * The below test fails intermittently due to race conditions in OpportunityAggregator.
+     * Each thread adds an opportunity concurrently, and without proper synchronization,
+     * some additions are lost, resulting in fewer than 1000 total opportunities.
+     * This test demonstrates the need for thread-safe data structures or synchronization
+     * mechanisms in the OpportunityAggregator implementation.
+     */
     @Test
     @DisplayName("Should safely add 1000 opportunities from 100 threads")
     void testConcurrentAdditions() throws InterruptedException {
@@ -95,39 +175,10 @@ class OpportunityAggregatorTest {
     }
 
 
-    @Test
-    @DisplayName("Should demonstrate race condition with simple thread pool without using ExecutorService and CountDownLatch")
-    void testSimpleConcurrentAdditions() throws InterruptedException {
-        // --- Arrange ---
-        int numThreads = 10; // Using fewer threads for clarity
-        int tasksPerThread = 100; // Each thread will add 100 opportunities meaning total 1000 tasks
-        int totalExpectedTasks = numThreads * tasksPerThread; // 1000 total tasks
 
-        opportunityAggregator = new OpportunityAggregator();
-        Thread[] threads = new Thread[numThreads]; // Array to hold thread references
 
-        // --- Act ---
-        // Create and start threads
-        for (int i = 0; i < numThreads; i++) {
-            threads[i] = new Thread(() -> {
-                // Each thread adds multiple opportunities
-                for (int j = 0; j < tasksPerThread; j++) {
-                    opportunityAggregator.addOpportunity(createDummyOpportunity());
-                }
-            });
-            threads[i].start();
-        }
 
-        // Wait for all threads to complete
-        for (Thread thread : threads) {
-            thread.join();
-        }
 
-        // --- Assert ---
-        // Due to race condition, actual count will likely be less than expected
-        assertEquals(totalExpectedTasks, opportunityAggregator.getOpportunityCount(),
-                "Lost writes due to race condition");
-    }
 
 
 
