@@ -20,6 +20,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 // 1. Enable Testcontainers for this test class
+// Testcontainers will manage the lifecycle of our containers
+// (e.g., start before tests, stop after tests)
+// Testcontainers annotation means docker must be running for these tests to work
 @Testcontainers
 @DisplayName("DatabaseService Integration Tests")
 class DatabaseServiceTest {
