@@ -1,5 +1,6 @@
 package com.cryptoArb.service;
 
+import com.cryptoArb.exception.InvalidPairException;
 import com.cryptoArb.fetcher.BinanceFetcher;
 import com.cryptoArb.fetcher.CoinbaseFetcher;
 import com.cryptoArb.fetcher.PriceFetcher;
@@ -44,5 +45,24 @@ class PriceFetcherFactoryTest {
         // Then
         assertNotNull(fetcher);
         assertTrue(fetcher instanceof BinanceFetcher, "Factory should return an instance of BinanceFetcher");
+    }
+
+
+    @Test
+    @DisplayName("Should throw InvalidPairException for unknown ID")
+    void shouldThrowForUnknownId() {
+        // Given
+        String exchangeId = "unknown-exchange";
+
+        // When & Then
+        // Assert that executing the createFetcher method throws our exception
+        Exception exception = assertThrows(InvalidPairException.class, () -> {
+            factory.createFetcher(exchangeId);
+        });
+
+        // We can also check that the message is helpful
+        String expectedMessage = "No fetcher available for exchange: " + exchangeId;
+        String actualMessage = exception.getMessage();
+        assertEquals(expectedMessage, actualMessage);
     }
 }

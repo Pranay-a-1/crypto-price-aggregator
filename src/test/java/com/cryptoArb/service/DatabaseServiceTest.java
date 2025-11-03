@@ -4,10 +4,7 @@ import com.cryptoArb.domain.ArbitrageOpportunity;
 import com.cryptoArb.domain.CurrencyPair;
 import com.cryptoArb.domain.Exchange;
 import com.cryptoArb.domain.PriceTick;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -25,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 // Testcontainers annotation means docker must be running for these tests to work
 @Testcontainers
 @DisplayName("DatabaseService Integration Tests")
-//@Disabled("Skip heavy integration test during normal maven test runs")
+@Disabled("Skip heavy integration test during normal maven test runs")
 class DatabaseServiceTest {
 
     // 2. Define the PostgreSQL container
