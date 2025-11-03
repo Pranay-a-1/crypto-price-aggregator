@@ -4,9 +4,14 @@ import com.cryptoArb.exception.InvalidPairException;
 import com.cryptoArb.fetcher.BinanceFetcher;
 import com.cryptoArb.fetcher.CoinbaseFetcher;
 import com.cryptoArb.fetcher.PriceFetcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // This is our "Factory"
 public class PriceFetcherFactory {
+
+    // 2. Set up the static logger instance
+    private static final Logger log = LoggerFactory.getLogger(PriceFetcherFactory.class);
 
     public PriceFetcher createFetcher(String exchangeId) {
 
@@ -26,15 +31,22 @@ public class PriceFetcherFactory {
         */
 
         if (exchangeId == null) {
+            log.warn("createFetcher called with null exchangeId"); // Log a warning
             throw new InvalidPairException("Exchange ID cannot be null");
         }
+
+        log.info("Creating fetcher for exchange: {}", exchangeId); // Log an info message
 
         // Use a modern Java switch expression for better readability
         return switch (exchangeId.toLowerCase()) {
             case "coinbase" -> new CoinbaseFetcher();
             case "binance" -> new BinanceFetcher();
             // The default case now throws our custom exception
-            default -> throw new InvalidPairException("No fetcher available for exchange: " + exchangeId);
+
+            default -> {
+                log.error("No fetcher implementation found for: {}", exchangeId); // Log an error
+                throw new InvalidPairException("No fetcher available for exchange: " + exchangeId);
+            }
         };
 
 
