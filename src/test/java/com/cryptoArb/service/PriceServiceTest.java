@@ -42,6 +42,9 @@ class PriceServiceTest {
     void setUp() {
         // priceService = new PriceService(); // refactored to a singleton
         // FIXED: Use the public static getInstance() method
+        // Ok to test with singleton since no state is kept ,
+        // meaning no test interference as long as we don't add stateful methods or fields ,
+        // we can keep using singleton pattern for this service
         priceService = PriceService.getInstance();
         // Create a list of mixed ticks before each test
         allTicks = List.of(
