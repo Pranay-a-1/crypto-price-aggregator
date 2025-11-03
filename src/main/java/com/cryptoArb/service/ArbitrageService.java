@@ -47,6 +47,19 @@ public class ArbitrageService {
      * - We SELL at the Best BID.
      */
     private ArbitrageOpportunity createOpportunityFromPrice(ConsolidatedPrice price) {
+        // Use the new Builder pattern
+        return new ArbitrageOpportunity.Builder()
+                .pair(price.pair())
+                .timestamp(price.timestamp())
+                .buyExchange(price.bestAskExchange()) // Buy from the exchange with the lowest ask
+                .buyPrice(price.bestAsk())            // Buy at the lowest ask price
+                .sellExchange(price.bestBidExchange())// Sell to the exchange with the highest bid
+                .sellPrice(price.bestBid())           // Sell at the highest bid price
+                .build();
+    }
+
+    /*
+    private ArbitrageOpportunity createOpportunityFromPrice(ConsolidatedPrice price) {
         return new ArbitrageOpportunity(
                 price.pair(),
                 price.timestamp(),
@@ -56,4 +69,9 @@ public class ArbitrageService {
                 price.bestBid()          // Sell at the highest bid price
         );
     }
+
+     */
+
+
+
 }

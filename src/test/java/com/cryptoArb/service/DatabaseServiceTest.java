@@ -145,18 +145,27 @@ class DatabaseServiceTest {
     void shouldSaveArbitrageOpportunityAndAllowRetrieval() throws SQLException {
         // --- Given ---
         // A sample ArbitrageOpportunity object
-        ArbitrageOpportunity opportunity = new ArbitrageOpportunity(
-                new CurrencyPair("ETH", "USD"),
-                Instant.parse("2025-11-01T10:00:00Z"),
-                new Exchange("kraken"),
-                new BigDecimal("4000.10"),
-                new Exchange("binance"),
-                new BigDecimal("4005.15")
-        );
+        CurrencyPair pair = new CurrencyPair("ETH", "USD");
+        //Instant timestamp = Instant.now(); // 3. Changed from long
+        Instant timestamp = Instant.parse("2025-11-01T10:00:00Z");
+
+        Exchange buyExchange = new Exchange("kraken"); //"kraken";
+        BigDecimal buyPrice = new BigDecimal("4000.10"); // Buy low
+        Exchange sellExchange = new Exchange("binance");
+        BigDecimal sellPrice = new BigDecimal("4005.15"); // Sell high
+
+
+
+        ArbitrageOpportunity opportunity = new ArbitrageOpportunity.Builder()
+                .pair(pair)
+                .timestamp(timestamp)
+                .buyExchange(buyExchange)
+                .buyPrice(buyPrice)
+                .sellExchange(sellExchange)
+                .sellPrice(sellPrice)
+                .build();
 
         // --- When ---
-        // We call our (non-existent) save method
-        // (This line will fail to compile!)
         databaseService.saveOpportunity(opportunity);
 
         // --- Then ---

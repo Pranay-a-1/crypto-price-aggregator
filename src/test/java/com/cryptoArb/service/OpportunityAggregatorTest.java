@@ -22,14 +22,14 @@ class OpportunityAggregatorTest {
 
     // Helper method to create a fake opportunity
     private ArbitrageOpportunity createDummyOpportunity() {
-        return new ArbitrageOpportunity(
-                new CurrencyPair("BTC", "USD"),
-                Instant.now(),
-                new Exchange("buy-exchange"),
-                BigDecimal.valueOf(100),
-                new Exchange("sell-exchange"),
-                BigDecimal.valueOf(101)
-        );
+        return new ArbitrageOpportunity.Builder()
+                .pair(new CurrencyPair("BTC", "USD"))
+                .timestamp(Instant.now())
+                .buyExchange(new Exchange("buy-exchange"))
+                .buyPrice(BigDecimal.valueOf(100))
+                .sellExchange(new Exchange("sell-exchange"))
+                .sellPrice(BigDecimal.valueOf(101))
+                .build();
     }
 
 
