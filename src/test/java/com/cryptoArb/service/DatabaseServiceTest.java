@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 // Testcontainers annotation means docker must be running for these tests to work
 @Testcontainers
 @DisplayName("DatabaseService Integration Tests")
+//@Disabled("Skip heavy integration test during normal maven test runs")
 class DatabaseServiceTest {
 
     // 2. Define the PostgreSQL container
