@@ -10,7 +10,47 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/** This service provides price filtering and aggregation functionalities.
+ * It demonstrates behavior parameterization using Predicates
+ * and uses Java Streams for data processing.
+ *
+ * It includes methods to filter price ticks based on dynamic conditions,
+ * aggregate prices into consolidated views, and filter out stale data.
+ *
+ * It also contains deprecated traditional implementations for reference.
+ *
+ * Usable methods:
+ * - filter(List<PriceTick>, Predicate<PriceTick>)
+ * - aggregatePrices(List<PriceTick>)
+ * - aggregatePricesParallel(List<PriceTick>)
+ * - filterStaleTicks(List<PriceTick>, Instant, Duration)
+ * Deprecated methods:
+ * - filterCoinbaseTicks_old(List<PriceTick>)
+ * - filter_old(List<PriceTick>, Predicate<PriceTick>)
+ * - aggregatePrices_traditional(List<PriceTick>)
+ * - buildConsolidatedPriceFromList_traditional(List<PriceTick>)
+ *
+ *
+ */
 public class PriceService {
+
+
+    // 1. Create a private static final instance of the class itself.
+    // This is "eager initialization" and is inherently thread-safe.
+    private static final PriceService INSTANCE = new PriceService();
+
+    // 2. Make the constructor private.
+    // This is the most important step! It prevents anyone else
+    // from creating a new instance using 'new PriceService()'.
+    private PriceService() {
+        // Private constructor to prevent external instantiation.
+    }
+
+    // 3. Create a public static method to get the single instance.
+    // This is the new 'getInstance()' method our test is looking for.
+    public static PriceService getInstance() {
+        return INSTANCE;
+    }
 
 
     /**

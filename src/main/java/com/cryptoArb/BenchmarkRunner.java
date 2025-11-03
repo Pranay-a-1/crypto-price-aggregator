@@ -20,7 +20,7 @@ public class BenchmarkRunner {
 
     // --- Configuration ---
     private static final int TICK_COUNT = 1_000_000; // 1 Million ticks
-    private static final PriceService priceService = new PriceService();
+    private static final PriceService priceService = PriceService.getInstance(); // new PriceService(); // refactor to singleton
 
     // --- Mock Data ---
     private static final List<Exchange> EXCHANGES = List.of(

@@ -15,8 +15,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class PriceServiceTest {
 
@@ -41,7 +40,9 @@ class PriceServiceTest {
 
     @BeforeEach
     void setUp() {
-        priceService = new PriceService();
+        // priceService = new PriceService(); // refactored to a singleton
+        // FIXED: Use the public static getInstance() method
+        priceService = PriceService.getInstance();
         // Create a list of mixed ticks before each test
         allTicks = List.of(
                 // --- BTC/USD Ticks ---
@@ -67,7 +68,7 @@ class PriceServiceTest {
     void givenTicksFromMultipleExchanges_whenFilterByCoinbase_thenReturnsOnlyCoinbaseTicks() {
         // Given: A PriceService and a list of ticks (from setUp)
         // These two lines will NOT compile
-        PriceService priceService = new PriceService();
+        PriceService priceService = PriceService.getInstance(); // new PriceService(); // refactor to singleton
         String targetExchangeId = "coinbase";
 
         // When: We call the hard-coded filter method
@@ -90,7 +91,7 @@ class PriceServiceTest {
     @DisplayName("Should filter ticks using a flexible Predicate (anonymous class)")
     void givenTicks_whenFilterByPredicate_thenReturnsFilteredTicks() {
         // Given: A PriceService (this time, it needs to be instantiated in the test)
-        PriceService priceService = new PriceService();
+        PriceService priceService = PriceService.getInstance(); // new PriceService(); // refactor to singleton
 
         // And a Predicate, written as an anonymous class, to find "kraken" ticks
         //BEFORE:
@@ -123,7 +124,7 @@ class PriceServiceTest {
     @DisplayName("Should filter by multiple criteria using Predicate.and()")
     void givenTicks_whenFilterByExchangeAndPrice_thenReturnsSpecificTick() {
         // Given: A PriceService
-        PriceService priceService = new PriceService();
+        PriceService priceService = PriceService.getInstance(); // new PriceService(); // refactor to singleton
 
         // And: A simple Predicate for the exchange
         Predicate<PriceTick> coinbasePredicate =
@@ -328,6 +329,22 @@ class PriceServiceTest {
         assertTrue(freshTimestamps.contains(ts4), "Missing ts4 tick");
         assertTrue(freshTimestamps.contains(ts5), "Missing ts5 tick");
         assertTrue(freshTimestamps.contains(ts6), "Missing ts6 tick");
+    }
+
+
+    @Test
+    @DisplayName("Should return the same instance when called twice (Singleton test)")
+    void shouldBeSingleton() {
+        // When
+        // This code will fail to compile (RED) because:
+        // 1. The getInstance() method does not exist
+        PriceService instance1 = PriceService.getInstance();
+        PriceService instance2 = PriceService.getInstance();
+
+        // Then
+        assertNotNull(instance1);
+        // assertSame checks if both references point to the exact same object
+        assertSame(instance1, instance2, "PriceService should be a Singleton");
     }
 
 }
