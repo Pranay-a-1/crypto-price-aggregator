@@ -7,14 +7,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * Phase 6: Classic Concurrency Engine (V1).
  * This service uses an ExecutorService to run all fetchers concurrently
  * and acts as a Producer, putting results into a BlockingQueue.
+ *
+ * It also runs a Consumer thread to process ticks from the queue.
  */
 public class PriceEngineV1 {
 
@@ -23,33 +23,108 @@ public class PriceEngineV1 {
 
     private final List<PriceFetcher> fetchers;
     private final BlockingQueue<PriceTick> tickQueue;
-    private final ExecutorService executor;
+    private final DatabaseService databaseService;
+
+    // --- Refactored Executors ---
+    // A single-thread scheduler for the producers
+    private final ScheduledExecutorService producerScheduler = Executors.newSingleThreadScheduledExecutor();
+    // The pool for the fetchers to actually run on
+    private final ExecutorService producerExecutor;
+    // The single-thread consumer
+    private final ExecutorService consumerExecutor = Executors.newSingleThreadExecutor();
+
+    // 'volatile' ensures visibility of this flag across threads
+    private volatile boolean running = true; // Control flag for consumer thread
+
 
     /**
      * Constructor for the PriceEngine.
      *
-     * @param fetchers  The list of PriceFetcher strategies to run.
-     * @param tickQueue The central queue to put results into.
+     * @param fetchers        The list of PriceFetcher strategies to run.
+     * @param tickQueue       The central queue to put results into.
+     * @param databaseService The service to persist ticks.
      */
-    public PriceEngineV1(List<PriceFetcher> fetchers, BlockingQueue<PriceTick> tickQueue) {
+    public PriceEngineV1(List<PriceFetcher> fetchers,
+                         BlockingQueue<PriceTick> tickQueue,
+                         DatabaseService databaseService) { // Updated constructor
         this.fetchers = fetchers;
         this.tickQueue = tickQueue;
-        // Create a fixed thread pool based on the number of fetchers [cite: 92]
-        this.executor = Executors.newFixedThreadPool(fetchers.size());
+        this.databaseService = databaseService; // Assign new service
+        // Create a fixed thread pool based on the number of fetchers
+        this.producerExecutor = Executors.newFixedThreadPool(fetchers.size());
     }
 
+
     /**
-     * Runs one full fetch cycle, submitting each fetcher as a task
-     * to the thread pool.
+     * Starts the entire engine.
+     * 1. Starts the consumer thread.
+     * 2. Schedules the producer (fetch cycle) to run every 5 seconds.
      */
-    public void runFetchCycle() {
+    public void start() {
+        log.info("Starting PriceEngineV1...");
+        startConsumer(); // Start the consumer
+
+        // Schedule the runFetchCycle task to run repeatedly
+        producerScheduler.scheduleAtFixedRate(
+                this::runFetchCycle, // The task to run // without method reference : () -> runFetchCycle(),
+                0,                   // Initial delay (run immediately)
+                5,                   // Period (run every 5)
+                TimeUnit.SECONDS     // Time unit
+        );
+        log.info("Producer fetch cycle scheduled to run every 5 seconds.");
+    }
+
+
+    /**
+     * Starts the consumer thread.
+     * This method will return immediately, but the consumer
+     * will be running in the background.
+     * (Changed to private, as start() is now the public entry point)
+     */
+    void startConsumer() {
+        log.info("Starting consumer thread...");
+        consumerExecutor.submit(() -> { // Submit the consumer task
+            while (running) {
+                try {
+                    // .take() blocks and waits until an item is available
+                    PriceTick tick = tickQueue.take();
+
+                    log.debug("Consumer took tick: {}", tick.exchange().id());
+
+                    // This is the "processing" step
+                    databaseService.saveTick(tick);
+
+                } catch (InterruptedException e) {
+                    // This is expected when we call stop()
+                    log.info("Consumer thread interrupted. Shutting down.");
+                    running = false; // Stop the loop
+                    Thread.currentThread().interrupt(); // Restore interrupt status
+                } catch (Exception e) {
+                    // Catch any other exceptions (e.g., from saveTick)
+                    log.error("Consumer error while processing tick: {}", e.getMessage(), e);
+                }
+            }
+        });
+    }
+
+
+
+    /**
+     * Runs one full fetch cycle, submitting each fetcher as a task to the thread pool.
+     * (Changed to package-private or private, as it's now managed internally)
+     */
+     void runFetchCycle() { // Changed from public to package-private
+        if (!running) {
+            log.warn("Fetch cycle called, but engine is stopped.");
+            return;
+        }
         log.info("Starting new fetch cycle with {} fetchers...", fetchers.size());
 
         // Iterate over all fetchers and submit them to the executor
         for (PriceFetcher fetcher : fetchers) {
 
             // We submit a Runnable (a task) to the thread pool
-            executor.submit(() -> { // This lambda is the task that runs on a separate thread
+            producerExecutor.submit(() -> { // This lambda is the task that runs on a separate thread
                 try {
                     // 1. Fetch prices (this is the I/O call)
                     List<PriceTick> ticks = fetcher.fetchPrices();
@@ -71,22 +146,28 @@ public class PriceEngineV1 {
             });
         }
 
-        // Note: We don't call executor.shutdown() here, as this engine
-        // is intended to run multiple cycles.
-        // because we want to keep reusing the thread pool.
-        /**
-         * I didn't call executor.shutdown(), and that was intentional.
-         *
-         * Here’s why:
-         *
-         * It's a Long-Running Service: The PriceEngineV1 isn't a one-time script. According to the project plan, the goal is to use a ScheduledExecutorService to run this fetch cycle repeatedly (e.g., every 5 seconds).
-         *
-         * What shutdown() Does: Calling executor.shutdown() tells the thread pool: "Don't accept any new tasks, and shut down completely once all current tasks are finished."
-         *
-         * The Problem: If we called executor.shutdown() at the end of runFetchCycle(), the first cycle would work perfectly. But when the ScheduledExecutorService tried to run the cycle again 5 seconds later, the executor would be dead. Submitting new tasks would fail, throwing a RejectedExecutionException.
-         *
-         * In short, the ExecutorService is a permanent component of our PriceEngineV1 service. It needs to stay alive to process all future fetch cycles for as long as the application is running.
-         */
+    }
 
+
+    /**
+     * Stops the engine, shutting down both producer and consumer executors.
+     */
+    public void stop() {
+        log.info("Stopping PriceEngineV1...");
+        this.running = false; // Signal consumer loop to stop
+
+        // Shut down all three executors
+        producerScheduler.shutdown();
+        producerExecutor.shutdown();
+        consumerExecutor.shutdownNow(); // Forcefully interrupt the consumer's .take()
+
+        try {
+            producerScheduler.awaitTermination(5, TimeUnit.SECONDS);
+            producerExecutor.awaitTermination(5, TimeUnit.SECONDS);
+            consumerExecutor.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            log.warn("Interrupted while waiting for executors to shut down.");
+            Thread.currentThread().interrupt();
+        }
     }
 }
