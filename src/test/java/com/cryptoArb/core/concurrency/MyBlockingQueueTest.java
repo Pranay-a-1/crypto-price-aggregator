@@ -87,8 +87,15 @@ class MyBlockingQueueTest {
         // Give the consumer a moment to start and enter the wait() state
         TimeUnit.MILLISECONDS.sleep(200);
 
-        // Now, the producer (our main test thread) puts an item
-        queue.put(testValue);
+        // --- MODIFIED ---
+        // We must now handle the InterruptedException
+        try {
+            // Now, the producer (our main test thread) puts an item
+            queue.put(testValue);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
 
         // Then: The consumer task should complete
         // We use .get() which waits for the Future to have a result.
@@ -108,9 +115,17 @@ class MyBlockingQueueTest {
         // This line will fail to compile (RED)
         final MyBlockingQueue<Integer> queue = new MyBlockingQueue<>(1);
 
-        // And the queue is full
-        // puts an item to fill the queue
-        queue.put(1); // This should work fine
+
+        // --- MODIFIED ---
+        // This call to put() must also be handled
+        try {
+            // And the queue is full
+            // puts an item to fill the queue
+            queue.put(1);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
 
         // When: We submit a task (a producer) that tries to .put()
         Future<?> producerTask = executor.submit(() -> {

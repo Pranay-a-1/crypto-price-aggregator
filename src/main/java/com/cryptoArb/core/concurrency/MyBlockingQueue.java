@@ -28,6 +28,25 @@ public class MyBlockingQueue<T> {
     // Other alternatives could be using ReentrantLock from java.util.concurrent.locks
     private final Object lock = new Object();
 
+    // --- NEW: Add capacity field ---
+    private final int capacity;
+
+    /**
+     * Creates a new blocking queue with a (virtually) unbounded capacity.
+     */
+    public MyBlockingQueue() {
+        // Call our other constructor with a default "unbounded" size
+        this(Integer.MAX_VALUE);
+    }
+
+    /**
+     * Creates a new blocking queue with a fixed capacity.
+     * @param capacity The maximum number of items the queue can hold.
+     */
+    public MyBlockingQueue(int capacity) {
+        this.capacity = capacity;
+    }
+
     /**
      * Takes an item from the queue.
      * If the queue is empty, this method will block (wait)
@@ -58,10 +77,13 @@ public class MyBlockingQueue<T> {
                 lock.wait();
             }
 
+
             // --- MODIFIED ---
-            // Once we are awakened AND the queue is not empty,
-            // we remove and return the item.
-            return queue.remove();
+            // We are about to remove an item, so the queue is no longer full.
+            // We MUST notify any waiting PRODUCER threads.
+            T item = queue.remove();
+            lock.notifyAll(); // Wake up any waiting producers
+            return item;
         }
     }
 
@@ -72,13 +94,19 @@ public class MyBlockingQueue<T> {
      * waiting for an item to become available.
      *
      * @param item The item to add to the queue.
+     * @throws InterruptedException if the thread is interrupted while waiting
      */
-    public void put(T item) {
+    public void put(T item) throws InterruptedException {
         synchronized (lock) {
+            // --- MODIFIED ---
+            // Wait while the queue is full (at capacity)
+            while (queue.size() == capacity) {
+                lock.wait();
+            }
             // 1. Add the item to the queue
             queue.add(item);
 
-            // 2. Notify ALL waiting threads (i.e., any consumers
+            // 2. Notify ALL waiting threads (i.e., any consumers threads
             //    stuck in take()) that the state has changed.
             //    This is the "signal" our test is waiting for.
             lock.notifyAll();
