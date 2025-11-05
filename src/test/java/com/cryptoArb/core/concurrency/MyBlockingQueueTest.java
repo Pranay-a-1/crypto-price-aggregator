@@ -5,13 +5,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 class MyBlockingQueueTest {
 
@@ -144,5 +141,99 @@ class MyBlockingQueueTest {
         // Assert: The task should NOT be done, because it should be waiting.
         boolean isDone = producerTask.isDone(); // Check if the task has completed
         assertFalse(isDone, "Task should be blocked, but it finished.");
+    }
+
+
+
+    @Test
+    @DisplayName("Should handle concurrent producers and consumers without deadlock or lost items")
+    void shouldHandleConcurrentProducersAndConsumers() throws InterruptedException {
+        // --- Given ---
+        final MyBlockingQueue<Integer> queue = new MyBlockingQueue<>(10); // A small capacity
+        final int numProducers = 5;
+        final int numConsumers = 5;
+        final int itemsPerThread = 20; // 5 * 20 = 100 items total
+        final int totalItems = numProducers * itemsPerThread;
+
+        // A new thread pool for this specific, high-contention test
+        ExecutorService concurrentExecutor = Executors.newFixedThreadPool(numProducers + numConsumers);
+
+        // Latches to synchronize all threads
+        // to allow us to start and stop all threads together
+        // This increases contention and the chance of race conditions.
+        // We want to stress-test the queue.
+        // Using latches also helps avoid flaky tests.
+        // (without latches, threads might start at slightly different times,
+        // leading to inconsistent results)
+        // startLatch.await(1) will block all threads until we call startLatch.countDown() , the 1 means we need 1 count to release all waiting threads.
+        // so all threads will wait at startLatch.await() until we call startLatch.countDown() once.
+        // if we had startLatch = new CountDownLatch(3) , then we would need to call startLatch.countDown() three times to release all waiting threads.
+        final CountDownLatch startLatch = new CountDownLatch(1); // To start all threads
+        final CountDownLatch endLatch = new CountDownLatch(numProducers + numConsumers); // To finish all tasks
+
+        // We use AtomicInteger for thread-safe summing
+        // without AtomicInteger the test could have race conditions leading to false failures.
+        // the alternative is to use synchronized blocks, but AtomicInteger is simpler here.
+        final AtomicInteger producedSum = new AtomicInteger(0);
+        final AtomicInteger consumedSum = new AtomicInteger(0);
+
+        // --- When ---
+
+        // 1. Create all Producer tasks
+        for (int i = 0; i < numProducers; i++) {
+            final int producerId = i;
+            concurrentExecutor.submit(() -> {
+                try {
+                    startLatch.await(); // Wait for "GO" signal
+                    for (int j = 0; j < itemsPerThread; j++) {
+                        // We produce a unique item (e.g., 1000 + 20*i + j)
+                        int item = (producerId * itemsPerThread) + j;
+                        queue.put(item);
+                        producedSum.addAndGet(item);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    endLatch.countDown(); // Signal this producer is done
+                }
+            });
+        }
+
+        // 2. Create all Consumer tasks
+        for (int i = 0; i < numConsumers; i++) {
+            concurrentExecutor.submit(() -> {
+                try {
+                    startLatch.await(); // Wait for "GO" signal
+                    for (int j = 0; j < itemsPerThread; j++) {
+                        // This will block until an item is available
+                        Integer item = queue.take();
+                        consumedSum.addAndGet(item);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    endLatch.countDown(); // Signal this consumer is done
+                }
+            });
+        }
+
+        // 3. "GO!" - Release all threads at once
+        startLatch.countDown();
+
+        // 4. Wait for all 10 threads to finish, with a timeout
+        boolean finishedInTime = endLatch.await(10, TimeUnit.SECONDS);
+
+        // --- Then ---
+        // Cleanup this test's executor
+        concurrentExecutor.shutdownNow();
+
+        // Assert: If we timed out, it means we had a deadlock
+        assertTrue(finishedInTime, "Test timed out, indicating a deadlock or missed signal");
+
+        // Assert: If we finished, check that no items were lost or duplicated
+        assertEquals(producedSum.get(), consumedSum.get(), "The sum of produced items should equal the sum of consumed items");
+        // We can also check the queue is empty, but we need a .size() method first.
+        // Now we can prove the queue is empty
+        assertEquals(0, queue.size(), "Queue should be empty at the end of the test");
     }
 }

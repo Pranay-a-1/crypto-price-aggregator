@@ -112,4 +112,18 @@ public class MyBlockingQueue<T> {
             lock.notifyAll();
         }
     }
+
+    /**
+     * Returns the current number of items in the queue.
+     * This method is thread-safe.
+     *
+     * @return The number of items
+     */
+    public int size() {
+        // We must acquire the lock just to read the size
+        // to ensure we get an accurate, non-changing value.
+        synchronized (lock) {
+            return queue.size();
+        }
+    }
 }
