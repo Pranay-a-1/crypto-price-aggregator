@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class MyBlockingQueueTest {
@@ -33,7 +34,6 @@ class MyBlockingQueueTest {
     @DisplayName("Should block (wait) when taking from an empty queue")
     void shouldBlockWhenTakingFromEmptyQueue() throws Exception {
         // Given: An empty MyBlockingQueue
-        // This line will fail to compile (RED)
         final MyBlockingQueue<Integer> queue = new MyBlockingQueue<>();
 
         // When: We submit a task (a consumer) that tries to .take()
@@ -61,6 +61,73 @@ class MyBlockingQueueTest {
         boolean isDone = consumerTask.isDone();
 
         // Assert: The task should NOT be done, because it should be waiting.
+        assertFalse(isDone, "Task should be blocked, but it finished.");
+    }
+
+
+    @Test
+    @DisplayName("Should unblock take() when put() is called")
+    void shouldPutAndUnblockTake() throws Exception {
+        // Given: An empty MyBlockingQueue
+        final MyBlockingQueue<Integer> queue = new MyBlockingQueue<>();
+        final Integer testValue = 42;
+
+        // When: We submit a consumer task (as a Callable)
+        // This task will block, then return the value it receives
+        Future<Integer> consumerTask = executor.submit(() -> {
+            try {
+                // This call will block until put() notifies it
+                return queue.take();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return null; // Should not happen in this test
+            }
+        });
+
+        // Give the consumer a moment to start and enter the wait() state
+        TimeUnit.MILLISECONDS.sleep(200);
+
+        // Now, the producer (our main test thread) puts an item
+        queue.put(testValue);
+
+        // Then: The consumer task should complete
+        // We use .get() which waits for the Future to have a result.
+        // We give it a 1-second timeout.
+        // without timeout, the test could hang indefinitely if something goes wrong.
+        Integer returnedValue = consumerTask.get(1, TimeUnit.SECONDS);
+
+        // Assert: The value taken is the value we put
+        assertEquals(testValue, returnedValue, "The value taken should be the value that was put");
+    }
+
+
+    @Test
+    @DisplayName("Should block (wait) when putting into a full queue")
+    void shouldBlockWhenPuttingToFullQueue() throws Exception {
+        // Given: A queue with a capacity of 1
+        // This line will fail to compile (RED)
+        final MyBlockingQueue<Integer> queue = new MyBlockingQueue<>(1);
+
+        // And the queue is full
+        // puts an item to fill the queue
+        queue.put(1); // This should work fine
+
+        // When: We submit a task (a producer) that tries to .put()
+        Future<?> producerTask = executor.submit(() -> {
+            try {
+                // This call should block forever
+                queue.put(2);
+            } catch (InterruptedException e) {
+                // This is expected when the test shuts down
+                Thread.currentThread().interrupt();
+            }
+        });
+
+        // Then: We give the producer thread a moment to start and block
+        TimeUnit.MILLISECONDS.sleep(200);
+
+        // Assert: The task should NOT be done, because it should be waiting.
+        boolean isDone = producerTask.isDone(); // Check if the task has completed
         assertFalse(isDone, "Task should be blocked, but it finished.");
     }
 }

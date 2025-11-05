@@ -46,16 +46,42 @@ public class MyBlockingQueue<T> {
          */
         synchronized (lock) {
             // 4. Check if the queue is empty
-            if (queue.isEmpty()) {
+            // --- MODIFIED ---
+            // We MUST use a 'while' loop instead of an 'if'.
+            // This is the standard, correct pattern to guard against
+            // "spurious wakeups" (where a thread can wake up
+            // even if notify() wasn't called).
+            while (queue.isEmpty()) { //if (queue.isEmpty()) {
                 // 5. If empty, release the lock and wait
                 // This call causes the consumer thread to pause
                 // and enter the 'WAITING' state.
                 lock.wait();
             }
 
-            // (Code to actually remove an item will go here later)
-            // For now, we just return null to satisfy the method signature
-            return null;
+            // --- MODIFIED ---
+            // Once we are awakened AND the queue is not empty,
+            // we remove and return the item.
+            return queue.remove();
+        }
+    }
+
+    // --- NEW METHOD ---
+    /**
+     * Puts an item into the queue.
+     * This method will also notify any threads that are
+     * waiting for an item to become available.
+     *
+     * @param item The item to add to the queue.
+     */
+    public void put(T item) {
+        synchronized (lock) {
+            // 1. Add the item to the queue
+            queue.add(item);
+
+            // 2. Notify ALL waiting threads (i.e., any consumers
+            //    stuck in take()) that the state has changed.
+            //    This is the "signal" our test is waiting for.
+            lock.notifyAll();
         }
     }
 }
