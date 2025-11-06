@@ -15,6 +15,18 @@ import java.util.concurrent.*;
  * and acts as a Producer, putting results into a BlockingQueue.
  *
  * It also runs a Consumer thread to process ticks from the queue.
+ *
+ *
+ * PriceEngineV1 (Phase 6)
+ * Architecture: Classic Producer-Consumer.
+ *
+ * Responsibility: Its job is very limited. It acted as two separate parts:
+ *
+ * Producer: Run fetchers and put raw PriceTicks into a BlockingQueue.
+ *
+ * Consumer: take raw PriceTicks from the queue and only save them to the database (databaseService.saveTick(tick)).
+ *
+ * It did not know how to aggregate prices or find arbitrage. It just saved the raw data. The assumption was that some other, separate part of the application would read from the database later to perform those tasks.
  */
 public class PriceEngineV1 {
 
