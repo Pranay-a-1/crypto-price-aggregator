@@ -1,5 +1,7 @@
 package com.cryptoArb.service;
 
+import com.cryptoArb.domain.PriceTick;
+import com.cryptoArb.exception.PriceFetchException;
 import com.cryptoArb.fetcher.PriceFetcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Phase 8: Modern Concurrency Engine (V2).
@@ -66,11 +69,42 @@ public class PriceEngineV2 {
      * Runs one full asynchronous fetch-and-process cycle.
      */
     public CompletableFuture<Void> runFetchCycle() {
-        // This is the method we will implement and test
         log.info("Starting new async fetch cycle...");
 
-        // For now, it does nothing and just returns a completed future
-        return CompletableFuture.completedFuture(null);
+        // 1. Create a list of async tasks to fetch prices
+        // We get a List<CompletableFuture<List<PriceTick>>>
+        List<CompletableFuture<List<PriceTick>>> fetchFutures = fetchers.stream()
+                .map(fetcher -> {
+                    return CompletableFuture.supplyAsync(() -> {
+                        // This is the "task" to run
+                        try {
+                            log.debug("Fetching from {}", fetcher.getExchangeName());
+                            // This is the blocking I/O call from Phase 6
+                            return fetcher.fetchPrices();
+                        } catch (PriceFetchException e) {
+                            log.error("Failed to fetch prices from {}: {}", fetcher.getExchangeName(), e.getMessage());
+                            return List.<PriceTick>of(); // Return an empty list on failure
+                        }
+                    }, executor);
+                }) // Tell CompletableFuture to run this task on our thread pool
+                .collect(Collectors.toList());
+
+        // 2. Chain the next step: save the ticks (this is what the test checks)
+        // We get a List<CompletableFuture<List<PriceTick>>> (the list is just passed through)
+        List<CompletableFuture<List<PriceTick>>> saveFutures = fetchFutures.stream()
+                .map(fetchFuture -> fetchFuture.thenApplyAsync(ticks -> {
+                    // This task runs *after* the fetchFuture is complete
+                    ticks.forEach(tick -> {
+                        log.debug("Saving tick: {}", tick);
+                        databaseService.saveTick(tick); // Call the mock DB service
+                    });
+                    return ticks; // Pass the list of ticks down the chain for the next step
+                }, executor)) // Also run this task on our thread pool
+                .collect(Collectors.toList());
+
+        // 3. We return a single "master" future that completes when all
+        //    save operations are done.
+        return CompletableFuture.allOf(saveFutures.toArray(new CompletableFuture[0]));
     }
 
 

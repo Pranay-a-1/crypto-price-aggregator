@@ -5,6 +5,7 @@ import com.cryptoArb.domain.Exchange;
 import com.cryptoArb.domain.PriceTick;
 import com.cryptoArb.exception.PriceFetchException;
 import com.cryptoArb.fetcher.PriceFetcher;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,9 +18,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.fail;
-
+import static org.mockito.Mockito.verify;
 
 
 // Use Mockito extension to automatically initialize mocks
@@ -75,18 +76,20 @@ class PriceEngineV2Test {
         priceEngineV2.stop();
     }
 
-    // This is our first "Red" test, which will fail!
+    // --- THIS IS THE UPDATED TEST ---
     @Test
     @DisplayName("Should run async cycle and save all ticks")
     void shouldRunAsyncCycleAndSaveTicks() {
         // When: We run the fetch cycle
         priceEngineV2.runFetchCycle();
 
-        // Then: We expect the database service to be called for each tick.
-        // This will fail because our method is empty.
-
-        // We'll add Awaitility here in the next step!
-        // For now, this is just a placeholder.
-        fail("Test not yet implemented");
+        // Then: We use Awaitility to wait (at most 2 seconds)
+        // for our async assertions to pass.
+        Awaitility.await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
+            // We verify that our mock database service was called
+            // with tick1 and tick2.
+            verify(mockDbService).saveTick(tick1);
+            verify(mockDbService).saveTick(tick2);
+        });
     }
 }
