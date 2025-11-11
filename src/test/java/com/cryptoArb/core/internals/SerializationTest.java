@@ -44,7 +44,7 @@ class SerializationTest {
 
     /**
      * Helper method to serialize (write) the object to a file.
-     * This is the first method our test plan requires[cite: 152].
+     * This is the first method our test plan requires
      */
     private void serializeToDisk(PriceTick_old tick) throws IOException {
         // This is the core Java serialization logic
@@ -64,7 +64,7 @@ class SerializationTest {
 
     /**
      * Helper method to deserialize (read) the object from a file.
-     * This is the second method our test plan requires[cite: 152].
+     * This is the second method our test plan requires
      */
     private PriceTick_old deserializeFromDisk() throws IOException, ClassNotFoundException {
         try (FileInputStream fileIn = new FileInputStream(serializationFile);

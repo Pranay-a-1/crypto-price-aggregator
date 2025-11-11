@@ -38,23 +38,23 @@ class PriceCacheTest {
     @Test
     @DisplayName("Should auto-remove entry when key is no longer strongly referenced")
     void shouldGarbageCollectEntryWhenKeyIsNulled() {
-        // 1. Create a strong reference to the key [cite: 158]
+        // 1. Create a strong reference to the key
         CurrencyPair key = new CurrencyPair("BTC", "USD");
 
-        // 2. Put it in the cache [cite: 159]
+        // 2. Put it in the cache
         priceCache.put(key, testPrice);
 
         // 3. Verify it's there
         assertEquals(1, priceCache.size(), "Cache should have 1 entry");
 
-        // 4. Remove the *only* strong reference to the key [cite: 160]
+        // 4. Remove the *only* strong reference to the key
         key = null;
 
-        // 5. Hint to the JVM to run garbage collection [cite: 161]
+        // 5. Hint to the JVM to run garbage collection
         // This is just a hint, not a guarantee.
         System.gc();
 
-        // 6. Use Awaitility to wait until the GC runs and clears the WeakHashMap [cite: 162]
+        // 6. Use Awaitility to wait until the GC runs and clears the WeakHashMap
         Awaitility.await()
                 .atMost(Duration.ofSeconds(10)) // Wait a max of 10s
                 .pollInterval(Duration.ofMillis(100)) // Check every 100ms

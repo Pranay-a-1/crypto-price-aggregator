@@ -42,7 +42,7 @@ public class VolatileFlagStop implements Runnable {
 
     /**
      * Signals the worker thread to stop.
-     * This method is called from a different thread[cite: 114].
+     * This method is called from a different thread.
      */
     public void stop() {
         System.out.println("Stop signal received.");

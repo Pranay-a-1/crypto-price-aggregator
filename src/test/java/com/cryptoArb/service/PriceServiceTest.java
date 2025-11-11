@@ -339,7 +339,6 @@ class PriceServiceTest {
     @DisplayName("Should return the same instance when called twice (Singleton test)")
     void shouldBeSingleton() {
         // When
-        // This code will fail to compile (RED) because:
         // 1. The getInstance() method does not exist
         PriceService instance1 = PriceService.getInstance();
         PriceService instance2 = PriceService.getInstance();

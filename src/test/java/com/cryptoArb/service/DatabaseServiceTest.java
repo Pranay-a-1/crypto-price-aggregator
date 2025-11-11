@@ -41,7 +41,6 @@ class DatabaseServiceTest {
         String username = postgresContainer.getUsername();
         String password = postgresContainer.getPassword();
 
-        // 4. Create the service instance (This line will fail to compile!)
         databaseService = new DatabaseService(jdbcUrl, username, password);
 
         // 5. Create our *own* connection for verifying the test results
@@ -105,7 +104,6 @@ class DatabaseServiceTest {
 
         // --- When ---
         // We call our (non-existent) save method
-        // (This line will also fail to compile!)
         databaseService.saveTick(tick);
 
         // --- Then ---

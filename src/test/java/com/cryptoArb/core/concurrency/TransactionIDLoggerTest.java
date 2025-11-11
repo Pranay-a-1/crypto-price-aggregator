@@ -35,7 +35,6 @@ class TransactionIDLoggerTest {
                     startLatch.await(); // Wait for "GO" signal
 
                     // 1. SET the ID for this thread
-                    // This line will fail to compile (RED)
                     idLogger.setTransactionId(threadId);
 
                     // Add a small delay. This is to give other threads
@@ -43,7 +42,6 @@ class TransactionIDLoggerTest {
                     TimeUnit.MILLISECONDS.sleep(10);
 
                     // 2. GET the ID for this thread
-                    // This line will fail to compile (RED)
                     String retrievedId = idLogger.getTransactionId();
 
                     // 3. CHECK if the ID is correct

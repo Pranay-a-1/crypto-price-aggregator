@@ -23,7 +23,6 @@ class ConsolidatedPriceTest {
         Exchange bestAskExchange = new Exchange("coinbase");
 
         // When
-        // This line will fail to compile (RED)
         ConsolidatedPrice price = new ConsolidatedPrice(
                 pair,
                 timestamp,

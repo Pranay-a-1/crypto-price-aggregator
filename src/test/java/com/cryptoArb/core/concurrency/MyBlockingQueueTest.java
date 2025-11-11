@@ -109,7 +109,6 @@ class MyBlockingQueueTest {
     @DisplayName("Should block (wait) when putting into a full queue")
     void shouldBlockWhenPuttingToFullQueue() throws Exception {
         // Given: A queue with a capacity of 1
-        // This line will fail to compile (RED)
         final MyBlockingQueue<Integer> queue = new MyBlockingQueue<>(1);
 
 

@@ -27,7 +27,6 @@ class ArbitrageOpportunityTest {
 
         /* Old non builder , record code
         // When
-        // This line will fail to compile (RED)
         ArbitrageOpportunity opportunity = new ArbitrageOpportunity(
                 pair,
                 timestamp,
@@ -123,7 +122,6 @@ class ArbitrageOpportunityTest {
         BigDecimal sellPrice = new BigDecimal("50001");
 
         // When
-        // This code will fail to compile (RED) because:
         // 1. ArbitrageOpportunity.Builder does not exist
         // 2. The methods .pair(), .buyPrice(), etc. do not exist
         // 3. The .build() method does not exist

@@ -22,7 +22,6 @@ class SimpleJsonSerializerTest {
 
     @BeforeEach
     void setUp() {
-        // This line will fail to compile (RED)
         serializer = new SimpleJsonSerializer();
 
         testTick = new PriceTick(
