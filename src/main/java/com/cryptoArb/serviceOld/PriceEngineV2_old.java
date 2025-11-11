@@ -1,4 +1,4 @@
-package com.cryptoArb.service;
+package com.cryptoArb.serviceOld;
 
 import com.cryptoArb.domain.ArbitrageOpportunity;
 import com.cryptoArb.domain.ConsolidatedPrice;
@@ -6,6 +6,10 @@ import com.cryptoArb.domain.CurrencyPair;
 import com.cryptoArb.domain.PriceTick;
 import com.cryptoArb.exception.PriceFetchException;
 import com.cryptoArb.fetcher.PriceFetcher;
+import com.cryptoArb.service.ArbitrageService;
+import com.cryptoArb.service.DatabaseService;
+import com.cryptoArb.service.OpportunityAggregator;
+import com.cryptoArb.service.PriceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +45,9 @@ import java.util.stream.Collectors;
  *
  *
  */
-public class PriceEngineV2 {
+public class PriceEngineV2_old {
 
-    private static final Logger log = LoggerFactory.getLogger(PriceEngineV2.class);
+    private static final Logger log = LoggerFactory.getLogger(PriceEngineV2_old.class);
 
     // All the services needed for our async pipeline
     private final List<PriceFetcher> fetchers;
@@ -55,7 +59,7 @@ public class PriceEngineV2 {
     // The thread pool to run our async tasks
     private final ExecutorService executor;
 
-    public PriceEngineV2(List<PriceFetcher> fetchers,
+    public PriceEngineV2_old(List<PriceFetcher> fetchers,
                          DatabaseService databaseService,
                          PriceService priceService,
                          ArbitrageService arbitrageService,
@@ -100,23 +104,11 @@ public class PriceEngineV2 {
 
         // 2. Create a "master" future that completes when ALL fetches are done.
         // We need to collect all the individual lists into one big list.
-        // CompletableFuture.allOf() takes a varargs of CompletableFuture objects and returns a single CompletableFuture that is completed when all of the input futures are complete.
-        // It's a way to wait for multiple async tasks to finish before continuing.
-        // -- Step by step explaination
-        // 2.1. Convert the list of CompletableFuture<List<PriceTick>> to an array of CompletableFuture objects
-        // 2.2. Pass the array to CompletableFuture.allOf() to create a "master" future that completes when ALL fetches are done.
-        // 2.3. This "master" future is then passed to the next step in the pipeline.
-        // 2.4. Then we use .thenApply() to transform the "master" future into a future that contains the list of all ticks.
         CompletableFuture<Void> allOfFetchers = CompletableFuture.allOf(fetchFutures.toArray(new CompletableFuture[0]));
 
         CompletableFuture<List<PriceTick>> allTicksFuture = allOfFetchers
-                // 2.4. Then we use .thenApply() to transform the "master" future into a future that contains the list of all ticks.
-                // 2.5. We use .join() to wait for the "master" future to complete.
-                // 2.6. We use .stream() to convert the list of CompletableFuture<List<PriceTick>> into a stream of PriceTick objects.
-                // 2.7. We use .flatMap() to flatten the list of lists into a single list.
-                // 2.8. We use .collect() to collect the stream into a list.
                 .thenApply(v -> fetchFutures.stream()
-                        .map(CompletableFuture::join) // We can .join() because we know they are all complete // without method reference : .map(future -> future.join())
+                        .map(CompletableFuture::join) // We can .join() because we know they are all complete
                         .flatMap(List::stream)         // Flatten List<List<PriceTick>> into Stream<PriceTick>
                         .collect(Collectors.toList())
                 );
