@@ -1,9 +1,13 @@
 package com.cryptoArb.domainOld;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-public class PriceTick_old {
+public class PriceTick_old implements Serializable {
+
+    // Add a version ID. This is a crucial best practice.
+    private static final long serialVersionUID = 1L;
 
 
     private final CurrencyPair_old pair;
