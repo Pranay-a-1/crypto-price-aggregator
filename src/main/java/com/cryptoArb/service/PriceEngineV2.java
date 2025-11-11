@@ -73,6 +73,8 @@ public class PriceEngineV2 {
 
         // 1. Create a list of async tasks to fetch prices
         // We get a List<CompletableFuture<List<PriceTick>>>
+        // fetchers is a List<PriceFetcher> , which is a List of PriceFetcher objects
+        // like CoinbaseFetcher, BinanceFetcher, etc.
         List<CompletableFuture<List<PriceTick>>> fetchFutures = fetchers.stream()
                 .map(fetcher -> {
                     return CompletableFuture.supplyAsync(() -> {
@@ -92,6 +94,7 @@ public class PriceEngineV2 {
         // 2. Chain the next step: save the ticks (this is what the test checks)
         // We get a List<CompletableFuture<List<PriceTick>>> (the list is just passed through)
         List<CompletableFuture<List<PriceTick>>> saveFutures = fetchFutures.stream()
+                // thenApplyAsync is a method of CompletableFuture to apply a function to the result of the future and return a new future
                 .map(fetchFuture -> fetchFuture.thenApplyAsync(ticks -> {
                     // This task runs *after* the fetchFuture is complete
                     ticks.forEach(tick -> {

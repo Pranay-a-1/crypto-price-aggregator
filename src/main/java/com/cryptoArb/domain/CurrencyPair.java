@@ -7,6 +7,11 @@ package com.cryptoArb.domain;
  * - A public constructor (CurrencyPair_old(String base, String quote))
  * - Public accessor methods (base() and quote())
  * - Implementations for equals(), hashCode(), and toString()
+ *
+ * Examples :
+ *
+ * CurrencyPair pair = new CurrencyPair("BTC", "USD");
+ *
  */
 public record CurrencyPair(String base, String quote) implements Comparable<CurrencyPair> {
 
