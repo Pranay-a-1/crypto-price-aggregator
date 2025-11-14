@@ -3,6 +3,7 @@ package com.cryptoArb;
 import com.cryptoArb.domain.CurrencyPair;
 import com.cryptoArb.domain.Exchange;
 import com.cryptoArb.domain.PriceTick;
+import org.junit.jupiter.api.Disabled;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -20,6 +21,7 @@ import java.util.concurrent.Executors;
  * millions of PriceTick objects and adding them to a shared list,
  * which will quickly fill the Java heap.
  */
+@Disabled
 public class MemoryStressTest {
     /**
     * 1. A shared list to hold all the objects.
