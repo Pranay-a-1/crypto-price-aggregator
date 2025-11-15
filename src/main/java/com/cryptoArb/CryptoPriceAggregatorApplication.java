@@ -12,13 +12,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication // 2. Add this annotation
 public class CryptoPriceAggregatorApplication {
 
+    /**
+     * DECISION: Use SpringApplication.run()
+     * WHY: This static method is the standard way to launch the application.
+     * It creates the application context, runs auto-configuration,
+     * and starts any embedded servers (like Tomcat).
+     */
     public static void main(String[] args) {
-        /**
-         * DECISION: Use SpringApplication.run()
-         * WHY: This static method is the standard way to launch the application.
-         * It creates the application context, runs auto-configuration,
-         * and starts any embedded servers (like Tomcat).
-         */
+
         SpringApplication.run(CryptoPriceAggregatorApplication.class, args); // 3. Add this line
     }
 

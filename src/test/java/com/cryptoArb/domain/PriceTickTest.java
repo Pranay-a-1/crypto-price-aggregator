@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class PriceTickTest {
 
     @Test
-    @DisplayName("Should create a PriceTick_old and verify all its properties")
+    @DisplayName("Should create a PriceTick_POJO and verify all its properties")
     void givenTickData_whenCreatePriceTick_thenPropertiesAreSet() {
         // Given
         CurrencyPair pair = new CurrencyPair("BTC", "USD");
@@ -30,7 +30,7 @@ class PriceTickTest {
 
         // Then: Use the new accessor methods
         assertEquals(pair, tick.pair(), "CurrencyPair_old should be set");
-        assertEquals(exchange, tick.exchange(), "Exchange_old should be set");
+        assertEquals(exchange, tick.exchange(), "Exchange_POJO should be set");
         assertEquals(timestamp, tick.timestamp(), "Timestamp should be set");
         assertEquals(bidPrice, tick.bidPrice(), "Bid price should be set");
         assertEquals(askPrice, tick.askPrice(), "Ask price should be set");

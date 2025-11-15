@@ -1,22 +1,22 @@
-package com.cryptoArb.domainOld;
+package com.cryptoArb.domainOld_POJOs;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-public class PriceTick_old implements Serializable {
+public class PriceTick_POJO implements Serializable {
 
     // Add a version ID. This is a crucial best practice.
     private static final long serialVersionUID = 1L;
 
 
-    private final CurrencyPair_old pair;
-    private final Exchange_old exchangeOld;
+    private final CurrencyPair_POJO pair;
+    private final Exchange_POJO exchangeOld;
     private final Instant timestamp;
     private final BigDecimal bidPrice;
     private final BigDecimal askPrice;
 
-    public PriceTick_old(CurrencyPair_old pair, Exchange_old exchangeOld, Instant timestamp, BigDecimal bidPrice, BigDecimal askPrice) {
+    public PriceTick_POJO(CurrencyPair_POJO pair, Exchange_POJO exchangeOld, Instant timestamp, BigDecimal bidPrice, BigDecimal askPrice) {
         this.pair = pair;
         this.exchangeOld = exchangeOld;
         this.timestamp = timestamp;
@@ -24,11 +24,11 @@ public class PriceTick_old implements Serializable {
         this.askPrice = askPrice;
     }
 
-    public CurrencyPair_old getPair() {
+    public CurrencyPair_POJO getPair() {
         return pair;
     }
 
-    public Exchange_old getExchange() {
+    public Exchange_POJO getExchange() {
         return exchangeOld;
     }
 

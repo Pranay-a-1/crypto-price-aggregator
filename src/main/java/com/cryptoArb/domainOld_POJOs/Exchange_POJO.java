@@ -1,15 +1,15 @@
-package com.cryptoArb.domainOld;
+package com.cryptoArb.domainOld_POJOs;
 
 import java.io.Serializable;
 
-public class Exchange_old implements Serializable {
+public class Exchange_POJO implements Serializable {
 
     // Add a version ID
     private static final long serialVersionUID = 1L;
 
     private final String id;
 
-    public Exchange_old(String id) {
+    public Exchange_POJO(String id) {
         this.id = id;
     }
 

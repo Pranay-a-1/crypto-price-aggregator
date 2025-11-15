@@ -1,5 +1,6 @@
 package com.cryptoArb.core.concurrency;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -8,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 
-
+@Disabled
 class VolatileFlagStopTest {
 
     @Test

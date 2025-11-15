@@ -1,4 +1,4 @@
-package com.cryptoArb.domainOld;
+package com.cryptoArb.domainOld_POJOs;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -8,15 +8,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class CurrencyPairOldTest {
 
     @Test
-    @DisplayName("Should correctly create a CurrencyPair_old and verify its properties")
+    @DisplayName("Should correctly create a CurrencyPair_POJO and verify its properties")
     void givenBaseAndQuote_whenCreateCurrencyPair_thenPropertiesAreSet() {
         // Given: We have a base currency and a quote currency
         String baseCurrency = "BTC";
         String quoteCurrency = "USD";
 
-        // When: We create a new CurrencyPair_old
+        // When: We create a new CurrencyPair_POJO
         // This line will NOT compile, which is what we want!
-        CurrencyPair_old pair = new CurrencyPair_old(baseCurrency, quoteCurrency);
+        CurrencyPair_POJO pair = new CurrencyPair_POJO(baseCurrency, quoteCurrency);
 
         // Then: The getters should return the correct values
         assertEquals(baseCurrency, pair.getBase(), "The base currency should be BTC");
@@ -25,11 +25,11 @@ class CurrencyPairOldTest {
 
 
     @Test
-    @DisplayName("Should correctly test for equality between two CurrencyPair_old objects")
+    @DisplayName("Should correctly test for equality between two CurrencyPair_POJO objects")
     void givenTwoEqualCurrencyPairs_whenCheckEquals_thenReturnsTrue() {
         // Given: Two separate instances with the same values
-        CurrencyPair_old pair1 = new CurrencyPair_old("BTC", "USD");
-        CurrencyPair_old pair2 = new CurrencyPair_old("BTC", "USD");
+        CurrencyPair_POJO pair1 = new CurrencyPair_POJO("BTC", "USD");
+        CurrencyPair_POJO pair2 = new CurrencyPair_POJO("BTC", "USD");
 
         // When: We check for equality
         boolean areEqual = pair1.equals(pair2);
@@ -42,9 +42,9 @@ class CurrencyPairOldTest {
     @DisplayName("Should correctly test for inequality")
     void givenTwoDifferentCurrencyPairs_whenCheckEquals_thenReturnsFalse() {
         // Given: Two different pairs
-        CurrencyPair_old pair1 = new CurrencyPair_old("BTC", "USD");
-        CurrencyPair_old pair2 = new CurrencyPair_old("ETH", "USD");
-        CurrencyPair_old pair3 = new CurrencyPair_old("BTC", "EUR");
+        CurrencyPair_POJO pair1 = new CurrencyPair_POJO("BTC", "USD");
+        CurrencyPair_POJO pair2 = new CurrencyPair_POJO("ETH", "USD");
+        CurrencyPair_POJO pair3 = new CurrencyPair_POJO("BTC", "EUR");
 
         // When / Then
         assertFalse(pair1.equals(pair2), "Should be false for different base currency");

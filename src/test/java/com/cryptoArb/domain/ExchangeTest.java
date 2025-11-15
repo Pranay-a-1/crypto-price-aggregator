@@ -8,12 +8,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ExchangeTest {
 
     @Test
-    @DisplayName("Should create an Exchange_old and verify its ID")
+    @DisplayName("Should create an Exchange_POJO and verify its ID")
     void givenExchangeId_whenCreateExchange_thenIdIsSet() {
         // Given: An exchange's unique identifier
         String exchangeId = "coinbase";
 
-        // When: We create a new Exchange_old object
+        // When: We create a new Exchange_POJO object
         // This line will NOT compile
         Exchange exchange = new Exchange(exchangeId);
 

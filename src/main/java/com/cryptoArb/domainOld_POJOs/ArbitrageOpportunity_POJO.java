@@ -1,4 +1,4 @@
-package com.cryptoArb.domainOld;
+package com.cryptoArb.domainOld_POJOs;
 
 import com.cryptoArb.domain.CurrencyPair;
 import com.cryptoArb.domain.Exchange;
@@ -18,7 +18,7 @@ import java.time.Instant;
  * @param sellExchange     The exchange to sell at (highest bid)
  * @param sellPrice        The price to sell at (highest bid)
  */
-public record ArbitrageOpportunity_old(
+public record ArbitrageOpportunity_POJO(
         CurrencyPair pair,
         Instant timestamp,
         Exchange buyExchange,
