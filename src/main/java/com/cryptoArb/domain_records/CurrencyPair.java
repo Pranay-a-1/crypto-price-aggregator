@@ -1,5 +1,4 @@
 package com.cryptoArb.domain_records;
-import jakarta.persistence.Embeddable;
 
 /**
  * Represents an immutable currency pair (e.g., BTC/USD).
@@ -12,12 +11,7 @@ import jakarta.persistence.Embeddable;
  *
  * CurrencyPair pair = new CurrencyPair("BTC", "USD");
  *
- *
- * This is marked as @Embeddable, meaning it doesn't have its own table.
- * Instead, its fields (base, quote) will be directly embedded into
- * any @Entity that uses it (like PriceTick).
  */
-@Embeddable // <-- ADD ANNOTATION
 public record CurrencyPair(String base, String quote) implements Comparable<CurrencyPair> {
 
 

@@ -2,6 +2,7 @@ package com.cryptoArb;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 /**
  * DECISION: Add @SpringBootApplication
@@ -10,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * which is what our failing test (@SpringBootTest) is searching for.
  */
 @SpringBootApplication // 2. Add this annotation
+@EntityScan("com.cryptoArb.domain_spring")
 public class CryptoPriceAggregatorApplication {
 
     /**
