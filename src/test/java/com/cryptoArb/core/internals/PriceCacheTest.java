@@ -1,8 +1,8 @@
 package com.cryptoArb.core.internals;
 
-import com.cryptoArb.domain.ConsolidatedPrice;
-import com.cryptoArb.domain.CurrencyPair;
-import com.cryptoArb.domain.Exchange;
+import com.cryptoArb.domain_records.ConsolidatedPrice;
+import com.cryptoArb.domain_records.CurrencyPair;
+import com.cryptoArb.domain_records.Exchange;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

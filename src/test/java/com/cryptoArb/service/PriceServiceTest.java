@@ -1,9 +1,9 @@
 package com.cryptoArb.service;
 
-import com.cryptoArb.domain.ConsolidatedPrice;
-import com.cryptoArb.domain.CurrencyPair;
-import com.cryptoArb.domain.Exchange;
-import com.cryptoArb.domain.PriceTick;
+import com.cryptoArb.domain_records.ConsolidatedPrice;
+import com.cryptoArb.domain_records.CurrencyPair;
+import com.cryptoArb.domain_records.Exchange;
+import com.cryptoArb.domain_records.PriceTick;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

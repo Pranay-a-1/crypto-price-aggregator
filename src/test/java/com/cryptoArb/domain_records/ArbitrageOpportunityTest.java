@@ -1,4 +1,4 @@
-package com.cryptoArb.domain;
+package com.cryptoArb.domain_records;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -1,9 +1,9 @@
 package com.cryptoArb.service;
 
-import com.cryptoArb.domain.ArbitrageOpportunity;
-import com.cryptoArb.domain.CurrencyPair;
-import com.cryptoArb.domain.Exchange;
-import com.cryptoArb.domain.PriceTick;
+import com.cryptoArb.domain_records.ArbitrageOpportunity;
+import com.cryptoArb.domain_records.CurrencyPair;
+import com.cryptoArb.domain_records.Exchange;
+import com.cryptoArb.domain_records.PriceTick;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;

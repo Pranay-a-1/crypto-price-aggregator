@@ -1,7 +1,7 @@
 package com.cryptoArb.core.internals;
 
-import com.cryptoArb.domain.ConsolidatedPrice;
-import com.cryptoArb.domain.CurrencyPair;
+import com.cryptoArb.domain_records.ConsolidatedPrice;
+import com.cryptoArb.domain_records.CurrencyPair;
 
 import java.util.Map;
 import java.util.WeakHashMap;

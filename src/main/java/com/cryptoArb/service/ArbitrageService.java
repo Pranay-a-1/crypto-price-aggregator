@@ -1,8 +1,8 @@
 package com.cryptoArb.service;
 
-import com.cryptoArb.domain.ArbitrageOpportunity;
-import com.cryptoArb.domain.ConsolidatedPrice;
-import com.cryptoArb.domain.CurrencyPair;
+import com.cryptoArb.domain_records.ArbitrageOpportunity;
+import com.cryptoArb.domain_records.ConsolidatedPrice;
+import com.cryptoArb.domain_records.CurrencyPair;
 
 import java.util.List;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.cryptoArb.domainOld_POJOs;
+package com.cryptoArb.domain_POJOs;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

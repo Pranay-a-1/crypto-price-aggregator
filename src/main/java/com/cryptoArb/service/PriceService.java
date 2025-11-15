@@ -1,8 +1,8 @@
 package com.cryptoArb.service;
 
-import com.cryptoArb.domain.ConsolidatedPrice;
-import com.cryptoArb.domain.CurrencyPair;
-import com.cryptoArb.domain.PriceTick;
+import com.cryptoArb.domain_records.ConsolidatedPrice;
+import com.cryptoArb.domain_records.CurrencyPair;
+import com.cryptoArb.domain_records.PriceTick;
 
 import java.time.Duration;
 import java.time.Instant;

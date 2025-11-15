@@ -1,8 +1,8 @@
 package com.cryptoArb;
 
-import com.cryptoArb.domain.CurrencyPair;
-import com.cryptoArb.domain.Exchange;
-import com.cryptoArb.domain.PriceTick;
+import com.cryptoArb.domain_records.CurrencyPair;
+import com.cryptoArb.domain_records.Exchange;
+import com.cryptoArb.domain_records.PriceTick;
 import com.cryptoArb.service.PriceService;
 
 import java.math.BigDecimal;

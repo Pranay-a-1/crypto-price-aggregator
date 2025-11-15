@@ -1,6 +1,6 @@
 package com.cryptoArb.serviceOld;
 
-import com.cryptoArb.domain.ArbitrageOpportunity;
+import com.cryptoArb.domain_records.ArbitrageOpportunity;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.cryptoArb.domainOld_POJOs;
+package com.cryptoArb.domain_POJOs;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

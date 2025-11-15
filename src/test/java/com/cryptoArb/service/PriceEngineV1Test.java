@@ -1,8 +1,8 @@
 package com.cryptoArb.service;
 
-import com.cryptoArb.domain.CurrencyPair;
-import com.cryptoArb.domain.Exchange;
-import com.cryptoArb.domain.PriceTick;
+import com.cryptoArb.domain_records.CurrencyPair;
+import com.cryptoArb.domain_records.Exchange;
+import com.cryptoArb.domain_records.PriceTick;
 import com.cryptoArb.exception.PriceFetchException;
 import com.cryptoArb.fetcher.PriceFetcher;
 import org.awaitility.Awaitility;

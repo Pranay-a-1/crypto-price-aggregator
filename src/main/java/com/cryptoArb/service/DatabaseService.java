@@ -1,7 +1,7 @@
 package com.cryptoArb.service;
 
-import com.cryptoArb.domain.ArbitrageOpportunity;
-import com.cryptoArb.domain.PriceTick;
+import com.cryptoArb.domain_records.ArbitrageOpportunity;
+import com.cryptoArb.domain_records.PriceTick;
 
 import java.sql.*;
 

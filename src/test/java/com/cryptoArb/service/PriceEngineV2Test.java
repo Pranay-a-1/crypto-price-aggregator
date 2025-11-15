@@ -1,6 +1,6 @@
 package com.cryptoArb.service;
 
-import com.cryptoArb.domain.*;
+import com.cryptoArb.domain_records.*;
 import com.cryptoArb.exception.PriceFetchException;
 import com.cryptoArb.fetcher.PriceFetcher;
 import org.awaitility.Awaitility;

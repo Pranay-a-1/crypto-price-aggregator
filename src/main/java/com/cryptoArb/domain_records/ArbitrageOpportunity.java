@@ -1,4 +1,4 @@
-package com.cryptoArb.domain;
+package com.cryptoArb.domain_records;
 
 import java.math.BigDecimal;
 import java.math.MathContext;

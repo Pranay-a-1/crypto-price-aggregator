@@ -1,7 +1,7 @@
-package com.cryptoArb.domainOld_POJOs;
+package com.cryptoArb.domain_POJOs;
 
-import com.cryptoArb.domain.CurrencyPair;
-import com.cryptoArb.domain.Exchange;
+import com.cryptoArb.domain_records.CurrencyPair;
+import com.cryptoArb.domain_records.Exchange;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
