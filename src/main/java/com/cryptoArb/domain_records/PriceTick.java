@@ -1,5 +1,6 @@
 package com.cryptoArb.domain_records;
 
+
 import java.math.BigDecimal;
 import java.time.Instant;
 

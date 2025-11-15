@@ -1,7 +1,5 @@
 package com.cryptoArb.domain_POJOs;
 
-import com.cryptoArb.domain_records.CurrencyPair;
-import com.cryptoArb.domain_records.Exchange;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -19,11 +17,11 @@ import java.time.Instant;
  * @param sellPrice        The price to sell at (highest bid)
  */
 public record ArbitrageOpportunity_POJO(
-        CurrencyPair pair,
+        CurrencyPair_POJO pair,
         Instant timestamp,
-        Exchange buyExchange,
+        Exchange_POJO buyExchange,
         BigDecimal buyPrice,
-        Exchange sellExchange,
+        Exchange_POJO sellExchange,
         BigDecimal sellPrice
 ) {
 
