@@ -1,9 +1,9 @@
 package com.cryptoArb;
 
-import com.cryptoArb.domain_records.CurrencyPair;
-import com.cryptoArb.domain_records.Exchange;
-import com.cryptoArb.domain_records.PriceTick;
-import com.cryptoArb.service.PriceService;
+import com.cryptoArb.javaImpl.domain_records.CurrencyPair;
+import com.cryptoArb.javaImpl.domain_records.Exchange;
+import com.cryptoArb.javaImpl.domain_records.PriceTick;
+import com.cryptoArb.javaImpl.service.PriceService;
 
 import java.math.BigDecimal;
 import java.time.Instant;

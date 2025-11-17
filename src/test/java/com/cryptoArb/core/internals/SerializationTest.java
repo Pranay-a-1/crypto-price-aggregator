@@ -1,8 +1,8 @@
 package com.cryptoArb.core.internals;
 
-import com.cryptoArb.domain_POJOs.CurrencyPair_POJO;
-import com.cryptoArb.domain_POJOs.Exchange_POJO;
-import com.cryptoArb.domain_POJOs.PriceTick_POJO;
+import com.cryptoArb.javaImpl.domain_POJOs.CurrencyPair_POJO;
+import com.cryptoArb.javaImpl.domain_POJOs.Exchange_POJO;
+import com.cryptoArb.javaImpl.domain_POJOs.PriceTick_POJO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
