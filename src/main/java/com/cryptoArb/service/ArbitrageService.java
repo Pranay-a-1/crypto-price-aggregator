@@ -1,6 +1,9 @@
 package com.cryptoArb.service;
 
+import com.cryptoArb.domain_spring.ArbitrageOpportunity;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * Spring-managed service interface for arbitrage-related operations.
@@ -16,4 +19,10 @@ public interface ArbitrageService {
     // No methods required by the test *yet*.
     // We will add List<ArbitrageOpportunity> getRecentOpportunities();
     // when we write the test for that endpoint.
+
+    /**
+     * Retrieves a list of recently found arbitrage opportunities.
+     * @return A list of ArbitrageOpportunity objects.
+     */
+    List<ArbitrageOpportunity> getRecentOpportunities();
 }

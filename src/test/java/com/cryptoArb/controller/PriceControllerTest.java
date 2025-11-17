@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -62,10 +63,13 @@ class PriceControllerTest {
                 new Exchange("coinbase")
         );
 
+        // when PriceService.getConsolidatedPriceForPair is called, return the mock price
         when(mockPriceService.getConsolidatedPriceForPair(any(CurrencyPair.class)))
                 .thenReturn(Optional.of(mockPrice));
 
         // --- When (Act) & Then (Assert) ---
+        // perform a GET request to /api/v1/price/BTC-USD
+        // accept JSON response
         mockMvc.perform(get("/api/v1/price/BTC-USD")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()) // This should now pass
@@ -85,5 +89,30 @@ class PriceControllerTest {
         mockMvc.perform(get("/api/v1/price/UNKNOWN-USD")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound()); // This should now pass
+    }
+
+
+    // === NEW TEST ===
+    @Test
+    @DisplayName("GET /api/v1/arbitrage should return 200 OK with list")
+    void givenOpportunitiesExist_whenGetArbitrage_thenReturns200Ok() throws Exception {
+        // --- Given (Arrange) ---
+        // We will test the "happy path" where the service returns an empty list.
+        when(mockArbitrageService.getRecentOpportunities()).thenReturn(List.of());
+
+        // --- When (Act) & Then (Assert) ---
+        // perform a GET request to /api/v1/arbitrage
+        // accept JSON response
+        // mockMVC.perform does the actual HTTP request
+        // and returns a ResultActions object
+        // which we can chain matchers on like this:
+        // expect status to be 200 OK
+        // expect content type to be JSON
+        // expect JSON array to be empty
+        mockMvc.perform(get("/api/v1/arbitrage")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isEmpty()); // Check for an empty JSON array: []
     }
 }

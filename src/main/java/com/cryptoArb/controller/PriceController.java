@@ -1,5 +1,6 @@
 package com.cryptoArb.controller;
 
+import com.cryptoArb.domain_spring.ArbitrageOpportunity;
 import com.cryptoArb.domain_spring.ConsolidatedPrice;
 import com.cryptoArb.domain_spring.CurrencyPair;
 import com.cryptoArb.service.ArbitrageService;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -62,5 +64,24 @@ public class PriceController {
         return price
                 .map(ResponseEntity::ok) // If present, wrap in ResponseEntity.ok()
                 .orElseGet(() -> ResponseEntity.notFound().build()); // If empty, return 404
+    }
+
+
+
+    /**
+     * (8) The endpoint for retrieving arbitrage opportunities.
+     * It maps HTTP GET requests for /api/v1/arbitrage to this method.
+     * This fulfills requirement FS-8 from the SRS.
+     */
+    @GetMapping("/arbitrage")
+    public ResponseEntity<List<ArbitrageOpportunity>> getRecentOpportunities() {
+        // (9) Call the service layer to get the data.
+        // In our test, this calls the mock. In production, it calls the real impl.
+        List<ArbitrageOpportunity> opportunities = arbitrageService.getRecentOpportunities();
+
+        // (10) Return the list wrapped in a 200 OK response.
+        // Spring Boot's Jackson library will automatically serialize the list
+        // into a JSON array (e.g., "[]").
+        return ResponseEntity.ok(opportunities);
     }
 }

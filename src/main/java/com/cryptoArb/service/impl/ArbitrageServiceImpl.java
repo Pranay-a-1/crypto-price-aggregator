@@ -1,7 +1,10 @@
 package com.cryptoArb.service.impl;
 
+import com.cryptoArb.domain_spring.ArbitrageOpportunity;
 import com.cryptoArb.service.ArbitrageService;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * Minimal implementation of the ArbitrageService to satisfy dependency injection
@@ -9,7 +12,15 @@ import org.springframework.stereotype.Service;
  */
 @Service // 1. Mark this as a Spring-managed bean
 public class ArbitrageServiceImpl implements ArbitrageService {
-    // 2. We don't even need to add any methods yet,
-    // because the interface itself is empty.
-    // This empty class is enough to satisfy the dependency.
+
+    // 2. We must now implement the method from the interface
+    @Override
+    public List<ArbitrageOpportunity> getRecentOpportunities() {
+        // This is the minimal code to satisfy the contract.
+        // Our controller test mocks this service, so it doesn't
+        // care about this implementation.
+        // In a real application, this would call the data access layer.
+        // For now, we just return an empty list.
+        return List.of();
+    }
 }
