@@ -1,10 +1,6 @@
 package com.cryptoArb.javaImpl.domain_records;
 
 
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -18,10 +14,7 @@ import java.time.Instant;
  * @param bidPrice   The highest price a buyer is willing to pay
  * @param askPrice   The lowest price a seller is willing to accept
  */
-@Entity
-@Table(name = "price_tick")
 public record PriceTick(
-        @EmbeddedId // or use @Id with @GeneratedValue if needed
         CurrencyPair pair,
         Exchange exchange,
         Instant timestamp,

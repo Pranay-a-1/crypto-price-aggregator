@@ -1,8 +1,8 @@
-package com.cryptoArb.javaImpl.service;
+package com.cryptoArb.javaImpl.service_javaImpl;
 
 import com.cryptoArb.exception.PriceFetchException;
-import com.cryptoArb.fetcher.PriceFetcher;
 import com.cryptoArb.javaImpl.domain_records.*;
+import com.cryptoArb.javaImpl.fetcher_javaImpl.PriceFetcher;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

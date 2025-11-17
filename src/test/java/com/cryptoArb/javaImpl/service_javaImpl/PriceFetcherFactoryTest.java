@@ -1,4 +1,4 @@
-package com.cryptoArb.javaImpl.service;
+package com.cryptoArb.javaImpl.service_javaImpl;
 
 import com.cryptoArb.exception.InvalidPairException;
 import com.cryptoArb.fetcher.BinanceFetcher;

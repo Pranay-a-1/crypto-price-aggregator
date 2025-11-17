@@ -1,6 +1,6 @@
 package com.cryptoArb.repository;
 
-import com.cryptoArb.domain_spring.ArbitrageOpportunity_spring;
+import com.cryptoArb.domain_spring.ArbitrageOpportunity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
  * (save, findById, findAll, delete, etc.) for free.
  */
 @Repository
-public interface ArbitrageRepository extends JpaRepository<ArbitrageOpportunity_spring, Long> {
+public interface ArbitrageRepository extends JpaRepository<ArbitrageOpportunity, Long> {
     // We don't need to write any methods here yet.
     // JpaRepository provides save(), findById(), findAll(), and deleteById(), which our test uses.
 }

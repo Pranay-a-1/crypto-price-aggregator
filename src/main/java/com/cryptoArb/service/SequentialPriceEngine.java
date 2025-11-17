@@ -1,11 +1,14 @@
-package com.cryptoArb.javaImpl.service;
+package com.cryptoArb.service;
 
 
+import com.cryptoArb.domain_spring.PriceTick;
 import com.cryptoArb.exception.PriceFetchException;
 import com.cryptoArb.fetcher.PriceFetcher;
-import com.cryptoArb.javaImpl.domain_records.PriceTick;
+import com.cryptoArb.repository.PriceTickRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -13,26 +16,34 @@ import java.util.List;
  * A simple, sequential engine for fetching and processing prices.
  * This engine processes each fetcher one by one.
  *
- * Architecture: Sequential (Blocking)
- * Responsibility: Orchestrates the fetch-and-save cycle in a single-threaded,
- * easy-to-read manner.
+ * (Refactored in Phase 11 to be a Spring @Service
+ * and use Spring Data JPA instead of Core JDBC).
+ *
+ *  * Architecture: Sequential (Blocking)
+ *  * Responsibility: Orchestrates the fetch-and-save cycle in a single-threaded,
+ *  * easy-to-read manner.
  *
  * This is a blocking implementation, where each fetcher is processed one after the other.
  * It's simple and easy to understand, but not the most efficient.
  *
  * It is a blocking implementation of the PriceEngineV2 class
  */
+@Service // 1. Identify this as a Spring-managed service
 public class SequentialPriceEngine {
 
     private static final Logger log = LoggerFactory.getLogger(SequentialPriceEngine.class);
 
     private final List<PriceFetcher> fetchers;
-    private final DatabaseService databaseService;
 
+    // 2. We now depend on the repository interface, not the old DatabaseService
+    private final PriceTickRepository priceTickRepository;
+
+    // 3. Use @Autowired on the constructor for clean, testable dependency injection
+    @Autowired
     public SequentialPriceEngine(List<PriceFetcher> fetchers,
-                                 DatabaseService databaseService) {
+                                 PriceTickRepository priceTickRepository) {
         this.fetchers = fetchers;
-        this.databaseService = databaseService;
+        this.priceTickRepository = priceTickRepository;
     }
 
     /**
@@ -46,7 +57,7 @@ public class SequentialPriceEngine {
     public void runFetchCycle() {
         log.info("Starting new sequential fetch cycle...");
 
-        // === NEW CODE START ===
+        // === MODIFIED CODE START ===
 
         // 1. Iterate through each fetcher in our list
         for (PriceFetcher fetcher : fetchers) {
@@ -67,9 +78,8 @@ public class SequentialPriceEngine {
                 for (PriceTick tick : ticks) {
                     log.debug("Saving tick: {}", tick);
 
-                    // 4. Call the database service for each tick
-                    // In our test, this is what Mockito is counting
-                    databaseService.saveTick(tick);
+                    // 4. Call the new repository's save method
+                    priceTickRepository.save(tick);
                 }
             } catch (PriceFetchException e) {
                 // If a fetcher fails, we log the error and the loop continues
@@ -79,7 +89,7 @@ public class SequentialPriceEngine {
             }
         }
 
-        // === NEW CODE END ===
+        // === MODIFIED CODE END ===
 
         log.info("Sequential fetch cycle finished.");
     }

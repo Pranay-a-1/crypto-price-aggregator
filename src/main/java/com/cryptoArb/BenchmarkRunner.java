@@ -3,7 +3,7 @@ package com.cryptoArb;
 import com.cryptoArb.javaImpl.domain_records.CurrencyPair;
 import com.cryptoArb.javaImpl.domain_records.Exchange;
 import com.cryptoArb.javaImpl.domain_records.PriceTick;
-import com.cryptoArb.javaImpl.service.PriceService;
+import com.cryptoArb.javaImpl.service_javaImpl.PriceService;
 
 import java.math.BigDecimal;
 import java.time.Instant;

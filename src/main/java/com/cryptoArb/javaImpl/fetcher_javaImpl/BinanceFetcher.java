@@ -1,26 +1,26 @@
-package com.cryptoArb.fetcher;
+package com.cryptoArb.javaImpl.fetcher_javaImpl;
 
-import com.cryptoArb.domain_spring.PriceTick;
 import com.cryptoArb.exception.PriceFetchException;
+import com.cryptoArb.javaImpl.domain_records.PriceTick;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class CoinbaseFetcher implements PriceFetcher {
+public class BinanceFetcher implements PriceFetcher {
 
     @Override
     public List<PriceTick> fetchPrices() throws PriceFetchException {
         // Minimal implementation
-        System.out.println("Fetching from Coinbase...");
+        System.out.println("Fetching from Binance...");
 
         // --- NEW ---
         // Simulate network I/O delay as per Phase 6
         try {
-            TimeUnit.MILLISECONDS.sleep(50); // Simulate 50ms delay
+            TimeUnit.MILLISECONDS.sleep(70); // Simulate 70ms delay
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new PriceFetchException("Coinbase fetch interrupted", e);
+            throw new PriceFetchException("Binance fetch interrupted", e);
         }
         // --- END NEW ---
 

@@ -17,7 +17,7 @@ import java.util.Objects;
 @Getter
 @Entity
 @Table(name = "arbitrage_opportunity")
-public class ArbitrageOpportunity_spring {
+public class ArbitrageOpportunity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,7 +29,7 @@ public class ArbitrageOpportunity_spring {
             @AttributeOverride(name = "base", column = @Column(name = "base_currency")),
             @AttributeOverride(name = "quote", column = @Column(name = "quote_currency"))
     })
-    private CurrencyPair_spring pair;
+    private CurrencyPair pair;
 
     @Column(nullable = false)
     private Instant timestamp;
@@ -39,7 +39,7 @@ public class ArbitrageOpportunity_spring {
     @AttributeOverrides({
             @AttributeOverride(name = "exchangeId", column = @Column(name = "buy_exchange_id"))
     })
-    private Exchange_spring buyExchange;
+    private Exchange buyExchange;
 
     @Column(nullable = false, precision = 20, scale = 8)
     private BigDecimal buyPrice;
@@ -49,7 +49,7 @@ public class ArbitrageOpportunity_spring {
     @AttributeOverrides({
             @AttributeOverride(name = "exchangeId", column = @Column(name = "sell_exchange_id"))
     })
-    private Exchange_spring sellExchange;
+    private Exchange sellExchange;
 
     @Column(nullable = false, precision = 20, scale = 8)
     private BigDecimal sellPrice;
@@ -58,14 +58,14 @@ public class ArbitrageOpportunity_spring {
     private BigDecimal profitPercentage;
 
     // JPA requires a no-arg constructor
-    protected ArbitrageOpportunity_spring() {
+    protected ArbitrageOpportunity() {
     }
 
     // Full constructor for our application logic
-    public ArbitrageOpportunity_spring(CurrencyPair_spring pair, Instant timestamp,
-                                       Exchange_spring buyExchange, BigDecimal buyPrice,
-                                       Exchange_spring sellExchange, BigDecimal sellPrice,
-                                       BigDecimal profitPercentage) {
+    public ArbitrageOpportunity(CurrencyPair pair, Instant timestamp,
+                                Exchange buyExchange, BigDecimal buyPrice,
+                                Exchange sellExchange, BigDecimal sellPrice,
+                                BigDecimal profitPercentage) {
         this.pair = pair;
         this.timestamp = timestamp;
         this.buyExchange = buyExchange;
@@ -86,7 +86,7 @@ public class ArbitrageOpportunity_spring {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ArbitrageOpportunity_spring that = (ArbitrageOpportunity_spring) o;
+        ArbitrageOpportunity that = (ArbitrageOpportunity) o;
         // Only check equality on the ID, and ensure ID is not null
         return id != null && Objects.equals(id, that.id);
     }

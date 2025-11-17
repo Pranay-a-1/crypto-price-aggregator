@@ -1,9 +1,9 @@
 package com.cryptoArb.repository;
 
 import com.cryptoArb.CryptoPriceAggregatorApplication;
-import com.cryptoArb.domain_spring.ArbitrageOpportunity_spring;
-import com.cryptoArb.domain_spring.CurrencyPair_spring;
-import com.cryptoArb.domain_spring.Exchange_spring;
+import com.cryptoArb.domain_spring.ArbitrageOpportunity;
+import com.cryptoArb.domain_spring.CurrencyPair;
+import com.cryptoArb.domain_spring.Exchange;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,13 +49,13 @@ class ArbitrageRepositoryTest {
     void shouldSaveAndRetrieveArbitrageOpportunity() {
         // --- Given ---
         // Create all the required embeddable parts
-        CurrencyPair_spring pair = new CurrencyPair_spring("ETH", "USD");
-        Exchange_spring buyExchange = new Exchange_spring("kraken");
-        Exchange_spring sellExchange = new Exchange_spring("binance");
+        CurrencyPair pair = new CurrencyPair("ETH", "USD");
+        Exchange buyExchange = new Exchange("kraken");
+        Exchange sellExchange = new Exchange("binance");
         Instant timestamp = Instant.now();
 
         // Create the entity we want to save
-        ArbitrageOpportunity_spring opportunity = new ArbitrageOpportunity_spring(
+        ArbitrageOpportunity opportunity = new ArbitrageOpportunity(
                 pair,
                 timestamp,
                 buyExchange,
@@ -67,10 +67,10 @@ class ArbitrageRepositoryTest {
 
         // --- When ---
         // We use the EntityManager to save the entity and get its ID
-        ArbitrageOpportunity_spring saved = entityManager.persistAndFlush(opportunity);
+        ArbitrageOpportunity saved = entityManager.persistAndFlush(opportunity);
 
         // We then use our (non-existent) repository to find it
-        ArbitrageOpportunity_spring found = repository.findById(saved.getId()).orElse(null);
+        ArbitrageOpportunity found = repository.findById(saved.getId()).orElse(null);
 
         // --- Then ---
         // We assert that the repository found the entity

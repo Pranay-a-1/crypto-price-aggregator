@@ -5,15 +5,15 @@ import jakarta.persistence.Embeddable;
 import java.util.Objects;
 
 @Embeddable
-public class Exchange_spring {
+public class Exchange {
 
     private String exchangeId;
 
     // JPA requires a no-arg constructor
-    protected Exchange_spring() {
+    protected Exchange() {
     }
 
-    public Exchange_spring(String exchangeId) {
+    public Exchange(String exchangeId) {
         this.exchangeId = exchangeId;
     }
 
@@ -25,7 +25,7 @@ public class Exchange_spring {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Exchange_spring exchangeSpring = (Exchange_spring) o;
+        Exchange exchangeSpring = (Exchange) o;
         return Objects.equals(exchangeId, exchangeSpring.exchangeId);
     }
 

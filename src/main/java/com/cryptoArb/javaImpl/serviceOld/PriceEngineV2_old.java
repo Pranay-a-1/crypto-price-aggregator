@@ -1,15 +1,15 @@
 package com.cryptoArb.javaImpl.serviceOld;
 
 import com.cryptoArb.exception.PriceFetchException;
-import com.cryptoArb.fetcher.PriceFetcher;
 import com.cryptoArb.javaImpl.domain_records.ArbitrageOpportunity;
 import com.cryptoArb.javaImpl.domain_records.ConsolidatedPrice;
 import com.cryptoArb.javaImpl.domain_records.CurrencyPair;
 import com.cryptoArb.javaImpl.domain_records.PriceTick;
-import com.cryptoArb.javaImpl.service.ArbitrageService;
-import com.cryptoArb.javaImpl.service.DatabaseService;
-import com.cryptoArb.javaImpl.service.OpportunityAggregator;
-import com.cryptoArb.javaImpl.service.PriceService;
+import com.cryptoArb.javaImpl.fetcher_javaImpl.PriceFetcher;
+import com.cryptoArb.javaImpl.service_javaImpl.ArbitrageService;
+import com.cryptoArb.javaImpl.service_javaImpl.DatabaseService;
+import com.cryptoArb.javaImpl.service_javaImpl.OpportunityAggregator;
+import com.cryptoArb.javaImpl.service_javaImpl.PriceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

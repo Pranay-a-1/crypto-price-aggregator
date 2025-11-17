@@ -2,6 +2,8 @@ package com.cryptoArb.fetcher;
 
 import com.cryptoArb.exception.PriceFetchException;
 import com.cryptoArb.javaImpl.domain_records.PriceTick;
+import com.cryptoArb.javaImpl.fetcher_javaImpl.CoinbaseFetcher;
+import com.cryptoArb.javaImpl.fetcher_javaImpl.PriceFetcher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

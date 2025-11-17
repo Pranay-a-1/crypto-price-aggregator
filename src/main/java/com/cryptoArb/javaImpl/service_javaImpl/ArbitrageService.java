@@ -1,4 +1,4 @@
-package com.cryptoArb.javaImpl.service;
+package com.cryptoArb.javaImpl.service_javaImpl;
 
 import com.cryptoArb.javaImpl.domain_records.ArbitrageOpportunity;
 import com.cryptoArb.javaImpl.domain_records.ConsolidatedPrice;

@@ -1,9 +1,9 @@
 package com.cryptoArb.repository;
 
 import com.cryptoArb.CryptoPriceAggregatorApplication;
-import com.cryptoArb.domain_spring.CurrencyPair_spring;
-import com.cryptoArb.domain_spring.Exchange_spring;
-import com.cryptoArb.domain_spring.PriceTick_spring;
+import com.cryptoArb.domain_spring.CurrencyPair;
+import com.cryptoArb.domain_spring.Exchange;
+import com.cryptoArb.domain_spring.PriceTick;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -30,19 +30,19 @@ class PriceTickRepositoryTest {
     @Test
     void shouldSaveAndRetrievePriceTick() {
         // Given
-        PriceTick_spring tick = new PriceTick_spring(
-                new CurrencyPair_spring("BTC", "USD"),
-                new Exchange_spring("coinbase"),
+        PriceTick tick = new PriceTick(
+                new CurrencyPair("BTC", "USD"),
+                new Exchange("coinbase"),
                 Instant.now(),
                 new BigDecimal("50000.00"),
                 new BigDecimal("50001.00")
         );
 
         // When
-        PriceTick_spring saved = repository.save(tick);
+        PriceTick saved = repository.save(tick);
         entityManager.flush();
 
-        PriceTick_spring found = repository.findById(saved.getId()).orElse(null);
+        PriceTick found = repository.findById(saved.getId()).orElse(null);
 
         // Then
         assertThat(found).isNotNull();

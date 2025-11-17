@@ -6,16 +6,16 @@ import jakarta.persistence.Embeddable;
 import java.util.Objects;
 
 @Embeddable
-public class CurrencyPair_spring {
+public class CurrencyPair {
 
     private String base;
     private String quote;
 
     // JPA requires a no-arg constructor
-    protected CurrencyPair_spring() {
+    protected CurrencyPair() {
     }
 
-    public CurrencyPair_spring(String base, String quote) {
+    public CurrencyPair(String base, String quote) {
         this.base = base;
         this.quote = quote;
     }
@@ -32,7 +32,7 @@ public class CurrencyPair_spring {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        CurrencyPair_spring that = (CurrencyPair_spring) o;
+        CurrencyPair that = (CurrencyPair) o;
         return Objects.equals(base, that.base) &&
                 Objects.equals(quote, that.quote);
     }

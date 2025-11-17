@@ -1,10 +1,11 @@
-package com.cryptoArb.javaImpl.service;
+package com.cryptoArb.service;
 
+import com.cryptoArb.domain_spring.CurrencyPair;
+import com.cryptoArb.domain_spring.Exchange;
+import com.cryptoArb.domain_spring.PriceTick;
 import com.cryptoArb.exception.PriceFetchException;
 import com.cryptoArb.fetcher.PriceFetcher;
-import com.cryptoArb.javaImpl.domain_records.CurrencyPair;
-import com.cryptoArb.javaImpl.domain_records.Exchange;
-import com.cryptoArb.javaImpl.domain_records.PriceTick;
+import com.cryptoArb.repository.PriceTickRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +18,6 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 
-
 /**
  * Tests for the SequentialPriceEngine.
  * We use Mockito to simulate the behavior of its dependencies.
@@ -26,8 +26,14 @@ import static org.mockito.Mockito.*;
 class SequentialPriceEngineTest {
 
     // --- Mocks ---
+
+    // THIS IS THE CHANGE: We no longer mock DatabaseService
+    // @Mock
+    // private DatabaseService mockDatabaseService;
+
+    // INSTEAD: We mock our new repository
     @Mock
-    private DatabaseService mockDatabaseService;
+    private PriceTickRepository mockPriceTickRepository;
 
     @Mock
     private PriceFetcher mockFetcher1; // "Binance"
@@ -45,10 +51,12 @@ class SequentialPriceEngineTest {
         when(mockFetcher1.getExchangeName()).thenReturn("Binance");
         when(mockFetcher2.getExchangeName()).thenReturn("Coinbase");
 
-        // Create a new engine before each test, injecting our mocks
+        // THIS LINE WILL FAIL TO COMPILE (RED)
+        // The constructor expects "mockDatabaseService",
+        // but we now have "mockPriceTickRepository".
         engine = new SequentialPriceEngine(
                 List.of(mockFetcher1, mockFetcher2),
-                mockDatabaseService
+                mockPriceTickRepository
         );
     }
 
@@ -56,88 +64,68 @@ class SequentialPriceEngineTest {
     void testRunFetchCycle_FetchesAndSavesAllTicks() throws Exception { // <-- Added throws
         // --- Given (Our Setup) ---
 
-        // 1. Define the domain objects our constructor needs
+        // 1. Define the domain objects (no change here)
         Exchange exBinance = new Exchange("Binance");
         Exchange exCoinbase = new Exchange("Coinbase");
         CurrencyPair pairBtcUsd = new CurrencyPair("BTC" , "USD");
         CurrencyPair pairEthUsd = new CurrencyPair("ETH" , "USD");
         Instant now = Instant.now();
 
-        // 2. Define the data our mocks will return (using the *correct* constructor)
-        // We assume the two BigDecimals are bid and ask.
+        // 2. Define the data our mocks will return (no change here)
         PriceTick tick1_1 = new PriceTick(pairBtcUsd, exBinance, now, new BigDecimal("30000"), new BigDecimal("30001"));
         PriceTick tick1_2 = new PriceTick(pairEthUsd, exBinance, now, new BigDecimal("2000"), new BigDecimal("2000.50"));
         PriceTick tick2_1 = new PriceTick(pairBtcUsd, exCoinbase, now, new BigDecimal("30002"), new BigDecimal("30003"));
 
-        // 3. "Program" the mocks with their behavior
-        // When mockFetcher1.fetchPrices() is called, return these two ticks.
-        // We add "throws Exception" because fetchPrices() is a checked exception
+        // 3. "Program" the mocks (no change here)
         when(mockFetcher1.fetchPrices()).thenReturn(List.of(tick1_1, tick1_2));
-
-        // When mockFetcher2.fetchPrices() is called, return this one tick.
         when(mockFetcher2.fetchPrices()).thenReturn(List.of(tick2_1));
 
         // --- When (The Action) ---
-        // We call the method we are testing
         engine.runFetchCycle();
 
         // --- Then (The Verification) ---
-        // We verify that the *correct actions occurred*.
 
         // 1. Check that fetchPrices() was called on *both* fetchers.
         verify(mockFetcher1, times(1)).fetchPrices();
         verify(mockFetcher2, times(1)).fetchPrices();
 
-        // 2. Check that saveTick() was called for *all three* ticks.
-        verify(mockDatabaseService, times(1)).saveTick(tick1_1);
-        verify(mockDatabaseService, times(1)).saveTick(tick1_2);
-        verify(mockDatabaseService, times(1)).saveTick(tick2_1);
-
-        // 3. A more robust check: verify *exactly* 3 calls to saveTick,
-        //    and no other interactions with this mock.
-        verify(mockDatabaseService, times(3)).saveTick(any(PriceTick.class));
-        verifyNoMoreInteractions(mockDatabaseService);
+        // 2. THIS IS THE NEW VERIFICATION:
+        // We verify that our *repository's* save method was called.
+        // We use any() because we will need to map the PriceTick record
+        // to a PriceTick_spring entity, which we haven't done yet.
+        verify(mockPriceTickRepository, times(3)).save(any(PriceTick.class));
+        verifyNoMoreInteractions(mockPriceTickRepository);
     }
 
 
     @Test
     void testRunFetchCycle_ContinuesWhenOneFetcherFails() throws Exception {
         // --- Given (Our Setup) ---
-        // 1. Define the domain objects our constructor needs
+        // 1. Define domain objects (no change)
         Exchange exCoinbase = new Exchange("Coinbase");
         CurrencyPair pairBtcUsd = new CurrencyPair("BTC", "USD");
         Instant now = Instant.now();
 
-        // 2. Define data for the *successful* fetcher
+        // 2. Define data for the *successful* fetcher (no change)
         PriceTick tick2_1 = new PriceTick(pairBtcUsd, exCoinbase, now, new BigDecimal("30002"), new BigDecimal("30003"));
 
-        // 3. "Program" the mocks with their behavior
-
-        // ** THE KEY DIFFERENCE **
-        // When mockFetcher1.fetchPrices() is called, throw an exception.
+        // 3. "Program" the mocks (no change)
         when(mockFetcher1.fetchPrices())
                 .thenThrow(new PriceFetchException("API is down"));
-
-        // When mockFetcher2.fetchPrices() is called, return its tick.
         when(mockFetcher2.fetchPrices()).thenReturn(List.of(tick2_1));
 
         // --- When (The Action) ---
-        // We call the method we are testing
         engine.runFetchCycle();
 
         // --- Then (The Verification) ---
-        // We verify the *correct* robust behavior.
 
         // 1. Check that fetchPrices() was still called on *both* fetchers.
         verify(mockFetcher1, times(1)).fetchPrices();
         verify(mockFetcher2, times(1)).fetchPrices();
 
-        // 2. Check that saveTick() was called *only* for the successful tick.
-        verify(mockDatabaseService, times(1)).saveTick(tick2_1);
-
-        // 3. A more robust check: verify *exactly* 1 call to saveTick.
-        // This proves we didn't save any "ghost" ticks from the failed fetcher.
-        verify(mockDatabaseService, times(1)).saveTick(any(PriceTick.class));
-        verifyNoMoreInteractions(mockDatabaseService);
+        // 2. THIS IS THE NEW VERIFICATION:
+        // Check that save() was called *only* for the successful tick.
+        verify(mockPriceTickRepository, times(1)).save(any(PriceTick.class));
+        verifyNoMoreInteractions(mockPriceTickRepository);
     }
 }

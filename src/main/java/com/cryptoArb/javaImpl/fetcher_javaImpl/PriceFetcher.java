@@ -1,7 +1,7 @@
-package com.cryptoArb.fetcher;
+package com.cryptoArb.javaImpl.fetcher_javaImpl;
 
-import com.cryptoArb.domain_spring.PriceTick;
 import com.cryptoArb.exception.PriceFetchException;
+import com.cryptoArb.javaImpl.domain_records.PriceTick;
 
 import java.util.List;
 
