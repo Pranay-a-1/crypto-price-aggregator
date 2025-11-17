@@ -2,11 +2,13 @@ package com.cryptoArb.fetcher;
 
 import com.cryptoArb.domain_spring.PriceTick;
 import com.cryptoArb.exception.PriceFetchException;
+import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Service
 public class CoinbaseFetcher implements PriceFetcher {
 
     @Override

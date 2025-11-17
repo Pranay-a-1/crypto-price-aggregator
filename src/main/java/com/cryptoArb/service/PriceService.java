@@ -2,6 +2,7 @@ package com.cryptoArb.service;
 
 import com.cryptoArb.domain_spring.ConsolidatedPrice;
 import com.cryptoArb.domain_spring.CurrencyPair;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
@@ -10,6 +11,7 @@ import java.util.Optional;
  * This defines the contract for our application's services,
  * decoupling the controller from the implementation.
  */
+@Service
 public interface PriceService {
 
     /**

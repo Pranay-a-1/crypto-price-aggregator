@@ -1,5 +1,7 @@
 package com.cryptoArb.service;
 
+import org.springframework.stereotype.Service;
+
 /**
  * Spring-managed service interface for arbitrage-related operations.
  * This defines the contract for our application's services.
@@ -8,6 +10,7 @@ package com.cryptoArb.service;
  * We will add methods here in a later TDD cycle when we test the
  * /api/v1/arbitrage endpoint.)
  */
+@Service
 public interface ArbitrageService {
 
     // No methods required by the test *yet*.
