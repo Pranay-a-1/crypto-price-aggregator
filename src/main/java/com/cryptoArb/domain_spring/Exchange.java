@@ -25,8 +25,8 @@ public class Exchange {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Exchange exchangeSpring = (Exchange) o;
-        return Objects.equals(exchangeId, exchangeSpring.exchangeId);
+        Exchange exchange = (Exchange) o;
+        return Objects.equals(exchangeId, exchange.exchangeId);
     }
 
     @Override

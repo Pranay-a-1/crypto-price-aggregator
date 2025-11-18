@@ -3,6 +3,7 @@ package com.cryptoArb.service;
 import com.cryptoArb.domain_spring.ArbitrageOpportunity;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -16,13 +17,17 @@ import java.util.List;
 @Service
 public interface ArbitrageService {
 
-    // No methods required by the test *yet*.
-    // We will add List<ArbitrageOpportunity> getRecentOpportunities();
-    // when we write the test for that endpoint.
-
     /**
-     * Retrieves a list of recently found arbitrage opportunities.
-     * @return A list of ArbitrageOpportunity objects.
+     * Retrieves a list of arbitrage opportunities found in the last 5 minutes (default).
+     * @return A list of recent ArbitrageOpportunity objects.
      */
     List<ArbitrageOpportunity> getRecentOpportunities();
+
+    /**
+     * Retrieves a list of arbitrage opportunities found within the specified duration.
+     *
+     * @param duration The look back period (e.g., Duration.ofHours(1)).
+     * @return A list of ArbitrageOpportunity objects.
+     */
+    List<ArbitrageOpportunity> getRecentOpportunities(Duration duration);
 }

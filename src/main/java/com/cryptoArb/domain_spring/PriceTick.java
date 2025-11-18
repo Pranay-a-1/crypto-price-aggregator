@@ -7,6 +7,19 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 
+
+/**
+ * PriceTick class represents a price tick for a specific currency pair and exchange.
+ * It is used to store the price tick data in the database.
+ *
+ * It has the following fields:
+ * 1. id: The primary key of the price tick.
+ * 2. pair: The currency pair for which the price tick is stored.
+ * 3. exchange: The exchange where the price tick is stored.
+ * 4. timestamp: The timestamp of the price tick.
+ * 5. bidPrice: The bid price of the price tick.
+ * 6. askPrice: The ask price of the price tick.
+ */
 @Entity
 @Table(name = "price_tick")
 public class PriceTick {
@@ -24,7 +37,7 @@ public class PriceTick {
 
     @Embedded
     @AttributeOverride(name = "exchangeId", column = @Column(name = "exchange_id"))
-    private Exchange exchangeSpring;
+    private Exchange exchange;
 
     @Column(nullable = false)
     private Instant timestamp;
@@ -39,10 +52,10 @@ public class PriceTick {
     protected PriceTick() {
     }
 
-    public PriceTick(CurrencyPair pair, Exchange exchangeSpring, Instant timestamp,
+    public PriceTick(CurrencyPair pair, Exchange exchange, Instant timestamp,
                      BigDecimal bidPrice, BigDecimal askPrice) {
         this.pair = pair;
-        this.exchangeSpring = exchangeSpring;
+        this.exchange = exchange;
         this.timestamp = timestamp;
         this.bidPrice = bidPrice;
         this.askPrice = askPrice;
@@ -58,7 +71,7 @@ public class PriceTick {
     }
 
     public Exchange getExchange() {
-        return exchangeSpring;
+        return exchange;
     }
 
     public Instant getTimestamp() {
