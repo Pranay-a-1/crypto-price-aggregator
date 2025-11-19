@@ -1,7 +1,6 @@
 package com.cryptoArb.service;
 
 import com.cryptoArb.domain_spring.ArbitrageOpportunity;
-import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.List;
  * We will add methods here in a later TDD cycle when we test the
  * /api/v1/arbitrage endpoint.)
  */
-@Service
 public interface ArbitrageService {
 
     /**
