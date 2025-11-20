@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -72,7 +73,7 @@ class PriceControllerTest {
         // accept JSON response
         mockMvc.perform(get("/api/v1/price/BTC-USD")
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()) // This should now pass
+                .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.pair.base").value("BTC"))
                 .andExpect(jsonPath("$.bestBid").value("50000"));
@@ -101,8 +102,25 @@ class PriceControllerTest {
                 .andExpect(jsonPath("$.timestamp").exists());
     }
 
+    // --- NEW TEST ---
+    @Test
+    @DisplayName("GET /api/v1/price/INVALID_FORMAT should return 400 with Validation Error")
+    void givenInvalidPairFormat_whenGetPrice_thenReturns400WithJson() throws Exception {
+        // --- Given ---
+        String invalidPair = "BTCUSD"; // Missing hyphen
 
-    // === NEW TEST ===
+        // --- When & Then ---
+        mockMvc.perform(get("/api/v1/price/" + invalidPair)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                // We expect a standardized error body, not just an empty 400 response
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                // We expect our custom validator message
+                .andExpect(jsonPath("$.message").value(containsString("Invalid currency pair format")));
+    }
+
     @Test
     @DisplayName("GET /api/v1/arbitrage should return 200 OK with list")
     void givenOpportunitiesExist_whenGetArbitrage_thenReturns200Ok() throws Exception {

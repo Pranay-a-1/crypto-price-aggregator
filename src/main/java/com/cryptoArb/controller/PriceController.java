@@ -6,6 +6,7 @@ import com.cryptoArb.domain_spring.CurrencyPair;
 import com.cryptoArb.exception.PriceNotFoundException;
 import com.cryptoArb.service.ArbitrageService;
 import com.cryptoArb.service.PriceService;
+import com.cryptoArb.validation.ValidCurrencyPair;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,11 +27,12 @@ import java.util.Optional;
 /**
  * REST API Controller for exposing price and arbitrage data.
  *
- * Refactored Phase 12: Uses Global Exception Handling.
+ * Refactored Phase 12: Uses Global Exception Handling. , Declarative Validation
  */
 @RestController // (1) Marks this class as a Spring-managed REST controller
 @RequestMapping("/api/v1") // (2) Sets the base path for all endpoints in this class
 @Tag(name = "Market Data", description = "Endpoints for real-time price and arbitrage data")
+@Validated // (1) Enables method-level validation for @PathVariable constraints
 public class PriceController {
 
     // --- Dependencies ---
@@ -61,17 +64,14 @@ public class PriceController {
             @ApiResponse(responseCode = "400", description = "Invalid currency pair format (use BASE-QUOTE)")
     })
     @GetMapping("/price/{pair}")
-    public ResponseEntity<ConsolidatedPrice> getPriceForPair(@PathVariable String pair) {
+    public ResponseEntity<ConsolidatedPrice> getPriceForPair(
+            @PathVariable @ValidCurrencyPair String pair) { // (2) Apply our custom validator
 
-        // (5) Minimal logic to parse the path variable.
-        // We will need to add proper error handling for a malformed pair
-        // (e.g., "BTC-USD-EUR") in a future refactor, but for TDD,
-        // we do the minimum.
+        // (3) Manual validation logic REMOVED.
+        // If we get here, 'pair' is guaranteed to match "XXX-YYY".
+
         String[] parts = pair.split("-");
-        if (parts.length != 2) {
-            // Not a valid pair, return 400 Bad Request
-            return ResponseEntity.badRequest().build();
-        }
+        // We can safely assume length is 2 because of the regex validation
         CurrencyPair currencyPair = new CurrencyPair(parts[0], parts[1]);
 
         // Call service
