@@ -4,6 +4,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
+// http://localhost:8080/actuator/health
 @Component
 public class ExchangeHealthIndicator implements HealthIndicator {
 

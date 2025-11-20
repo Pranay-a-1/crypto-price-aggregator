@@ -53,6 +53,14 @@ public class SecurityConfig {
                         // (Useful for load balancers and monitoring tools)
                         .requestMatchers("/actuator/health").permitAll()
 
+                        // Optional: Allow public access to Swagger UI
+                        // (Useful for API documentation)
+                        // http://localhost:8080/v3/api-docs
+                        //  http://localhost:8080/swagger-ui/index.html
+                        //    http://localhost:8080/swagger-ui.html
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
+
                         // Optional: Secure other actuator endpoints
                         .requestMatchers("/actuator/**").authenticated()
 

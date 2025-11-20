@@ -49,6 +49,9 @@ public class PriceController {
      * (4) The endpoint our test is looking for.
      * It maps HTTP GET requests for /api/v1/price/{pair} to this method.
      */
+    // http://localhost:8080/v3/api-docs
+    //  http://localhost:8080/swagger-ui/index.html
+    //    http://localhost:8080/swagger-ui.html
     @Operation(summary = "Get Consolidated Price", description = "Retrieves the best bid and ask price for a specific currency pair.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved price",
