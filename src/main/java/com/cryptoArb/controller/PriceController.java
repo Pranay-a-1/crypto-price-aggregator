@@ -5,6 +5,12 @@ import com.cryptoArb.domain_spring.ConsolidatedPrice;
 import com.cryptoArb.domain_spring.CurrencyPair;
 import com.cryptoArb.service.ArbitrageService;
 import com.cryptoArb.service.PriceService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +28,7 @@ import java.util.Optional;
  */
 @RestController // (1) Marks this class as a Spring-managed REST controller
 @RequestMapping("/api/v1") // (2) Sets the base path for all endpoints in this class
+@Tag(name = "Market Data", description = "Endpoints for real-time price and arbitrage data")
 public class PriceController {
 
     // --- Dependencies ---
@@ -42,6 +49,13 @@ public class PriceController {
      * (4) The endpoint our test is looking for.
      * It maps HTTP GET requests for /api/v1/price/{pair} to this method.
      */
+    @Operation(summary = "Get Consolidated Price", description = "Retrieves the best bid and ask price for a specific currency pair.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved price",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConsolidatedPrice.class))),
+            @ApiResponse(responseCode = "404", description = "Currency pair not found or no data available"),
+            @ApiResponse(responseCode = "400", description = "Invalid currency pair format (use BASE-QUOTE)")
+    })
     @GetMapping("/price/{pair}")
     public ResponseEntity<ConsolidatedPrice> getPriceForPair(@PathVariable String pair) {
 
@@ -73,6 +87,8 @@ public class PriceController {
      * It maps HTTP GET requests for /api/v1/arbitrage to this method.
      * This fulfills requirement FS-8 from the SRS.
      */
+    @Operation(summary = "Get Arbitrage Opportunities", description = "Retrieves all arbitrage opportunities detected in the last window.")
+    @ApiResponse(responseCode = "200", description = "List of opportunities found")
     @GetMapping("/arbitrage")
     public ResponseEntity<List<ArbitrageOpportunity>> getRecentOpportunities() {
         // (9) Call the service layer to get the data.
