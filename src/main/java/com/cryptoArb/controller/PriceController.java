@@ -3,6 +3,7 @@ package com.cryptoArb.controller;
 import com.cryptoArb.domain_spring.ArbitrageOpportunity;
 import com.cryptoArb.domain_spring.ConsolidatedPrice;
 import com.cryptoArb.domain_spring.CurrencyPair;
+import com.cryptoArb.exception.PriceNotFoundException;
 import com.cryptoArb.service.ArbitrageService;
 import com.cryptoArb.service.PriceService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,7 +25,7 @@ import java.util.Optional;
 /**
  * REST API Controller for exposing price and arbitrage data.
  *
- * This is the minimal implementation to pass the PriceControllerTest.
+ * Refactored Phase 12: Uses Global Exception Handling.
  */
 @RestController // (1) Marks this class as a Spring-managed REST controller
 @RequestMapping("/api/v1") // (2) Sets the base path for all endpoints in this class
@@ -73,14 +74,15 @@ public class PriceController {
         }
         CurrencyPair currencyPair = new CurrencyPair(parts[0], parts[1]);
 
-        // (6) Call our mockable service
+        // Call service
         Optional<ConsolidatedPrice> price = priceService.getConsolidatedPriceForPair(currencyPair);
 
-        // (7) Use ResponseEntity to return 200 OK or 404 Not Found
-        // This directly matches the logic in our test.
+        // --- REFACTORED SECTION ---
+        // Old: .orElseGet(() -> ResponseEntity.notFound().build()); // this used to return 404
+        // New: Throw exception to delegate to @ControllerAdvice // this throws PriceNotFoundException
         return price
                 .map(ResponseEntity::ok) // If present, wrap in ResponseEntity.ok()
-                .orElseGet(() -> ResponseEntity.notFound().build()); // If empty, return 404
+                .orElseThrow(() -> new PriceNotFoundException("Price not found for pair: " + pair));
     }
 
 

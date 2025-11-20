@@ -3,6 +3,7 @@ package com.cryptoArb.controller;
 import com.cryptoArb.domain_spring.ConsolidatedPrice;
 import com.cryptoArb.domain_spring.CurrencyPair;
 import com.cryptoArb.domain_spring.Exchange;
+import com.cryptoArb.exception.PriceNotFoundException;
 import com.cryptoArb.service.ArbitrageService;
 import com.cryptoArb.service.PriceService;
 import org.junit.jupiter.api.DisplayName;
@@ -36,7 +37,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 SecurityAutoConfiguration.class,
                 OAuth2ResourceServerAutoConfiguration.class
         })
-// --- END MODIFICATION ---
 @DisplayName("PriceController Web Slice Test")
 class PriceControllerTest {
 
@@ -79,16 +79,26 @@ class PriceControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/price/UNKNOWN-PAIR should return 404 Not Found")
-    void givenPairDoesNotExist_whenGetPriceByPair_thenReturns404NotFound() throws Exception {
+    @DisplayName("GET /api/v1/price/UNKNOWN-PAIR should return 404 with Standard Error JSON")
+    void givenPairDoesNotExist_whenGetPriceByPair_thenReturns404WithJson() throws Exception {
         // --- Given (Arrange) ---
+        // We mock the service to THROW our custom exception instead of returning Empty
         when(mockPriceService.getConsolidatedPriceForPair(any(CurrencyPair.class)))
-                .thenReturn(Optional.empty());
+                .thenThrow(new PriceNotFoundException("Price not found for pair: UNKNOWN-USD"));
 
         // --- When (Act) & Then (Assert) ---
         mockMvc.perform(get("/api/v1/price/UNKNOWN-USD")
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound()); // This should now pass
+                // 1. Assert Status is 404
+                .andExpect(status().isNotFound())
+                // 2. Assert Content Type is JSON
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                // 3. Assert the standardized error structure exists
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Price not found for pair: UNKNOWN-USD"))
+                .andExpect(jsonPath("$.path").value("/api/v1/price/UNKNOWN-USD"))
+                .andExpect(jsonPath("$.timestamp").exists());
     }
 
 
