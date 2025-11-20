@@ -6,6 +6,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * Spring Security configuration for the Crypto Price Aggregator API.
@@ -42,8 +43,9 @@ public class SecurityConfig {
      * @throws Exception if configuration fails
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, RequestLoggingFilter requestLoggingFilter) throws Exception {
         http
+                .addFilterBefore(requestLoggingFilter, UsernamePasswordAuthenticationFilter.class)  // this line is added to log the request and response ; requestLoggingFilter is a custom filter ; UsernamePasswordAuthenticationFilter is a default filter
                 // 1. Configure authorization rules
                 .authorizeHttpRequests(authz -> authz
                         // Require authentication for all /api/v1/** endpoints
