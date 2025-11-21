@@ -62,10 +62,15 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         // Require authentication for all /api/v1/** endpoints
                         .requestMatchers("/api/v1/**").authenticated()
+                        // --- DEV TESTING MODIFICATION START ---
+                        // TEMPORARY: Allow public access to API for local dev testing without an Auth Server
+//                        .requestMatchers("/api/v1/**").permitAll()
+                        // --- DEV TESTING MODIFICATION END ---
 
-                        // Optional: Allow public access to Actuator health endpoint
-                        // (Useful for load balancers and monitoring tools)
-                        .requestMatchers("/actuator/health").permitAll()
+                        // --- MODIFIED SECTION START ---
+                        // Allow public access to Health AND Metrics for verification
+                        .requestMatchers("/actuator/health", "/actuator/metrics/**", "/actuator/prometheus").permitAll()
+                        // --- MODIFIED SECTION END ---
 
                         // Optional: Allow public access to Swagger UI
                         // (Useful for API documentation)

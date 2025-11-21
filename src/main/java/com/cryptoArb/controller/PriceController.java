@@ -7,6 +7,7 @@ import com.cryptoArb.exception.PriceNotFoundException;
 import com.cryptoArb.service.ArbitrageService;
 import com.cryptoArb.service.PriceService;
 import com.cryptoArb.validation.ValidCurrencyPair;
+import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,7 +28,7 @@ import java.util.Optional;
 /**
  * REST API Controller for exposing price and arbitrage data.
  *
- * Refactored Phase 12: Uses Global Exception Handling. , Declarative Validation
+ * Refactored Phase 12: Uses Global Exception Handling, Declarative Validation, and Observability.
  */
 @RestController // (1) Marks this class as a Spring-managed REST controller
 @RequestMapping("/api/v1") // (2) Sets the base path for all endpoints in this class
@@ -50,8 +51,9 @@ public class PriceController {
     }
 
     /**
-     * (4) The endpoint our test is looking for.
-     * It maps HTTP GET requests for /api/v1/price/{pair} to this method.
+     * Retrieves the best bid and ask price for a specific currency pair.
+     *
+     * NEW: Added @Timed annotation to track request latency.
      */
     // http://localhost:8080/v3/api-docs
     //  http://localhost:8080/swagger-ui/index.html
@@ -64,6 +66,7 @@ public class PriceController {
             @ApiResponse(responseCode = "400", description = "Invalid currency pair format (use BASE-QUOTE)")
     })
     @GetMapping("/price/{pair}")
+    @Timed(value = "cpa.price.request", description = "Time taken to fetch consolidated price", histogram = true)
     public ResponseEntity<ConsolidatedPrice> getPriceForPair(
             @PathVariable @ValidCurrencyPair String pair) { // (2) Apply our custom validator
 
@@ -74,7 +77,6 @@ public class PriceController {
         // We can safely assume length is 2 because of the regex validation
         CurrencyPair currencyPair = new CurrencyPair(parts[0], parts[1]);
 
-        // Call service
         Optional<ConsolidatedPrice> price = priceService.getConsolidatedPriceForPair(currencyPair);
 
         // --- REFACTORED SECTION ---
