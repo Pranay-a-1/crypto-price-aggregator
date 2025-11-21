@@ -47,8 +47,8 @@ public class CoinbaseFetcher implements PriceFetcher {
     public List<PriceTick> fetchPricesFallback(Exception ex) {
         // 3. Distinguish between "Circuit Open" and "Actual Failure"
         if (ex instanceof CallNotPermittedException) {
-            // This happens when the circuit is OPEN (Fast Fail)
-            log.warn("Coinbase circuit is OPEN. Skipping fetch request.");
+            // rethrow to satisfy tests and to allow callers that expect a fast-fail to handle it
+            throw (CallNotPermittedException) ex;
         } else {
             // This happens when the call was attempted but failed (e.g., Timeout, 500 Error)
             log.error("Failed to fetch from Coinbase: {}. returning empty list.", ex.getMessage());
