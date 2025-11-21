@@ -16,10 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * * We simulate a "Pre-flight" OPTIONS request, which browsers send automatically
  * before making a cross-origin request (like POST or GET with custom headers).
  */
-@SpringBootTest(properties = {
-        // Use dummy JWK URI to bypass startup checks
-        "spring.security.oauth2.resourceserver.jwt.jwk-set-uri=https://example.com/oauth2/jwks"
-})
+@SpringBootTest
 @AutoConfigureMockMvc
 class CorsIntegrationTest {
 

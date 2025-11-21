@@ -18,11 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 2. Valid JWT tokens are accepted
  * 3. Invalid/missing tokens are rejected with 401
  */
-@SpringBootTest(properties = {
-        // Override the JWK Set URI with a dummy URL for testing
-        // This prevents the app from trying to reach the real IdP during tests
-        "spring.security.oauth2.resourceserver.jwt.jwk-set-uri=https://example.com/oauth2/jwks"
-})
+@SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("Security Configuration Integration Tests")
 class SecurityConfigTest {

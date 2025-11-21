@@ -22,10 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * We use OutputCaptureExtension to capture console output (System.out/err)
  * so we can assert that the logs are actually written.
  */
-@SpringBootTest(properties = {
-        // Provide a dummy JWK URI to satisfy SecurityConfig during context load
-        "spring.security.oauth2.resourceserver.jwt.jwk-set-uri=https://example.com/oauth2/jwks"
-})
+@SpringBootTest
 @ExtendWith(OutputCaptureExtension.class)
 class LoggingAspectTest {
 
