@@ -2,15 +2,21 @@ package com.cryptoArb.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 /**
  * Spring Security configuration for the Crypto Price Aggregator API.
- *
+ *  Refactored to include CORS configuration.
  * Architecture: OAuth2 Resource Server
  *
  * This application does NOT handle user authentication (no login flow).
@@ -45,8 +51,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, RequestLoggingFilter requestLoggingFilter) throws Exception {
         http
-                .addFilterBefore(requestLoggingFilter, UsernamePasswordAuthenticationFilter.class)  // this line is added to log the request and response ; requestLoggingFilter is a custom filter ; UsernamePasswordAuthenticationFilter is a default filter
-                // 1. Configure authorization rules
+                // 1. Insert our custom logging filter
+                .addFilterBefore(requestLoggingFilter, UsernamePasswordAuthenticationFilter.class)
+
+                // 2. Configure CORS (Cross-Origin Resource Sharing)
+                // This tells Spring Security to look for a bean named 'corsConfigurationSource'
+                .cors(Customizer.withDefaults())
+
+                // 3. Configure authorization rules
                 .authorizeHttpRequests(authz -> authz
                         // Require authentication for all /api/v1/** endpoints
                         .requestMatchers("/api/v1/**").authenticated()
@@ -70,17 +82,12 @@ public class SecurityConfig {
                         .anyRequest().denyAll()
                 )
 
-                // 2. Configure OAuth2 Resource Server with JWT validation
+                // 4. Configure OAuth2 Resource Server
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        // Enable JWT authentication
-                        .jwt(jwt -> {
-                            // Additional JWT customization can go here
-                            // For example: custom claim validation, authorities mapping
-                            // For now, we use the defaults from application.properties
-                        })
+                        .jwt(Customizer.withDefaults())
                 )
 
-                // 3. Configure session management
+                // 5. Stateless session management
                 .sessionManagement(session -> session
                         // STATELESS: No server-side sessions
                         // Each request must include a valid JWT
@@ -96,30 +103,26 @@ public class SecurityConfig {
     }
 
     /**
-     * ALTERNATIVE CONFIGURATION (if you need more control):
-     *
-     * You can create a custom JwtDecoder bean to:
-     * - Add custom claim validation
-     * - Configure token caching
-     * - Add custom error handling
-     *
-     * Example:
-     *
-     * @Bean
-     * public JwtDecoder jwtDecoder() {
-     *     // Create decoder from JWK Set URI
-     *     NimbusJwtDecoder decoder = NimbusJwtDecoder
-     *         .withJwkSetUri("https://your-idp.com/.well-known/jwks.json")
-     *         .build();
-     *
-     *     // Add custom validators
-     *     decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
-     *         new JwtTimestampValidator(),
-     *         new JwtIssuerValidator("https://your-idp.com"),
-     *         new CustomClaimValidator()
-     *     ));
-     *
-     *     return decoder;
-     * }
+     * Defines the CORS configuration rules.
+     * This bean is automatically detected by the .cors() method in the security chain.
      */
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // Allow the frontend dev server (matching our test)
+        // In the Refactor phase, we will move this to application.properties
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+
+        // Allow standard HTTP methods
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        // Allow standard headers (Authorization is crucial for JWT)
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Request-ID"));
+
+        // Register this config for all paths
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 }

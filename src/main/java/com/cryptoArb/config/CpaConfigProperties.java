@@ -21,6 +21,9 @@ public class CpaConfigProperties {
 
     private final Exchanges exchanges = new Exchanges();
 
+    // New CORS configuration section
+    private final Cors cors = new Cors();
+
 
     @Setter
     @Getter
@@ -29,7 +32,14 @@ public class CpaConfigProperties {
          * List of enabled exchange IDs (e.g. coinbase, binance).
          */
         private List<String> enabled = new ArrayList<>();
+    }
 
-
+    @Setter
+    @Getter
+    public static class Cors {
+        /**
+         * List of allowed origins for CORS (e.g., "http://localhost:3000").
+         */
+        private List<String> allowedOrigins = new ArrayList<>();
     }
 }

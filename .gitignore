@@ -37,3 +37,5 @@ build/
 ### Mac OS ###
 .DS_Store
 /.idea/
+/src/test/java/com/cryptoArb/config/CorsQ.txt
+/src/main/java/com/cryptoArb/config/SecurityConfigQ.txt
