@@ -1,0 +1,32 @@
+type Query {
+    getPrice(pair: String!): ConsolidatedPrice
+    getArbitrageOpportunities: [ArbitrageOpportunity]
+}
+
+type ConsolidatedPrice {
+    pair: CurrencyPair
+    timestamp: String
+    bestBid: Float
+    bestBidExchange: Exchange
+    bestAsk: Float
+    bestAskExchange: Exchange
+}
+
+type ArbitrageOpportunity {
+    pair: CurrencyPair
+    timestamp: String
+    buyExchange: Exchange
+    buyPrice: Float
+    sellExchange: Exchange
+    sellPrice: Float
+    profitPercentage: Float
+}
+
+type CurrencyPair {
+    base: String
+    quote: String
+}
+
+type Exchange {
+    id: String
+}
