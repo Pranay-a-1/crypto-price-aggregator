@@ -3,14 +3,18 @@ package com.cryptoArb;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.cache.annotation.EnableCaching;
 
 /**
  * DECISION: Add @SpringBootApplication
  * WHY: This annotation marks this class as the main entry point for the
- * Spring Boot application. It enables auto-configuration and component scanning,
+ * Spring Boot application. It enables auto-configuration and component
+ * scanning,
  * which is what our failing test (@SpringBootTest) is searching for.
  */
 @SpringBootApplication // 2. Add this annotation
+@EnableCaching
+
 @EntityScan("com.cryptoArb.domain_spring")
 public class CryptoPriceAggregatorApplication {
 

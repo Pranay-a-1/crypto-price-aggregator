@@ -10,11 +10,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
+import org.springframework.transaction.annotation.Transactional;
+
 /**
  * Implementation of ArbitrageService.
  * Handles business logic for retrieving and managing arbitrage opportunities.
  */
 @Service
+@Transactional(readOnly = true)
 public class ArbitrageServiceImpl implements ArbitrageService {
 
     private final ArbitrageRepository arbitrageRepository;

@@ -1,7 +1,16 @@
 package com.cryptoArb.domain_spring;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -16,22 +25,23 @@ import java.util.Objects;
  */
 @Getter
 @Entity
-@Table(name = "arbitrage_opportunity")
+@Table(name = "arbitrage_opportunities")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EntityListeners(AuditingEntityListener.class)
+@SQLDelete(sql = "UPDATE arbitrage_opportunities SET deleted = true WHERE id = ?")
+@Where(clause = "deleted = false")
 public class ArbitrageOpportunity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // We reuse the embeddable CurrencyPair_spring
     @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "base", column = @Column(name = "base_currency")),
-            @AttributeOverride(name = "quote", column = @Column(name = "quote_currency"))
-    })
     private CurrencyPair pair;
 
-    @Column(nullable = false)
     private Instant timestamp;
 
     // --- Buy Side ---
@@ -58,14 +68,13 @@ public class ArbitrageOpportunity {
     private BigDecimal profitPercentage;
 
     // JPA requires a no-arg constructor
-    protected ArbitrageOpportunity() {
-    }
+    // protected ArbitrageOpportunity() {} // Lombok @NoArgsConstructor handles this
 
-    // Full constructor for our application logic
+    // Full constructor for our application logic (Compatibility with tests)
     public ArbitrageOpportunity(CurrencyPair pair, Instant timestamp,
-                                Exchange buyExchange, BigDecimal buyPrice,
-                                Exchange sellExchange, BigDecimal sellPrice,
-                                BigDecimal profitPercentage) {
+            Exchange buyExchange, BigDecimal buyPrice,
+            Exchange sellExchange, BigDecimal sellPrice,
+            BigDecimal profitPercentage) {
         this.pair = pair;
         this.timestamp = timestamp;
         this.buyExchange = buyExchange;
@@ -75,8 +84,16 @@ public class ArbitrageOpportunity {
         this.profitPercentage = profitPercentage;
     }
 
-    // --- Getters ---
-    // (JPA and other frameworks rely on standard getters)
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private Instant createdDate;
+
+    @LastModifiedDate
+    @Column(nullable = false)
+    private Instant lastModifiedDate;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
 
     // --- equals() and hashCode() ---
     // Standard practice for JPA entities is to base equality
@@ -84,8 +101,10 @@ public class ArbitrageOpportunity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         ArbitrageOpportunity that = (ArbitrageOpportunity) o;
         // Only check equality on the ID, and ensure ID is not null
         return id != null && Objects.equals(id, that.id);

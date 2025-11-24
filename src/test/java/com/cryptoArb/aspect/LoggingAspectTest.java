@@ -6,12 +6,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 
 /**
  * Integration test to verify AOP Logging.
@@ -22,9 +24,25 @@ import static org.assertj.core.api.Assertions.assertThat;
  * We use OutputCaptureExtension to capture console output (System.out/err)
  * so we can assert that the logs are actually written.
  */
-@SpringBootTest
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+
+@SpringBootTest(properties = {
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration"
+})
 @ExtendWith(OutputCaptureExtension.class)
 class LoggingAspectTest {
+
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        @Primary
+        public CacheManager cacheManager() {
+            return new ConcurrentMapCacheManager("consolidatedPrices");
+        }
+    }
 
     @Autowired
     private PriceService priceService;
@@ -42,7 +60,8 @@ class LoggingAspectTest {
 
         // When
         // We call the service method.
-        // If AOP is working, the LoggingAspect (which doesn't exist yet) should intercept this call.
+        // If AOP is working, the LoggingAspect (which doesn't exist yet) should
+        // intercept this call.
         priceService.getConsolidatedPriceForPair(pair);
 
         // Then
