@@ -7,16 +7,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 /**
- * Phase 14: Consumer Service.
+ * Phase 14: Consumer Service with Retry-Aware Error Handling.
  * Listens for PriceTick messages from RabbitMQ and processes them.
+ * 
+ * Error Handling Strategy:
+ * - Transient failures (DB connection issues): Thrown to trigger retry
+ * - Permanent failures (validation errors, null data): Logged and discarded
  * 
  * This service:
  * 1. Receives PriceTick messages from the queue
- * 2. Saves them to the database
- * 3. Triggers arbitrage detection logic
+ * 2. Validates message data
+ * 3. Saves valid messages to the database
+ * 4. Triggers arbitrage detection logic
  */
 @Service
 public class PriceTickConsumer {
@@ -39,20 +45,28 @@ public class PriceTickConsumer {
      * The @RabbitListener annotation automatically:
      * - Deserializes the JSON message to a PriceTick object
      * - Handles connection management
-     * - Provides retry logic on failure
+     * - Applies retry policy configured in RabbitMqConfig
+     * 
+     * Error Handling:
+     * - DataAccessException: Requeue for retry (transient DB issues)
+     * - ValidationException: Discard message (permanent data quality issue)
+     * - After max retries: Message sent to Dead Letter Queue
      * 
      * @param tick The PriceTick message received from the queue
      */
     @RabbitListener(queues = "${cpa.rabbitmq.queue}")
     public void processPriceTick(PriceTick tick) {
         log.info("Received PriceTick from RabbitMQ: exchange={}, pair={}/{}, bid={}, ask={}",
-                tick.getExchange().getId(),
-                tick.getPair().getBase(),
-                tick.getPair().getQuote(),
+                getExchangeId(tick),
+                getCurrencyPairBase(tick),
+                getCurrencyPairQuote(tick),
                 tick.getBidPrice(),
                 tick.getAskPrice());
 
         try {
+            // Step 0: Validate message data
+            validatePriceTick(tick);
+
             // Step 1: Save the PriceTick to the database
             PriceTick savedTick = priceTickRepository.save(tick);
             log.debug("Saved PriceTick to database with ID: {}", savedTick.getId());
@@ -63,14 +77,84 @@ public class PriceTickConsumer {
             log.info("Successfully processed PriceTick for {}/{}",
                     tick.getPair().getBase(), tick.getPair().getQuote());
 
-        } catch (Exception e) {
-            log.error("Failed to process PriceTick: exchange={}, pair={}/{}, error={}",
-                    tick.getExchange().getId(),
-                    tick.getPair().getBase(),
-                    tick.getPair().getQuote(),
+        } catch (DataAccessException e) {
+            // TRANSIENT FAILURE: Database connection issues
+            // Throw to trigger RabbitMQ retry mechanism (up to 3 attempts)
+            log.error("Transient failure processing PriceTick: exchange={}, pair={}/{}, error={}",
+                    getExchangeId(tick),
+                    getCurrencyPairBase(tick),
+                    getCurrencyPairQuote(tick),
+                    e.getMessage());
+
+            throw new RuntimeException("Database error, will retry", e);
+
+        } catch (IllegalArgumentException | NullPointerException e) {
+            // PERMANENT FAILURE: Invalid data (e.g., null exchange, invalid prices)
+            // Log and DISCARD the message (don't retry)
+            log.error("Permanent failure - discarding invalid PriceTick: exchange={}, pair={}/{}, error={}",
+                    getExchangeId(tick),
+                    getCurrencyPairBase(tick),
+                    getCurrencyPairQuote(tick),
                     e.getMessage(), e);
-            // Re-throw to trigger RabbitMQ retry mechanism
-            throw new RuntimeException("Failed to process PriceTick", e);
+
+            // DO NOT throw - message will be acknowledged and removed from queue
+
+        } catch (Exception e) {
+            // UNKNOWN FAILURE: Log with full stack trace for investigation
+            // Treat as transient and retry
+            log.error("Unexpected error processing PriceTick: exchange={}, pair={}/{}, error={}",
+                    getExchangeId(tick),
+                    getCurrencyPairBase(tick),
+                    getCurrencyPairQuote(tick),
+                    e.getMessage(), e);
+
+            throw new RuntimeException("Unexpected error, will retry", e);
         }
+    }
+
+    /**
+     * Validates that the PriceTick contains the minimum required data.
+     * 
+     * @param tick The PriceTick to validate
+     * @throws IllegalArgumentException if validation fails
+     */
+    private void validatePriceTick(PriceTick tick) {
+        if (tick == null) {
+            throw new IllegalArgumentException("PriceTick cannot be null");
+        }
+        if (tick.getPair() == null) {
+            throw new IllegalArgumentException("CurrencyPair cannot be null");
+        }
+        // Note: Exchange can be null in some test scenarios, so we check defensively
+        if (tick.getBidPrice() == null || tick.getAskPrice() == null) {
+            throw new IllegalArgumentException("Bid and Ask prices cannot be null");
+        }
+    }
+
+    /**
+     * Safely extracts exchange ID, handling null cases.
+     */
+    private String getExchangeId(PriceTick tick) {
+        return (tick != null && tick.getExchange() != null)
+                ? tick.getExchange().getId()
+                : "null";
+    }
+
+    /**
+     * Safely extracts currency pair base, handling null cases.
+     */
+    private String getCurrencyPairBase(PriceTick tick) {
+        return (tick != null && tick.getPair() != null)
+                ? tick.getPair().getBase()
+                : "null";
+    }
+
+    /**
+     * Safely extracts currency pair quote, handling null cases.
+     */
+    private String getCurrencyPairQuote(PriceTick tick) {
+        return (tick != null && tick.getPair() != null)
+                ? tick.getPair().getQuote()
+                : "null";
     }
 }

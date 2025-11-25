@@ -1,15 +1,14 @@
 package com.cryptoArb.domain_spring;
 
-
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 
-
 /**
- * PriceTick class represents a price tick for a specific currency pair and exchange.
+ * PriceTick class represents a price tick for a specific currency pair and
+ * exchange.
  * It is used to store the price tick data in the database.
  *
  * It has the following fields:
@@ -53,7 +52,7 @@ public class PriceTick {
     }
 
     public PriceTick(CurrencyPair pair, Exchange exchange, Instant timestamp,
-                     BigDecimal bidPrice, BigDecimal askPrice) {
+            BigDecimal bidPrice, BigDecimal askPrice) {
         this.pair = pair;
         this.exchange = exchange;
         this.timestamp = timestamp;
@@ -88,8 +87,10 @@ public class PriceTick {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         PriceTick priceTickSpring = (PriceTick) o;
         return Objects.equals(id, priceTickSpring.id);
     }
@@ -97,5 +98,17 @@ public class PriceTick {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "PriceTick{" +
+                "id=" + id +
+                ", pair=" + (pair != null ? pair.getBase() + "/" + pair.getQuote() : "null") +
+                ", exchange=" + (exchange != null ? exchange.getId() : "null") +
+                ", timestamp=" + timestamp +
+                ", bidPrice=" + bidPrice +
+                ", askPrice=" + askPrice +
+                '}';
     }
 }
