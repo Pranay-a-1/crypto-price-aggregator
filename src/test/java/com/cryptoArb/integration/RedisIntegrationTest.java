@@ -10,13 +10,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.cryptoArb.CryptoPriceAggregatorApplication;
-import org.junit.jupiter.api.Disabled;
-import org.springframework.boot.test.context.SpringBootTest;
-
-@Disabled("Docker environment issues")
-@SpringBootTest(classes = CryptoPriceAggregatorApplication.class)
-public class RedisIntegrationTest {
+public class RedisIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private PriceService priceService;
