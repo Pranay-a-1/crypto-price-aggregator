@@ -1,6 +1,6 @@
 # Project Structure
 
-> **Auto-generated on:** 2025-11-24  
+> **Auto-generated on:** 2025-11-25  
 > **Project:** Crypto Price Aggregator  
 > **Last Updated:** Run `./update-structure.sh` to refresh this file
 
