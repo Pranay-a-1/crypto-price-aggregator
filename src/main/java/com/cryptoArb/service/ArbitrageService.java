@@ -1,6 +1,7 @@
 package com.cryptoArb.service;
 
 import com.cryptoArb.domain_spring.ArbitrageOpportunity;
+import com.cryptoArb.domain_spring.CurrencyPair;
 
 import java.time.Duration;
 import java.util.List;
@@ -28,4 +29,11 @@ public interface ArbitrageService {
      * @return A list of ArbitrageOpportunity objects.
      */
     List<ArbitrageOpportunity> getRecentOpportunities(Duration duration);
+
+    /**
+     * Detects and saves arbitrage opportunities for a given currency pair.
+     * 
+     * @param pair The currency pair to analyze for arbitrage opportunities
+     */
+    void detectAndSaveOpportunities(CurrencyPair pair);
 }
