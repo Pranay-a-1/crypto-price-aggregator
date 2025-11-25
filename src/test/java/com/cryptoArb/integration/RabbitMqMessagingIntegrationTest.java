@@ -235,4 +235,55 @@ class RabbitMqMessagingIntegrationTest {
                                         assertThat(savedTicks).hasSize(10);
                                 });
         }
+
+        @Test
+        @DisplayName("Should execute report generation asynchronously on custom thread pool")
+        void testAsyncReportGeneration() throws Exception {
+                // Given: Seed database with sample PriceTick data
+                CurrencyPair pair = new CurrencyPair("BTC", "USD");
+
+                // Create 5 sample ticks for the report
+                for (int i = 0; i < 5; i++) {
+                        PriceTick tick = new PriceTick(
+                                        pair,
+                                        new Exchange("exchange" + i),
+                                        Instant.now(),
+                                        new BigDecimal("50000.00").add(BigDecimal.valueOf(i * 100)),
+                                        new BigDecimal("50010.00").add(BigDecimal.valueOf(i * 100)));
+                        priceTickRepository.save(tick);
+                }
+
+                // When: We call the async report generation method
+                long startTime = System.currentTimeMillis();
+                java.util.concurrent.CompletableFuture<com.cryptoArb.domain_spring.ReportResult> futureResult = priceReportService
+                                .generateReport(pair);
+                long callDuration = System.currentTimeMillis() - startTime;
+
+                // Then (Immediate): The method should return immediately without blocking
+                // A truly async method should return in < 100ms (actual work takes 3+ seconds)
+                assertThat(callDuration).isLessThan(100L);
+                assertThat(futureResult).isNotNull();
+                assertThat(futureResult.isDone()).isFalse(); // Should NOT be completed yet
+
+                // Then (Async): Use Awaitility to wait for the async task to complete
+                await().atMost(10, SECONDS)
+                                .until(futureResult::isDone);
+
+                // Then (Result): Verify the report result contains correct data
+                com.cryptoArb.domain_spring.ReportResult result = futureResult.get();
+                assertThat(result).isNotNull();
+                assertThat(result.reportType()).isEqualTo("PRICE_SUMMARY");
+                assertThat(result.totalTicks()).isEqualTo(5L);
+                assertThat(result.status()).isEqualTo("COMPLETED");
+
+                // Verify average price calculation (should be around 50200.00)
+                // (50000 + 50100 + 50200 + 50300 + 50400) / 5 = 50200
+                assertThat(result.avgPrice()).isEqualByComparingTo("50200.00");
+
+                // Note: Thread name verification happens in the service via logging
+                // Check logs for: "Executing async report on thread: async-report-"
+        }
+
+        @Autowired
+        private com.cryptoArb.service.PriceReportService priceReportService;
 }
