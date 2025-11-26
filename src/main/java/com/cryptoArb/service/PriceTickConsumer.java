@@ -3,6 +3,9 @@ package com.cryptoArb.service;
 import com.cryptoArb.domain_spring.PriceTick;
 import com.cryptoArb.repository.PriceTickRepository;
 import com.cryptoArb.service.ArbitrageService;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -11,12 +14,18 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 /**
- * Phase 14: Consumer Service with Retry-Aware Error Handling.
+ * Phase 14: Consumer Service with Retry-Aware Error Handling and Message
+ * Tracing.
  * Listens for PriceTick messages from RabbitMQ and processes them.
  * 
  * Error Handling Strategy:
  * - Transient failures (DB connection issues): Thrown to trigger retry
  * - Permanent failures (validation errors, null data): Logged and discarded
+ * 
+ * Observability:
+ * - Tracks total messages processed
+ * - Measures processing duration
+ * - Counts failed messages
  * 
  * This service:
  * 1. Receives PriceTick messages from the queue
@@ -31,12 +40,29 @@ public class PriceTickConsumer {
 
     private final PriceTickRepository priceTickRepository;
     private final ArbitrageService arbitrageService;
+    private final Counter messagesProcessedCounter;
+    private final Counter messageFailureCounter;
+    private final Timer processingDurationTimer;
 
     @Autowired
     public PriceTickConsumer(PriceTickRepository priceTickRepository,
-            ArbitrageService arbitrageService) {
+            ArbitrageService arbitrageService,
+            MeterRegistry meterRegistry) {
         this.priceTickRepository = priceTickRepository;
         this.arbitrageService = arbitrageService;
+
+        // Initialize custom metrics
+        this.messagesProcessedCounter = Counter.builder("rabbitmq.messages.processed")
+                .description("Total number of messages successfully processed from RabbitMQ")
+                .register(meterRegistry);
+
+        this.messageFailureCounter = Counter.builder("rabbitmq.messages.failed")
+                .description("Total number of failed message processing attempts")
+                .register(meterRegistry);
+
+        this.processingDurationTimer = Timer.builder("rabbitmq.messages.processing.duration")
+                .description("Time taken to process messages from RabbitMQ")
+                .register(meterRegistry);
     }
 
     /**
@@ -63,53 +89,71 @@ public class PriceTickConsumer {
                 tick.getBidPrice(),
                 tick.getAskPrice());
 
-        try {
-            // Step 0: Validate message data
-            validatePriceTick(tick);
+        // Measure processing duration and track success/failure
+        processingDurationTimer.record(() -> {
+            try {
+                // Step 0: Validate message data
+                validatePriceTick(tick);
 
-            // Step 1: Save the PriceTick to the database
-            PriceTick savedTick = priceTickRepository.save(tick);
-            log.debug("Saved PriceTick to database with ID: {}", savedTick.getId());
+                // Step 1: Save the PriceTick to the database
+                PriceTick savedTick = priceTickRepository.save(tick);
+                log.debug("Saved PriceTick to database with ID: {}", savedTick.getId());
 
-            // Step 2: Trigger arbitrage detection for this currency pair
-            arbitrageService.detectAndSaveOpportunities(tick.getPair());
+                // Step 2: Trigger arbitrage detection for this currency pair
+                arbitrageService.detectAndSaveOpportunities(tick.getPair());
 
-            log.info("Successfully processed PriceTick for {}/{}",
-                    tick.getPair().getBase(), tick.getPair().getQuote());
+                log.info("Successfully processed PriceTick for {}/{}",
+                        tick.getPair().getBase(), tick.getPair().getQuote());
 
-        } catch (DataAccessException e) {
-            // TRANSIENT FAILURE: Database connection issues
-            // Throw to trigger RabbitMQ retry mechanism (up to 3 attempts)
-            log.error("Transient failure processing PriceTick: exchange={}, pair={}/{}, error={}",
-                    getExchangeId(tick),
-                    getCurrencyPairBase(tick),
-                    getCurrencyPairQuote(tick),
-                    e.getMessage());
+                // Increment success counter
+                messagesProcessedCounter.increment();
 
-            throw new RuntimeException("Database error, will retry", e);
+            } catch (DataAccessException e) {
+                // TRANSIENT FAILURE: Database connection issues
+                // Increment failure counter
+                messageFailureCounter.increment();
 
-        } catch (IllegalArgumentException | NullPointerException e) {
-            // PERMANENT FAILURE: Invalid data (e.g., null exchange, invalid prices)
-            // Log and DISCARD the message (don't retry)
-            log.error("Permanent failure - discarding invalid PriceTick: exchange={}, pair={}/{}, error={}",
-                    getExchangeId(tick),
-                    getCurrencyPairBase(tick),
-                    getCurrencyPairQuote(tick),
-                    e.getMessage(), e);
+                // Throw to trigger RabbitMQ retry mechanism (up to 3 attempts)
+                log.error("Transient failure processing PriceTick: exchange={}, pair={}/{}, error={}",
+                        getExchangeId(tick),
+                        getCurrencyPairBase(tick),
+                        getCurrencyPairQuote(tick),
+                        e.getMessage());
 
-            // DO NOT throw - message will be acknowledged and removed from queue
+                throw new RuntimeException("Database error, will retry", e);
 
-        } catch (Exception e) {
-            // UNKNOWN FAILURE: Log with full stack trace for investigation
-            // Treat as transient and retry
-            log.error("Unexpected error processing PriceTick: exchange={}, pair={}/{}, error={}",
-                    getExchangeId(tick),
-                    getCurrencyPairBase(tick),
-                    getCurrencyPairQuote(tick),
-                    e.getMessage(), e);
+            } catch (IllegalArgumentException | NullPointerException e) {
+                // PERMANENT FAILURE: Invalid data (e.g., null exchange, invalid prices)
+                // Increment failure counter
+                messageFailureCounter.increment();
 
-            throw new RuntimeException("Unexpected error, will retry", e);
-        }
+                // Log the permanent failure
+                log.error("Permanent failure - invalid PriceTick: exchange={}, pair={}/{}, error={}",
+                        getExchangeId(tick),
+                        getCurrencyPairBase(tick),
+                        getCurrencyPairQuote(tick),
+                        e.getMessage(), e);
+
+                // THROW exception to trigger retry mechanism
+                // Spring will retry 3 times (per RetryTemplate config)
+                // After max retries exhausted, message will be rejected and routed to DLQ
+                throw new RuntimeException("Invalid message data: " + e.getMessage(), e);
+
+            } catch (Exception e) {
+                // UNKNOWN FAILURE: Log with full stack trace for investigation
+                // Increment failure counter
+                messageFailureCounter.increment();
+
+                // Treat as transient and retry
+                log.error("Unexpected error processing PriceTick: exchange={}, pair={}/{}, error={}",
+                        getExchangeId(tick),
+                        getCurrencyPairBase(tick),
+                        getCurrencyPairQuote(tick),
+                        e.getMessage(), e);
+
+                throw new RuntimeException("Unexpected error, will retry", e);
+            }
+        });
     }
 
     /**

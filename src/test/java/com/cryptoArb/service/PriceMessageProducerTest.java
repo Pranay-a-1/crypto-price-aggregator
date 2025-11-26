@@ -3,6 +3,7 @@ package com.cryptoArb.service;
 import com.cryptoArb.domain_spring.CurrencyPair;
 import com.cryptoArb.domain_spring.PriceTick;
 import com.cryptoArb.fetcher.PriceFetcher;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,8 +36,11 @@ class PriceMessageProducerTest {
 
     @BeforeEach
     void setUp() {
+        // Use SimpleMeterRegistry for testing (no actual metrics backend needed)
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+
         // We pass a list containing our mock fetcher
-        priceMessageProducer = new PriceMessageProducer(List.of(priceFetcher), rabbitTemplate);
+        priceMessageProducer = new PriceMessageProducer(List.of(priceFetcher), rabbitTemplate, meterRegistry);
 
         // Manually set the @Value fields
         ReflectionTestUtils.setField(priceMessageProducer, "exchangeName", exchangeName);
