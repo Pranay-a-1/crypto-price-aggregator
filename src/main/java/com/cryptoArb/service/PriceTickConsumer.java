@@ -40,6 +40,7 @@ public class PriceTickConsumer {
 
     private final PriceTickRepository priceTickRepository;
     private final ArbitrageService arbitrageService;
+    private final PriceStreamService priceStreamService;
     private final Counter messagesProcessedCounter;
     private final Counter messageFailureCounter;
     private final Timer processingDurationTimer;
@@ -47,9 +48,11 @@ public class PriceTickConsumer {
     @Autowired
     public PriceTickConsumer(PriceTickRepository priceTickRepository,
             ArbitrageService arbitrageService,
+            PriceStreamService priceStreamService,
             MeterRegistry meterRegistry) {
         this.priceTickRepository = priceTickRepository;
         this.arbitrageService = arbitrageService;
+        this.priceStreamService = priceStreamService;
 
         // Initialize custom metrics
         this.messagesProcessedCounter = Counter.builder("rabbitmq.messages.processed")
@@ -101,6 +104,9 @@ public class PriceTickConsumer {
 
                 // Step 2: Trigger arbitrage detection for this currency pair
                 arbitrageService.detectAndSaveOpportunities(tick.getPair());
+
+                // Step 3: Emit to SSE stream
+                priceStreamService.emit(savedTick);
 
                 log.info("Successfully processed PriceTick for {}/{}",
                         tick.getPair().getBase(), tick.getPair().getQuote());
