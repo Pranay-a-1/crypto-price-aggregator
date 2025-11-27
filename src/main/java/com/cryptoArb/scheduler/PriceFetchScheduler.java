@@ -25,7 +25,7 @@ public class PriceFetchScheduler {
      * The initial delay ensures the application has fully started before the first
      * run.
      */
-    @Scheduled(fixedRateString = "${cpa.fetch-interval-ms:5000}", initialDelay = 5000)
+    @Scheduled(fixedRateString = "${cpa.fetch-interval-ms:30000}", initialDelay = 5000)
     public void scheduleFetch() {
         priceMessageProducer.fetchAndPublish();
     }
