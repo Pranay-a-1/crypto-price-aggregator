@@ -1,5 +1,8 @@
 package com.cryptoArb.crypto_price_aggregator.domain;
 
+
+import lombok.NonNull;
+
 public record CurrencyPair(String base, String quote) {
 
     public CurrencyPair {
@@ -16,6 +19,7 @@ public record CurrencyPair(String base, String quote) {
     }
 
     @Override
+    @NonNull
     public String toString() {
         return base + "/" + quote;
     }

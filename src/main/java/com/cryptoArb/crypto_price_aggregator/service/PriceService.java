@@ -1,5 +1,16 @@
 package com.cryptoArb.crypto_price_aggregator.service;
 
-public class PriceService {
-    
+import com.cryptoArb.crypto_price_aggregator.domain.AggregatedTopOfBookQuote;
+import com.cryptoArb.crypto_price_aggregator.domain.CurrencyPair;
+
+import java.util.Optional;
+
+public interface PriceService {
+    /**
+     * Retrieves the latest AggregatedTopOfBookQuote for a given currency pair.
+     *
+     * @param pair The currency pair to fetch (e.g., BTC/USD).
+     * @return An Optional containing the quote if found, or empty if not available.
+     */
+    Optional<AggregatedTopOfBookQuote> getAggregatedTopOfBookQuote(CurrencyPair pair);
 }
