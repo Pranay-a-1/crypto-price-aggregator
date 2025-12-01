@@ -3,12 +3,14 @@ package com.cryptoArb.crypto_price_aggregator.service.impl;
 import com.cryptoArb.crypto_price_aggregator.domain.AggregatedTopOfBookQuote;
 import com.cryptoArb.crypto_price_aggregator.domain.CurrencyPair;
 import com.cryptoArb.crypto_price_aggregator.domain.PriceTick;
+import com.cryptoArb.crypto_price_aggregator.repository.PriceTickRepository;
 import com.cryptoArb.crypto_price_aggregator.service.ManualConcurrentPriceEngine;
 import com.cryptoArb.crypto_price_aggregator.service.PriceFetcher;
 import com.cryptoArb.crypto_price_aggregator.service.PriceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -29,58 +31,53 @@ import java.util.Optional;
  * - Best Bid = MAX of all bids (highest price someone will pay)
  * - Best Ask = MIN of all asks (lowest price someone will sell)
  * <p>
- * Following KISS: Simple sequential fetching (Phase 2 will add concurrency)
+ * <b>Phase 2 Update:</b> Now uses {@link ManualConcurrentPriceEngine} for
+ * parallel fetching.
  * <p>
- * <b>Phase 2 Update:</b> Now uses {@link ManualConcurrentPriceEngine} for parallel fetching.
+ * <b>Phase 3 Update:</b> Now persists fetched ticks to H2 database via
+ * {@link PriceTickRepository}.
+ * Aggregation queries recent ticks from database (last 5 seconds) for better
+ * data consistency.
  * <p>
  * Following SOLID principles:
- * - Single Responsibility: Aggregation logic only. Threading delegated to Engine.
- * - Open/Closed: Engine can be swapped (e.g., for a Reactor version) without changing aggregation logic.
+ * - Single Responsibility: Aggregation logic only. Threading delegated to
+ * Engine, persistence to Repository.
+ * - Open/Closed: Engine and Repository can be swapped without changing
+ * aggregation logic.
  */
 @Service
+@Transactional
 public class PriceServiceImpl implements PriceService {
 
     private static final Logger log = LoggerFactory.getLogger(PriceServiceImpl.class);
 
+    // Time window for considering "recent" ticks (5 seconds)
+    private static final int RECENT_TICKS_WINDOW_SECONDS = 5;
+
     private final List<PriceFetcher> fetchers;
     private final ManualConcurrentPriceEngine executionEngine;
+    private final PriceTickRepository repository;
 
     /**
      * Constructor that receives runtime dependencies.
-     *<p>
-     * Notes for beginners:
-     * - Spring will provide the {@code List<PriceFetcher>} when it constructs this bean
-     *   (constructor injection). Each {@code PriceFetcher} implementation can be a Spring
-     *   bean and Spring will collect them into the list automatically.
-     * - We defensively set {@code fetchers} to an empty list if Spring passes {@code null}.
-     *<p>
-     * Manual composition vs. injection:
-     * - Manual composition: we create the {@code ManualConcurrentPriceEngine} instance here
-     *   using the {@code new} operator. This means this class controls which implementation
-     *   and configuration of the engine is used.
-     * - Dependency injection (preferred): the engine would be declared as a Spring bean and
-     *   passed into this constructor. That makes swapping or testing the engine easier.
-     *<p>
-     * Why we pick the pool size like this:
-     * - {@code Math.max(4, this.fetchers.size())} ensures a minimum of 4 worker threads so
-     *   small numbers of fetchers still get parallelism. If there are more fetchers than 4,
-     *   we use that larger number so each fetcher can potentially run in parallel.
-     *<p>
-     * TODO (next step): change the constructor to accept a {@code ManualConcurrentPriceEngine}
-     * (or a generic interface) and let Spring inject the engine instead of creating it here.
+     * <p>
+     * <b>Phase 3 Update:</b> Now injects {@link PriceTickRepository} for
+     * persistence.
      *
-     * @param fetchers List of price fetchers to aggregate from (may be null)
+     * @param fetchers   List of price fetchers to aggregate from (may be null)
+     * @param repository Repository for persisting and querying price ticks
      */
-    public PriceServiceImpl(List<PriceFetcher> fetchers) {
+    public PriceServiceImpl(List<PriceFetcher> fetchers, PriceTickRepository repository) {
         // Ensure fetchers is never null to simplify usage elsewhere
         this.fetchers = fetchers != null ? fetchers : new ArrayList<>();
+        this.repository = repository;
 
         // Manually create the execution engine for parallel fetching.
-        // This is simple and explicit for now, but move to DI later for better testability.
         int poolSize = Math.max(4, this.fetchers.size());
         this.executionEngine = new ManualConcurrentPriceEngine(poolSize);
 
-        log.info("PriceServiceImpl initialized with {} fetchers and ManualConcurrentPriceEngine (pool={})",
+        log.info(
+                "PriceServiceImpl initialized with {} fetchers, ManualConcurrentPriceEngine (pool={}), and PriceTickRepository",
                 this.fetchers.size(), poolSize);
     }
 
@@ -92,21 +89,32 @@ public class PriceServiceImpl implements PriceService {
 
         log.debug("Fetching AggregatedTopOfBookQuote for {}", pair);
 
-        // DELEGATE: Use the engine to fetch prices in parallel
-        // This replaces the sequential for-loop from Phase 1
-        List<PriceTick> successfulTicks = executionEngine.fetchPrices(fetchers, pair);
+        // PHASE 3: Fetch prices in parallel using the engine
+        List<PriceTick> freshTicks = executionEngine.fetchPrices(fetchers, pair);
 
-        // If all fetchers failed, return empty
-        if (successfulTicks.isEmpty()) {
-            log.warn("No successful price fetches for {}", pair);
+        // PHASE 3: Save all fetched ticks to database
+        if (!freshTicks.isEmpty()) {
+            repository.saveAll(freshTicks);
+            log.debug("Saved {} fresh ticks to database for {}", freshTicks.size(), pair);
+        }
+
+        // PHASE 3: Query recent ticks from database (last 5 seconds)
+        Instant cutoff = Instant.now().minusSeconds(RECENT_TICKS_WINDOW_SECONDS);
+        List<PriceTick> recentTicks = repository.findByPair_BaseAndPair_QuoteAndTimestampAfter(
+                pair.getBase(), pair.getQuote(), cutoff);
+
+        // If no recent ticks found in database, return empty
+        if (recentTicks.isEmpty()) {
+            log.warn("No recent price ticks found for {} in the last {} seconds",
+                    pair, RECENT_TICKS_WINDOW_SECONDS);
             return Optional.empty();
         }
 
-        // Aggregate: Best bestBid (max), Best bestAsk (min)
-        AggregatedTopOfBookQuote aggregatedTopOfBookQuote = aggregateTicks(pair, successfulTicks);
+        // Aggregate from database ticks
+        AggregatedTopOfBookQuote aggregatedTopOfBookQuote = aggregateTicks(pair, recentTicks);
 
-        log.info("Aggregated result for {}: bestBid={}, bestAsk={}",
-                pair, aggregatedTopOfBookQuote.bestBid(), aggregatedTopOfBookQuote.bestAsk());
+        log.info("Aggregated result for {} from {} recent ticks: bestBid={}, bestAsk={}",
+                pair, recentTicks.size(), aggregatedTopOfBookQuote.bestBid(), aggregatedTopOfBookQuote.bestAsk());
 
         return Optional.of(aggregatedTopOfBookQuote);
     }
@@ -118,20 +126,19 @@ public class PriceServiceImpl implements PriceService {
      */
     private AggregatedTopOfBookQuote aggregateTicks(CurrencyPair pair, List<PriceTick> ticks) {
         PriceTick bestBidTick = ticks.stream()
-                .max(Comparator.comparing(PriceTick::bid))
+                .max(Comparator.comparing(PriceTick::getBid))
                 .orElseThrow(() -> new IllegalStateException("No bids available"));
 
         PriceTick bestAskTick = ticks.stream()
-                .min(Comparator.comparing(PriceTick::ask))
+                .min(Comparator.comparing(PriceTick::getAsk))
                 .orElseThrow(() -> new IllegalStateException("No asks available"));
 
         return new AggregatedTopOfBookQuote(
                 pair,
-                bestBidTick.bid(),
-                bestBidTick.exchange(),
-                bestAskTick.ask(),
-                bestAskTick.exchange(),
-                Instant.now()
-        );
+                bestBidTick.getBid(),
+                bestBidTick.getExchange(),
+                bestAskTick.getAsk(),
+                bestAskTick.getExchange(),
+                Instant.now());
     }
 }

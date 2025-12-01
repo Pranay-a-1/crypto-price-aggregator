@@ -84,7 +84,7 @@ class MyBlockingQueueTest {
         consumerThread.join(1000);
 
         assertEquals(1, consumedItems.size(), "Consumer should have received exactly 1 item");
-        assertEquals("Binance", consumedItems.get(0).exchange().getDisplayName(),
+        assertEquals("Binance", consumedItems.get(0).getExchange().getDisplayName(),
                 "Consumed item should match produced item");
     }
 
@@ -243,14 +243,14 @@ class MyBlockingQueueTest {
         PriceTick result3 = queue.take();
 
         // THEN: Should return in FIFO order (verify by currency pair)
-        assertEquals("BTC", result1.pair().base(), "First item should be BTC-USD");
-        assertEquals("USD", result1.pair().quote(), "First item should be BTC-USD");
+        assertEquals("BTC", result1.getPair().getBase(), "First item should be BTC-USD");
+        assertEquals("USD", result1.getPair().getQuote(), "First item should be BTC-USD");
 
-        assertEquals("ETH", result2.pair().base(), "Second item should be ETH-USD");
-        assertEquals("USD", result2.pair().quote(), "Second item should be ETH-USD");
+        assertEquals("ETH", result2.getPair().getBase(), "Second item should be ETH-USD");
+        assertEquals("USD", result2.getPair().getQuote(), "Second item should be ETH-USD");
 
-        assertEquals("XRP", result3.pair().base(), "Third item should be XRP-EUR");
-        assertEquals("EUR", result3.pair().quote(), "Third item should be XRP-EUR");
+        assertEquals("XRP", result3.getPair().getBase(), "Third item should be XRP-EUR");
+        assertEquals("EUR", result3.getPair().getQuote(), "Third item should be XRP-EUR");
 
         assertTrue(queue.isEmpty(), "Queue should be empty after taking all items");
     }
@@ -286,7 +286,7 @@ class MyBlockingQueueTest {
             default -> Exchange.MOCK; // Default to MOCK for test exchanges
         };
 
-        CurrencyPair pair = new CurrencyPair(base, quote);
+        CurrencyPair pair = CurrencyPair.of(base, quote);
         BigDecimal priceValue = new BigDecimal(price);
         BigDecimal bid = priceValue.multiply(new BigDecimal("0.999")); // bid slightly lower
         BigDecimal ask = priceValue.multiply(new BigDecimal("1.001")); // ask slightly higher

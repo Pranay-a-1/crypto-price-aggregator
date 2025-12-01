@@ -41,7 +41,7 @@ class MockPriceFetcherTest {
         PriceTick tick = fetcher.fetchPrice(btcUsd);
 
         // Assert
-        assertEquals(Exchange.BINANCE, tick.exchange(),
+        assertEquals(Exchange.BINANCE, tick.getExchange(),
                 "Tick should be from BINANCE exchange");
     }
 
@@ -52,7 +52,7 @@ class MockPriceFetcherTest {
         PriceTick tick = fetcher.fetchPrice(btcUsd);
 
         // Assert
-        assertEquals(btcUsd, tick.pair(),
+        assertEquals(btcUsd, tick.getPair(),
                 "Tick should have the requested currency pair");
     }
 
@@ -63,7 +63,7 @@ class MockPriceFetcherTest {
         PriceTick tick = fetcher.fetchPrice(btcUsd);
 
         // Assert
-        assertTrue(tick.bid().compareTo(tick.ask()) < 0,
+        assertTrue(tick.getBid().compareTo(tick.getAsk()) < 0,
                 "Bid should be less than bestAsk (positive spread)");
     }
 
@@ -74,9 +74,9 @@ class MockPriceFetcherTest {
         PriceTick tick = fetcher.fetchPrice(btcUsd);
 
         // Assert
-        assertTrue(tick.bid().compareTo(BigDecimal.ZERO) > 0,
+        assertTrue(tick.getBid().compareTo(BigDecimal.ZERO) > 0,
                 "Bid should be positive");
-        assertTrue(tick.ask().compareTo(BigDecimal.ZERO) > 0,
+        assertTrue(tick.getAsk().compareTo(BigDecimal.ZERO) > 0,
                 "Ask should be positive");
     }
 
@@ -87,9 +87,9 @@ class MockPriceFetcherTest {
         PriceTick tick = fetcher.fetchPrice(btcUsd);
 
         // Assert
-        assertNotNull(tick.timestamp(), "Timestamp should not be null");
+        assertNotNull(tick.getTimestamp(), "Timestamp should not be null");
         // Timestamp should be within the last few seconds
-        assertTrue(Duration.between(tick.timestamp(),
+        assertTrue(Duration.between(tick.getTimestamp(),
                 Instant.now()).getSeconds() < 5,
                 "Timestamp should be recent (within 5 seconds)");
     }
@@ -114,7 +114,7 @@ class MockPriceFetcherTest {
 
         // Assert
         // There's a very small chance they could be equal, but extremely unlikely
-        assertNotEquals(tick1.bid(), tick2.bid(),
+        assertNotEquals(tick1.getBid(), tick2.getBid(),
                 "Different calls should generate different prices");
     }
 
@@ -128,7 +128,7 @@ class MockPriceFetcherTest {
         PriceTick tick = defaultFetcher.fetchPrice(btcUsd);
 
         // Assert
-        assertEquals(Exchange.MOCK, tick.exchange());
+        assertEquals(Exchange.MOCK, tick.getExchange());
         assertEquals(Exchange.MOCK, defaultFetcher.getExchange());
     }
 

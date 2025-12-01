@@ -1,11 +1,37 @@
 package com.cryptoArb.crypto_price_aggregator.domain;
 
+import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import lombok.NonNull;
+/**
+ * Embeddable JPA component representing a currency pair.
+ * Converted from record to satisfy JPA requirements.
+ * 
+ * Using Lombok @Data for getters/setters while maintaining validation.
+ * JPA requires:
+ * - No-arg constructor (provided by @NoArgsConstructor)
+ * - Mutable fields (for proxy creation)
+ * 
+ * Following SOLID principles:
+ * - Single Responsibility: Only represents currency pair data
+ * - Immutability sacrificed for JPA compatibility
+ */
+@Embeddable
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CurrencyPair {
 
-public record CurrencyPair(String base, String quote) {
+    private String base;
+    private String quote;
 
-    public CurrencyPair {
+    /**
+     * Factory method with validation (maintains fail-fast principle).
+     * Use this instead of constructor to ensure validation.
+     */
+    public static CurrencyPair of(String base, String quote) {
         // Defensive Coding: Fail fast if invalid data is attempted
         if (base == null || base.isBlank()) {
             throw new IllegalArgumentException("Base currency cannot be empty");
@@ -14,12 +40,10 @@ public record CurrencyPair(String base, String quote) {
             throw new IllegalArgumentException("Quote currency cannot be empty");
         }
         // Normalize to uppercase to avoid "btc" vs "BTC" mismatch bugs
-        base = base.toUpperCase();
-        quote = quote.toUpperCase();
+        return new CurrencyPair(base.toUpperCase(), quote.toUpperCase());
     }
 
     @Override
-    @NonNull
     public String toString() {
         return base + "/" + quote;
     }

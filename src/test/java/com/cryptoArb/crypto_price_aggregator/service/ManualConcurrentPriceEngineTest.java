@@ -77,7 +77,7 @@ class ManualConcurrentPriceEngineTest {
 
         // THEN
         assertEquals(1, results.size(), "Should return only the successful tick");
-        assertEquals(Exchange.BINANCE, results.get(0).exchange());
+        assertEquals(Exchange.BINANCE, results.get(0).getExchange());
     }
 
     // Helper to create a mock that sleeps before returning

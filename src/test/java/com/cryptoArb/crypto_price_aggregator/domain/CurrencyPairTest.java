@@ -8,27 +8,27 @@ import org.junit.jupiter.api.Test;
 public class CurrencyPairTest {
     @Test
     void testBase() {
-        CurrencyPair pair = new CurrencyPair("BTC", "USD");
-        assertEquals("BTC", pair.base());
+        CurrencyPair pair = CurrencyPair.of("BTC", "USD");
+        assertEquals("BTC", pair.getBase());
     }
 
     @Test
     void testQuote() {
-        CurrencyPair pair = new CurrencyPair("BTC", "USD");
+        CurrencyPair pair = CurrencyPair.of("BTC", "USD");
         System.out.println("pair: " + pair);
-        assertEquals("USD", pair.quote());
+        assertEquals("USD", pair.getQuote());
     }
 
     // when base is null or blank
     @Test
     void testBaseNull() {
-        assertThrows(IllegalArgumentException.class, () -> new CurrencyPair(null, "USD"));
+        assertThrows(IllegalArgumentException.class, () -> CurrencyPair.of(null, "USD"));
     }
 
     // when quote is null or blank
     @Test
     void testQuoteNull() {
-        assertThrows(IllegalArgumentException.class, () -> new CurrencyPair("BTC", null));
+        assertThrows(IllegalArgumentException.class, () -> CurrencyPair.of("BTC", null));
     }
 
 }

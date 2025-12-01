@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PriceTickTest {
 
-    private final CurrencyPair btcUsd = new CurrencyPair("BTC", "USD");
+    private final CurrencyPair btcUsd = CurrencyPair.of("BTC", "USD");
     private final Instant now = Instant.now();
 
     @Test
@@ -25,11 +25,11 @@ class PriceTickTest {
 
         // Assert
         assertNotNull(tick);
-        assertEquals(btcUsd, tick.pair());
-        assertEquals(Exchange.BINANCE, tick.exchange());
-        assertEquals(bid, tick.bid());
-        assertEquals(ask, tick.ask());
-        assertEquals(now, tick.timestamp());
+        assertEquals(btcUsd, tick.getPair());
+        assertEquals(Exchange.BINANCE, tick.getExchange());
+        assertEquals(bid, tick.getBid());
+        assertEquals(ask, tick.getAsk());
+        assertEquals(now, tick.getTimestamp());
     }
 
     @Test
@@ -110,7 +110,7 @@ class PriceTickTest {
                     new BigDecimal("50100"), new BigDecimal("50000"), now);
         });
         assertTrue(exception.getMessage().contains("Bid price")
-                && exception.getMessage().contains("cannot be greater than bestAsk price"));
+                && exception.getMessage().contains("cannot be greater than ask price"));
     }
 
     @Test
@@ -122,8 +122,8 @@ class PriceTickTest {
         PriceTick tick = new PriceTick(btcUsd, Exchange.BINANCE, price, price, now);
 
         assertNotNull(tick);
-        assertEquals(price, tick.bid());
-        assertEquals(price, tick.ask());
+        assertEquals(price, tick.getBid());
+        assertEquals(price, tick.getAsk());
     }
 
     @Test
@@ -134,7 +134,7 @@ class PriceTickTest {
         PriceTick tick = new PriceTick(btcUsd, Exchange.BINANCE, zero, zero, now);
 
         assertNotNull(tick);
-        assertEquals(zero, tick.bid());
-        assertEquals(zero, tick.ask());
+        assertEquals(zero, tick.getBid());
+        assertEquals(zero, tick.getAsk());
     }
 }
