@@ -65,6 +65,17 @@ public class ManualConcurrentPriceEngine {
             // DEFENSIVE CODING: Use invokeAll with a timeout.
             // If the timeout expires, unfinished tasks are automatically cancelled.
             // This prevents the "Hanging Request" problem.
+            // Hanging requests tie up server resources and degrade user experience.
+            // In production, consider making the timeout configurable.
+            // 'Hanging Request' means a request that takes an excessively long time to complete,
+            // often due to waiting on slow external services, leading to poor user experience.
+            //Q) what is a Future in java?
+            //A) In Java, a Future represents the result of an asynchronous computation.
+            // It acts as a placeholder for a value that will be available at some point in the future,
+            // allowing you to check if the computation is complete, wait for its completion, and retrieve
+            // the result once it's ready.
+            // Future exists because it allows developers to write non-blocking code, where previous tasks can continue executing
+            // while waiting for long-running operations to complete, thus improving application responsiveness and throughput.
             List<Future<PriceTick>> futures = executorService.invokeAll(
                     tasks, FETCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
@@ -76,7 +87,7 @@ public class ManualConcurrentPriceEngine {
                         continue; // Skip cancelled tasks
                     }
 
-                    PriceTick tick = future.get(); // Should return immediately if done
+                    PriceTick tick = future.get(); // Should return immediately if done , if not done throws exception because of timeout
                     if (tick != null) {
                         results.add(tick);
                     }

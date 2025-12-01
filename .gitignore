@@ -36,3 +36,5 @@ build/
 CPA_roadmap.md
 
 .agent/
+
+.editorconfig

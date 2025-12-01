@@ -46,17 +46,37 @@ public class PriceServiceImpl implements PriceService {
     private final ManualConcurrentPriceEngine executionEngine;
 
     /**
-     * Constructor with dependency injection.
-     * Following Dependency Inversion Principle.
+     * Constructor that receives runtime dependencies.
+     *<p>
+     * Notes for beginners:
+     * - Spring will provide the {@code List<PriceFetcher>} when it constructs this bean
+     *   (constructor injection). Each {@code PriceFetcher} implementation can be a Spring
+     *   bean and Spring will collect them into the list automatically.
+     * - We defensively set {@code fetchers} to an empty list if Spring passes {@code null}.
+     *<p>
+     * Manual composition vs. injection:
+     * - Manual composition: we create the {@code ManualConcurrentPriceEngine} instance here
+     *   using the {@code new} operator. This means this class controls which implementation
+     *   and configuration of the engine is used.
+     * - Dependency injection (preferred): the engine would be declared as a Spring bean and
+     *   passed into this constructor. That makes swapping or testing the engine easier.
+     *<p>
+     * Why we pick the pool size like this:
+     * - {@code Math.max(4, this.fetchers.size())} ensures a minimum of 4 worker threads so
+     *   small numbers of fetchers still get parallelism. If there are more fetchers than 4,
+     *   we use that larger number so each fetcher can potentially run in parallel.
+     *<p>
+     * TODO (next step): change the constructor to accept a {@code ManualConcurrentPriceEngine}
+     * (or a generic interface) and let Spring inject the engine instead of creating it here.
      *
-     * @param fetchers List of price fetchers to aggregate from
+     * @param fetchers List of price fetchers to aggregate from (may be null)
      */
     public PriceServiceImpl(List<PriceFetcher> fetchers) {
+        // Ensure fetchers is never null to simplify usage elsewhere
         this.fetchers = fetchers != null ? fetchers : new ArrayList<>();
 
-        // Manual wiring of the engine for Phase 2.
-        // Ideally, this should be injected, but we are demonstrating manual composition first.
-        // We ensure pool size is at least 4 or matches the number of fetchers to maximize parallelism.
+        // Manually create the execution engine for parallel fetching.
+        // This is simple and explicit for now, but move to DI later for better testability.
         int poolSize = Math.max(4, this.fetchers.size());
         this.executionEngine = new ManualConcurrentPriceEngine(poolSize);
 
