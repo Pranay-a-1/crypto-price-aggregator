@@ -41,4 +41,13 @@ public class PriceFetcherConfig {
     public PriceFetcher krakenMockFetcher() {
         return new MockPriceFetcher(Exchange.KRAKEN);
     }
+
+    /**
+     * Creates a mock fetcher for generic Mock exchange.
+     * Added for Phase 2 Cycle 3 - testing with 4 exchanges.
+     */
+    @Bean
+    public PriceFetcher genericMockFetcher() {
+        return new MockPriceFetcher(Exchange.MOCK);
+    }
 }
