@@ -3,7 +3,7 @@ package com.cryptoArb.crypto_price_aggregator.service.impl;
 import com.cryptoArb.crypto_price_aggregator.domain.AggregatedTopOfBookQuote;
 import com.cryptoArb.crypto_price_aggregator.domain.CurrencyPair;
 import com.cryptoArb.crypto_price_aggregator.domain.PriceTick;
-import com.cryptoArb.crypto_price_aggregator.exception.PriceFetchException;
+import com.cryptoArb.crypto_price_aggregator.service.ManualConcurrentPriceEngine;
 import com.cryptoArb.crypto_price_aggregator.service.PriceFetcher;
 import com.cryptoArb.crypto_price_aggregator.service.PriceService;
 import org.slf4j.Logger;
@@ -30,6 +30,12 @@ import java.util.Optional;
  * - Best Ask = MIN of all asks (lowest price someone will sell)
  * <p>
  * Following KISS: Simple sequential fetching (Phase 2 will add concurrency)
+ * <p>
+ * <b>Phase 2 Update:</b> Now uses {@link ManualConcurrentPriceEngine} for parallel fetching.
+ * <p>
+ * Following SOLID principles:
+ * - Single Responsibility: Aggregation logic only. Threading delegated to Engine.
+ * - Open/Closed: Engine can be swapped (e.g., for a Reactor version) without changing aggregation logic.
  */
 @Service
 public class PriceServiceImpl implements PriceService {
@@ -37,6 +43,7 @@ public class PriceServiceImpl implements PriceService {
     private static final Logger log = LoggerFactory.getLogger(PriceServiceImpl.class);
 
     private final List<PriceFetcher> fetchers;
+    private final ManualConcurrentPriceEngine executionEngine;
 
     /**
      * Constructor with dependency injection.
@@ -46,7 +53,15 @@ public class PriceServiceImpl implements PriceService {
      */
     public PriceServiceImpl(List<PriceFetcher> fetchers) {
         this.fetchers = fetchers != null ? fetchers : new ArrayList<>();
-        log.info("PriceServiceImpl initialized with {} fetchers", this.fetchers.size());
+
+        // Manual wiring of the engine for Phase 2.
+        // Ideally, this should be injected, but we are demonstrating manual composition first.
+        // We ensure pool size is at least 4 or matches the number of fetchers to maximize parallelism.
+        int poolSize = Math.max(4, this.fetchers.size());
+        this.executionEngine = new ManualConcurrentPriceEngine(poolSize);
+
+        log.info("PriceServiceImpl initialized with {} fetchers and ManualConcurrentPriceEngine (pool={})",
+                this.fetchers.size(), poolSize);
     }
 
     @Override
@@ -57,21 +72,9 @@ public class PriceServiceImpl implements PriceService {
 
         log.debug("Fetching AggregatedTopOfBookQuote for {}", pair);
 
-        List<PriceTick> successfulTicks = new ArrayList<>();
-
-        // Sequential fetching (KISS principle - Phase 2 will add concurrency)
-        for (PriceFetcher fetcher : fetchers) {
-            try {
-                PriceTick tick = fetcher.fetchPrice(pair);
-                successfulTicks.add(tick);
-                log.debug("Fetched from {}: bestBid={}, bestAsk={}",
-                        fetcher.getExchange(), tick.bid(), tick.ask());
-            } catch (PriceFetchException e) {
-                // Gracefully skip failed fetchers (resilience)
-                log.warn("Failed to fetch from {}: {}",
-                        fetcher.getExchange(), e.getMessage());
-            }
-        }
+        // DELEGATE: Use the engine to fetch prices in parallel
+        // This replaces the sequential for-loop from Phase 1
+        List<PriceTick> successfulTicks = executionEngine.fetchPrices(fetchers, pair);
 
         // If all fetchers failed, return empty
         if (successfulTicks.isEmpty()) {
@@ -81,7 +84,8 @@ public class PriceServiceImpl implements PriceService {
 
         // Aggregate: Best bestBid (max), Best bestAsk (min)
         AggregatedTopOfBookQuote aggregatedTopOfBookQuote = aggregateTicks(pair, successfulTicks);
-        log.info("AggregatedTopOfBookQuote for {}: bestBid={}, bestAsk={}",
+
+        log.info("Aggregated result for {}: bestBid={}, bestAsk={}",
                 pair, aggregatedTopOfBookQuote.bestBid(), aggregatedTopOfBookQuote.bestAsk());
 
         return Optional.of(aggregatedTopOfBookQuote);
