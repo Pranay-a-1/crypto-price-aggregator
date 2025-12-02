@@ -26,7 +26,7 @@ public class ManualConcurrentPriceEngine {
 
     // SLA: All fetches must complete within 3 seconds or be cancelled.
     // In a real app, this would be configurable via @Value
-    private static final long FETCH_TIMEOUT_SECONDS = 3;
+    private static final long FETCH_TIMEOUT_SECONDS = 5;
 
     private final ExecutorService executorService;
 

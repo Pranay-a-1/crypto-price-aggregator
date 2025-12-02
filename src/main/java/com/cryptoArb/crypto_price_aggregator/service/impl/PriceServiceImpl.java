@@ -2,6 +2,7 @@ package com.cryptoArb.crypto_price_aggregator.service.impl;
 
 import com.cryptoArb.crypto_price_aggregator.domain.AggregatedTopOfBookQuote;
 import com.cryptoArb.crypto_price_aggregator.domain.CurrencyPair;
+import com.cryptoArb.crypto_price_aggregator.domain.Exchange;
 import com.cryptoArb.crypto_price_aggregator.domain.PriceTick;
 import com.cryptoArb.crypto_price_aggregator.repository.PriceTickRepository;
 import com.cryptoArb.crypto_price_aggregator.service.ManualConcurrentPriceEngine;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  * Implementation of PriceService that aggregates prices from multiple fetchers.
@@ -108,11 +110,30 @@ public class PriceServiceImpl implements PriceService {
             return Optional.empty();
         }
 
-        // Aggregate from database ticks
-        AggregatedTopOfBookQuote aggregatedTopOfBookQuote = aggregateTicks(pair, recentTicks);
+        // Filter to get only the latest tick from each exchange
+        Map<Exchange, PriceTick> latestTicksByExchange = new HashMap<>();
+        for (PriceTick tick : recentTicks) {
+            // merge method will keep the tick with the latest timestamp
+            latestTicksByExchange.merge(tick.getExchange(), tick,
+                (existing, replacement) -> replacement.getTimestamp().isAfter(existing.getTimestamp()) ? replacement : existing);
+        }
 
-        log.info("Aggregated result for {} from {} recent ticks: bestBid={} (exchange={}), bestAsk={} (exchange={})",
-                pair, recentTicks.size(), aggregatedTopOfBookQuote.bestBid(), aggregatedTopOfBookQuote.bestBidExchange(),
+        List<PriceTick> latestTicks = new ArrayList<>(latestTicksByExchange.values());
+        log.debug("Number of latest ticks after filtering: {}", latestTicks.size());
+        log.debug("Latest ticks details: {}", latestTicks);
+
+        // If no latest ticks found after filtering, return empty
+        if (latestTicks.isEmpty()) {
+            log.warn("No latest price ticks found for {} after filtering by exchange",
+                    pair);
+            return Optional.empty();
+        }
+
+        // Aggregate from latest ticks (one per exchange)
+        AggregatedTopOfBookQuote aggregatedTopOfBookQuote = aggregateTicks(pair, latestTicks);
+
+        log.info("Aggregated result for {} from {} latest ticks (one per exchange): bestBid={} (exchange={}), bestAsk={} (exchange={})",
+                pair, latestTicks.size(), aggregatedTopOfBookQuote.bestBid(), aggregatedTopOfBookQuote.bestBidExchange(),
                 aggregatedTopOfBookQuote.bestAsk(), aggregatedTopOfBookQuote.bestAskExchange());
 
         return Optional.of(aggregatedTopOfBookQuote);
