@@ -35,10 +35,22 @@ public class BinanceFetcher implements PriceFetcher {
 
     @Override
     public PriceTick fetchPrice(CurrencyPair pair) throws PriceFetchException {
-        String symbol = pair.getBase() + pair.getQuote(); // e.g., BTCUSDT
-        // Binance usually uses USDT instead of USD. Handling simple case here.
-        if ("USD".equals(pair.getQuote())) {
-            symbol = pair.getBase() + "USDT";
+        // Ensure symbol is properly formatted for Binance API
+        // Binance requires uppercase letters only and specific format
+        String base = pair.getBase().toUpperCase();
+        String quote = pair.getQuote().toUpperCase();
+
+        // Binance usually uses USDT instead of USD
+        String symbol;
+        if ("USD".equals(quote)) {
+            symbol = base + "USDT";
+        } else {
+            symbol = base + quote;
+        }
+
+        // Validate symbol format to match Binance requirements: ^[A-Z0-9-_.]{1,20}$
+        if (!symbol.matches("^[A-Z0-9-_.]{1,20}$")) {
+            throw new PriceFetchException("Invalid symbol format for Binance: " + symbol);
         }
 
         String url = API_URL + symbol;

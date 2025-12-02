@@ -13,10 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of PriceService that aggregates prices from multiple fetchers.
@@ -113,10 +111,32 @@ public class PriceServiceImpl implements PriceService {
         // Aggregate from database ticks
         AggregatedTopOfBookQuote aggregatedTopOfBookQuote = aggregateTicks(pair, recentTicks);
 
-        log.info("Aggregated result for {} from {} recent ticks: bestBid={}, bestAsk={}",
-                pair, recentTicks.size(), aggregatedTopOfBookQuote.bestBid(), aggregatedTopOfBookQuote.bestAsk());
+        log.info("Aggregated result for {} from {} recent ticks: bestBid={} (exchange={}), bestAsk={} (exchange={})",
+                pair, recentTicks.size(), aggregatedTopOfBookQuote.bestBid(), aggregatedTopOfBookQuote.bestBidExchange(),
+                aggregatedTopOfBookQuote.bestAsk(), aggregatedTopOfBookQuote.bestAskExchange());
 
         return Optional.of(aggregatedTopOfBookQuote);
+    }
+
+
+
+    @Override
+    public Map<String, PriceTick> getLatestPriceTicks(CurrencyPair pair) {
+        if (pair == null) {
+            throw new IllegalArgumentException("CurrencyPair cannot be null");
+        }
+
+        log.debug("Fetching latest price ticks for {}", pair);
+
+        // Fetch prices using the engine (same as getAggregatedTopOfBookQuote)
+        List<PriceTick> freshTicks = executionEngine.fetchPrices(fetchers, pair);
+
+        // Convert to Map<ExchangeName, PriceTick>
+        return freshTicks.stream()
+                .collect(Collectors.toMap(
+                        tick -> tick.getExchange().name(),
+                        tick -> tick
+                ));
     }
 
     /**

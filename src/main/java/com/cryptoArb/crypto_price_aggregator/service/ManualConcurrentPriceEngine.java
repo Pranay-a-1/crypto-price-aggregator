@@ -93,7 +93,7 @@ public class ManualConcurrentPriceEngine {
                     }
                 } catch (ExecutionException e) {
                     // Task threw an exception (e.g., Network Error)
-                    log.warn("Error in parallel fetch: {}",
+                    log.error("Error in parallel fetch: {}",
                             e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
                 } catch (CancellationException e) {
                     // Double-check for cancellation (invokeAll documentation guarantees this for timed-out tasks)

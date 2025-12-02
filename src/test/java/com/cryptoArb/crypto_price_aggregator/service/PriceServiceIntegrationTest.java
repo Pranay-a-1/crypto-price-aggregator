@@ -58,7 +58,7 @@ class PriceServiceIntegrationTest {
         List<PriceTick> savedTicks = repository.findByPair_BaseAndPair_Quote("BTC", "USD");
 
         assertFalse(savedTicks.isEmpty(), "Ticks should be saved to database");
-        assertTrue(savedTicks.size() >= 2, "Should have ticks from all 4 mock exchanges");
+        assertTrue(savedTicks.size() > 2, "Should have ticks from all 4 mock exchanges");
 
         // Verify all saved ticks have the correct pair
         savedTicks.forEach(tick -> {
