@@ -1,4 +1,4 @@
-package com.cryptoArb.crypto_price_aggregator.service;
+package com.cryptoArb.crypto_price_aggregator.service.impl;
 
 import com.cryptoArb.crypto_price_aggregator.domain.CurrencyPair;
 import com.cryptoArb.crypto_price_aggregator.domain.Exchange;

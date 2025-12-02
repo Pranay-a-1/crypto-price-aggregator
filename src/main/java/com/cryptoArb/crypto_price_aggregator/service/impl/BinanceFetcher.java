@@ -1,9 +1,10 @@
-package com.cryptoArb.crypto_price_aggregator.service;
+package com.cryptoArb.crypto_price_aggregator.service.impl;
 
 import com.cryptoArb.crypto_price_aggregator.domain.CurrencyPair;
 import com.cryptoArb.crypto_price_aggregator.domain.Exchange;
 import com.cryptoArb.crypto_price_aggregator.domain.PriceTick;
 import com.cryptoArb.crypto_price_aggregator.exception.PriceFetchException;
+import com.cryptoArb.crypto_price_aggregator.service.PriceFetcher;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
