@@ -91,23 +91,24 @@ public class PriceServiceImpl implements PriceService {
 
         // PHASE 3: Fetch prices in parallel using the engine
         // Phase 5 Update: We no longer save explicitely. Fetchers publish events, and PriceTickConsumer saves them.
-        executionEngine.fetchPrices(fetchers, pair);
+        // Phase 6 Update: Persistence is now async via RabbitMQ. We use the returned fresh ticks for immediate aggregation
+        // to avoid race conditions with DB latency. The ticks are still sent to the DB in the background.
+        List<PriceTick> freshTicks = executionEngine.fetchPrices(fetchers, pair);
 
-        // PHASE 3: Query recent ticks from database (last 5 seconds)
-        Instant cutoff = Instant.now().minusSeconds(RECENT_TICKS_WINDOW_SECONDS);
-        List<PriceTick> recentTicks = repository.findByPair_BaseAndPair_QuoteAndTimestampAfter(
-                pair.getBase(), pair.getQuote(), cutoff);
-
-        // If no recent ticks found in database, return empty
-        if (recentTicks.isEmpty()) {
-            log.warn("No recent price ticks found for {} in the last {} seconds",
-                    pair, RECENT_TICKS_WINDOW_SECONDS);
+        if (freshTicks.isEmpty()) {
+            // Fallback to DB if live fetch fails? Or just return empty?
+            // For real-time aggregator, we prefer live data.
+            // If fetch failed, checking DB might give stale data, but let's check DB just in case?
+            // Actually, "In-Memory Persistence" logic (Phase 3) preferred DB for aggregation.
+            // But with Async MQ, DB is eventually consistent.
+            // We'll stick to freshTicks for "Real-Time" top of book.
+            log.warn("No fresh price ticks obtained for {}", pair);
             return Optional.empty();
         }
 
-        // Filter to get only the latest tick from each exchange
+        // Filter to get only the latest tick from each exchange (in case engine returns multiples, though it usually returns one per fetcher)
         Map<Exchange, PriceTick> latestTicksByExchange = new HashMap<>();
-        for (PriceTick tick : recentTicks) {
+        for (PriceTick tick : freshTicks) {
             // merge method will keep the tick with the latest timestamp
             latestTicksByExchange.merge(tick.getExchange(), tick,
                 (existing, replacement) -> replacement.getTimestamp().isAfter(existing.getTimestamp()) ? replacement : existing);

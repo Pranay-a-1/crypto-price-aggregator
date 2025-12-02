@@ -1,11 +1,9 @@
 # Project Structure
 
-**Generated on:** December 03, 2025 at 12:42 AM
+**Generated on:** December 02, 2025 at 10:17 PM
 
 ```text
 .
-├── ⚙️ docker-compose.yml
-├── 📦 Dockerfile
 ├── 📦 .gitattributes
 ├── 📦 .gitignore
 ├── 🔵 implementatonDocs
@@ -31,12 +29,6 @@
 │   │   ├── 📄 walkthrough.md
 │   ├── 🔵 phase5
 │   │   ├── 📄 PHASE_5_SUMMARY.md
-│   │   ├── 📄 PROJECT_STRUCTURE_phase6.md
-│   │   ├── 📄 walkthrough.md
-│   ├── 🔵 phase6
-│   │   ├── 📄 implementation_plan.md
-│   │   ├── 📄 phase_6_summary.md
-│   │   ├── 📄 tasks.md
 │   │   ├── 📄 walkthrough.md
 ├── 🔵 .mvn
 ├── 📦 mvnw
@@ -63,7 +55,6 @@
 │   │   │   │   │   │   ├── 🔵 config
 │   │   │   │   │   │   │   ├── ☕ AppConfig.java
 │   │   │   │   │   │   │   ├── ☕ JpaConfig.java
-│   │   │   │   │   │   │   ├── ☕ RabbitMqConfig.java
 │   │   │   │   │   │   ├── 🔵 controller
 │   │   │   │   │   │   │   ├── ☕ PriceController.java
 │   │   │   │   │   │   ├── ☕ CryptoPriceAggregatorApplication.java
@@ -87,10 +78,8 @@
 │   │   │   │   │   │   │   │   ├── 📄 PriceServiceImpl.md
 │   │   │   │   │   │   │   ├── ☕ ManualConcurrentPriceEngine.java
 │   │   │   │   │   │   │   ├── 📄 ManualConcurrentPriceEngine.md
-│   │   │   │   │   │   │   ├── ☕ ManualPriceMessageProducer.java
 │   │   │   │   │   │   │   ├── ☕ MockPriceFetcher.java
 │   │   │   │   │   │   │   ├── ☕ PriceFetcher.java
-│   │   │   │   │   │   │   ├── ☕ PriceMessageProducer.java
 │   │   │   │   │   │   │   ├── ☕ PriceService.java
 │   │   │   │   │   │   │   ├── ☕ PriceTickConsumer.java
 │   │   ├── 🔵 resources
@@ -109,8 +98,6 @@
 │   │   │   │   │   │   ├── 🔵 concurrency
 │   │   │   │   │   │   │   ├── ☕ MyBlockingQueueTest.java
 │   │   │   │   │   │   │   ├── ☕ VolatileFlagStopTest.java
-│   │   │   │   │   │   ├── 🔵 config
-│   │   │   │   │   │   │   ├── ☕ RabbitMqConfigTest.java
 │   │   │   │   │   │   ├── 🔵 controller
 │   │   │   │   │   │   │   ├── ☕ PriceControllerGetExchangesTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceControllerTest.java
@@ -133,9 +120,7 @@
 │   │   │   │   │   │   │   │   ├── ☕ KrakenFetcherTest.java
 │   │   │   │   │   │   │   ├── ☕ ManualConcurrentPriceEngineTest.java
 │   │   │   │   │   │   │   ├── ☕ ManualFetcherIntegrationTest.java
-│   │   │   │   │   │   │   ├── ☕ ManualPriceMessageProducerTest.java
 │   │   │   │   │   │   │   ├── ☕ MockPriceFetcherTest.java
-│   │   │   │   │   │   │   ├── ☕ PriceMessageProducerTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceServiceGetLatestTicksTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceServiceIntegrationTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceServiceTest.java
@@ -155,6 +140,6 @@
 
 ---
 
-**Total Files:** 91
+**Total Files:** 78
 
-**Total Directories:** 46
+**Total Directories:** 44

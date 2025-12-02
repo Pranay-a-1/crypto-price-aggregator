@@ -1,15 +1,16 @@
 package com.cryptoArb.crypto_price_aggregator.service;
 
+import com.cryptoArb.crypto_price_aggregator.config.RabbitMqConfig;
 import com.cryptoArb.crypto_price_aggregator.domain.CurrencyPair;
 import com.cryptoArb.crypto_price_aggregator.domain.Exchange;
 import com.cryptoArb.crypto_price_aggregator.domain.PriceTick;
 import com.cryptoArb.crypto_price_aggregator.event.PriceTickFetchedEvent;
-import com.cryptoArb.crypto_price_aggregator.repository.PriceTickRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -17,33 +18,34 @@ import java.time.Instant;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class PriceTickConsumerTest {
+class PriceMessageProducerTest {
 
     @Mock
-    private PriceTickRepository priceTickRepository;
+    private RabbitTemplate rabbitTemplate;
 
-    private PriceTickConsumer priceTickConsumer;
-
-    @BeforeEach
-    void setUp() {
-        priceTickConsumer = new PriceTickConsumer(priceTickRepository);
-    }
+    @InjectMocks
+    private PriceMessageProducer producer;
 
     @Test
-    void shouldSaveTickOnMessage() {
+    void shouldPublishEventUsingRabbitTemplate() {
         // Arrange
         PriceTick tick = new PriceTick(
-                new CurrencyPair("BTC", "USD"),
+                CurrencyPair.of("BTC", "USD"),
                 Exchange.BINANCE,
-                new BigDecimal("50000.00"),
-                new BigDecimal("50010.00"),
+                new BigDecimal("50000"),
+                new BigDecimal("50100"),
                 Instant.now()
         );
+        PriceTickFetchedEvent event = new PriceTickFetchedEvent(this, tick);
 
         // Act
-        priceTickConsumer.handlePriceTickMessage(tick);
+        producer.onApplicationEvent(event);
 
         // Assert
-        verify(priceTickRepository).save(tick);
+        verify(rabbitTemplate).convertAndSend(
+                RabbitMqConfig.EXCHANGE_NAME,
+                "prices.tick.binance",
+                tick
+        );
     }
 }
