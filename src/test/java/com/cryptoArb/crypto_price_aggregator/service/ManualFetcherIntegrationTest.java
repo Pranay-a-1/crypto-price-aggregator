@@ -3,6 +3,8 @@ package com.cryptoArb.crypto_price_aggregator.service;
 import com.cryptoArb.crypto_price_aggregator.domain.CurrencyPair;
 import com.cryptoArb.crypto_price_aggregator.domain.Exchange;
 import com.cryptoArb.crypto_price_aggregator.domain.PriceTick;
+import com.cryptoArb.crypto_price_aggregator.service.impl.BinanceFetcher;
+import com.cryptoArb.crypto_price_aggregator.service.impl.CoinbaseFetcher;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

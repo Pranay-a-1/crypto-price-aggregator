@@ -1,6 +1,6 @@
 # Project Structure
 
-**Generated on:** December 02, 2025 at 02:29 PM
+**Generated on:** December 02, 2025 at 06:02 PM
 
 ```text
 .
@@ -20,7 +20,11 @@
 │   ├── 🔵 phase3
 │   │   ├── 📄 implementation_plan.md
 │   │   ├── 📄 PHASE_3_SUMMARY.md
+│   │   ├── 📄 PROJECT_STRUCTURE_phase3.md
 │   │   ├── 📄 task.md
+│   │   ├── 📄 walkthrough2.md
+│   │   ├── 📄 walkthrough.md
+│   ├── 🔵 phase4
 │   │   ├── 📄 walkthrough.md
 ├── 🔵 .mvn
 ├── 📦 mvnw
@@ -28,6 +32,9 @@
 │   ├── 🔵 wrapper
 │   │   ├── ⚙️ maven-wrapper.properties
 ├── ⚙️ pom.xml
+├── 🔵 .qodo
+│   ├── 🔵 agents
+│   ├── 🔵 workflows
 ├── 📄 README.md
 ├── 🔵 src
 │   ├── 🔵 main
@@ -42,8 +49,8 @@
 │   │   │   │   │   │   │   ├── ☕ MyBlockingQueue.java
 │   │   │   │   │   │   │   ├── ☕ VolatileFlagStop.java
 │   │   │   │   │   │   ├── 🔵 config
+│   │   │   │   │   │   │   ├── ☕ AppConfig.java
 │   │   │   │   │   │   │   ├── ☕ JpaConfig.java
-│   │   │   │   │   │   │   ├── ☕ PriceFetcherConfig.java
 │   │   │   │   │   │   ├── 🔵 controller
 │   │   │   │   │   │   │   ├── ☕ PriceController.java
 │   │   │   │   │   │   ├── ☕ CryptoPriceAggregatorApplication.java
@@ -58,6 +65,9 @@
 │   │   │   │   │   │   │   ├── ☕ PriceTickRepository.java
 │   │   │   │   │   │   ├── 🔵 service
 │   │   │   │   │   │   │   ├── 🔵 impl
+│   │   │   │   │   │   │   │   ├── ☕ BinanceFetcher.java
+│   │   │   │   │   │   │   │   ├── ☕ CoinbaseFetcher.java
+│   │   │   │   │   │   │   │   ├── ☕ KrakenFetcher.java
 │   │   │   │   │   │   │   │   ├── ☕ PriceServiceImpl.java
 │   │   │   │   │   │   │   │   ├── 📄 PriceServiceImpl.md
 │   │   │   │   │   │   │   ├── ☕ ManualConcurrentPriceEngine.java
@@ -91,11 +101,19 @@
 │   │   │   │   │   │   ├── 🔵 repository
 │   │   │   │   │   │   │   ├── ☕ PriceTickRepositoryTest.java
 │   │   │   │   │   │   ├── 🔵 service
+│   │   │   │   │   │   │   ├── 🔵 docs
+│   │   │   │   │   │   │   │   ├── 📄 COINBASE_TESTING_GUIDE.md
+│   │   │   │   │   │   │   │   ├── 📄 ManualConcurrentPriceEngineTest.md
+│   │   │   │   │   │   │   │   ├── 📄 PriceServiceTest.md
+│   │   │   │   │   │   │   ├── 🔵 impl
+│   │   │   │   │   │   │   │   ├── ☕ BinanceFetcherTest.java
+│   │   │   │   │   │   │   │   ├── ☕ CoinbaseFetcherTest.java
+│   │   │   │   │   │   │   │   ├── ☕ KrakenFetcherTest.java
 │   │   │   │   │   │   │   ├── ☕ ManualConcurrentPriceEngineTest.java
-│   │   │   │   │   │   │   ├── 📄 ManualConcurrentPriceEngineTest.md
+│   │   │   │   │   │   │   ├── ☕ ManualFetcherIntegrationTest.java
 │   │   │   │   │   │   │   ├── ☕ MockPriceFetcherTest.java
+│   │   │   │   │   │   │   ├── ☕ PriceServiceIntegrationTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceServiceTest.java
-│   │   │   │   │   │   │   ├── 📄 PriceServiceTest.md
 ```
 
 ---
@@ -111,6 +129,6 @@
 
 ---
 
-**Total Files:** 57
+**Total Files:** 69
 
-**Total Directories:** 36
+**Total Directories:** 42
