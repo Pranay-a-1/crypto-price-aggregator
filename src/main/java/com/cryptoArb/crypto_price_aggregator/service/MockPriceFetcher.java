@@ -3,7 +3,9 @@ package com.cryptoArb.crypto_price_aggregator.service;
 import com.cryptoArb.crypto_price_aggregator.domain.CurrencyPair;
 import com.cryptoArb.crypto_price_aggregator.domain.Exchange;
 import com.cryptoArb.crypto_price_aggregator.domain.PriceTick;
+import com.cryptoArb.crypto_price_aggregator.event.PriceTickFetchedEvent;
 import com.cryptoArb.crypto_price_aggregator.exception.PriceFetchException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -27,22 +29,29 @@ public class MockPriceFetcher implements PriceFetcher {
 
     private final Exchange exchange;
     private final Random random;
+    private final ApplicationEventPublisher eventPublisher;
+
 
     /**
      * Constructor with dependency injection.
      *
      * @param exchange The exchange this fetcher represents
      */
-    public MockPriceFetcher(Exchange exchange) {
+    public MockPriceFetcher(Exchange exchange, ApplicationEventPublisher eventPublisher) {
         this.exchange = exchange;
         this.random = new Random();
+        this.eventPublisher = eventPublisher;
+    }
+
+    public MockPriceFetcher(Exchange exchange) {
+        this(exchange, null);
     }
 
     /**
      * Default constructor for Spring (creates MOCK exchange).
      */
     public MockPriceFetcher() {
-        this(Exchange.MOCK);
+        this(Exchange.MOCK , null);
     }
 
     @Override
@@ -65,7 +74,11 @@ public class MockPriceFetcher implements PriceFetcher {
             BigDecimal ask = BigDecimal.valueOf(basePrice + askOffset)
                     .setScale(2, RoundingMode.HALF_UP);
 
-            return new PriceTick(pair, exchange, bid, ask, Instant.now());
+            PriceTick tick = new PriceTick(pair, exchange, bid, ask, Instant.now());
+            if (eventPublisher != null) {
+                eventPublisher.publishEvent(new PriceTickFetchedEvent(this, tick));
+            }
+            return tick;
 
         } catch (Exception e) {
             throw new PriceFetchException(

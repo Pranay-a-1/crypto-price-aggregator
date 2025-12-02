@@ -3,11 +3,13 @@ package com.cryptoArb.crypto_price_aggregator.service.impl;
 import com.cryptoArb.crypto_price_aggregator.domain.CurrencyPair;
 import com.cryptoArb.crypto_price_aggregator.domain.Exchange;
 import com.cryptoArb.crypto_price_aggregator.domain.PriceTick;
+import com.cryptoArb.crypto_price_aggregator.event.PriceTickFetchedEvent;
 import com.cryptoArb.crypto_price_aggregator.exception.PriceFetchException;
 import com.cryptoArb.crypto_price_aggregator.service.PriceFetcher;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -28,11 +30,13 @@ public class KrakenFetcher implements PriceFetcher {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public KrakenFetcher(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public KrakenFetcher(RestTemplate restTemplate, ObjectMapper objectMapper, ApplicationEventPublisher eventPublisher) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -76,7 +80,9 @@ public class KrakenFetcher implements PriceFetcher {
             BigDecimal bid = new BigDecimal(tickerData.get("b").get(0).asText());
             BigDecimal ask = new BigDecimal(tickerData.get("a").get(0).asText());
 
-            return new PriceTick(pair, exchange, bid, ask, Instant.now());
+            PriceTick tick = new PriceTick(pair, exchange, bid, ask, Instant.now());
+            eventPublisher.publishEvent(new PriceTickFetchedEvent(this, tick));
+            return tick;
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

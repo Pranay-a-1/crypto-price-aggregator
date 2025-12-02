@@ -90,13 +90,8 @@ public class PriceServiceImpl implements PriceService {
         log.debug("Fetching AggregatedTopOfBookQuote for {}", pair);
 
         // PHASE 3: Fetch prices in parallel using the engine
-        List<PriceTick> freshTicks = executionEngine.fetchPrices(fetchers, pair);
-
-        // PHASE 3: Save all fetched ticks to database
-        if (!freshTicks.isEmpty()) {
-            repository.saveAll(freshTicks);
-            log.debug("Saved {} fresh ticks to database for {}", freshTicks.size(), pair);
-        }
+        // Phase 5 Update: We no longer save explicitely. Fetchers publish events, and PriceTickConsumer saves them.
+        executionEngine.fetchPrices(fetchers, pair);
 
         // PHASE 3: Query recent ticks from database (last 5 seconds)
         Instant cutoff = Instant.now().minusSeconds(RECENT_TICKS_WINDOW_SECONDS);

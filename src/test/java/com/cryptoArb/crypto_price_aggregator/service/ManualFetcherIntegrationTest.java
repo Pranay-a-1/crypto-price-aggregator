@@ -8,6 +8,7 @@ import com.cryptoArb.crypto_price_aggregator.service.impl.CoinbaseFetcher;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,8 +22,10 @@ class ManualFetcherIntegrationTest {
 
     @Test
     void testBinanceFetcher() throws Exception {
-        BinanceFetcher fetcher = new BinanceFetcher(new org.springframework.web.client.RestTemplate(), new com.fasterxml.jackson.databind.ObjectMapper());
+        ApplicationEventPublisher mockPublisher = org.mockito.Mockito.mock(org.springframework.context.ApplicationEventPublisher.class);
+        BinanceFetcher fetcher = new BinanceFetcher(new org.springframework.web.client.RestTemplate(), new com.fasterxml.jackson.databind.ObjectMapper(), mockPublisher);
         CurrencyPair pair = CurrencyPair.of("BTC", "USD"); // Maps to BTCUSDT
+
 
         try {
             PriceTick tick = fetcher.fetchPrice(pair);
@@ -44,7 +47,8 @@ class ManualFetcherIntegrationTest {
 
     @Test
     void testCoinbaseFetcher() throws Exception {
-        CoinbaseFetcher fetcher = new CoinbaseFetcher(new org.springframework.web.client.RestTemplate(), new com.fasterxml.jackson.databind.ObjectMapper());
+        ApplicationEventPublisher mockPublisher = org.mockito.Mockito.mock(org.springframework.context.ApplicationEventPublisher.class);
+        CoinbaseFetcher fetcher = new CoinbaseFetcher(new org.springframework.web.client.RestTemplate(), new com.fasterxml.jackson.databind.ObjectMapper(), mockPublisher);
         CurrencyPair pair = CurrencyPair.of("BTC", "USD"); // Maps to BTC-USD
 
         try {

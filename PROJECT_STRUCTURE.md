@@ -1,6 +1,6 @@
 # Project Structure
 
-**Generated on:** December 02, 2025 at 07:29 PM
+**Generated on:** December 02, 2025 at 10:17 PM
 
 ```text
 .
@@ -25,6 +25,10 @@
 │   │   ├── 📄 walkthrough2.md
 │   │   ├── 📄 walkthrough.md
 │   ├── 🔵 phase4
+│   │   ├── 📄 PROJECT_STRUCTURE_phase4.md
+│   │   ├── 📄 walkthrough.md
+│   ├── 🔵 phase5
+│   │   ├── 📄 PHASE_5_SUMMARY.md
 │   │   ├── 📄 walkthrough.md
 ├── 🔵 .mvn
 ├── 📦 mvnw
@@ -59,6 +63,8 @@
 │   │   │   │   │   │   │   ├── ☕ CurrencyPair.java
 │   │   │   │   │   │   │   ├── ☕ Exchange.java
 │   │   │   │   │   │   │   ├── ☕ PriceTick.java
+│   │   │   │   │   │   ├── 🔵 event
+│   │   │   │   │   │   │   ├── ☕ PriceTickFetchedEvent.java
 │   │   │   │   │   │   ├── 🔵 exception
 │   │   │   │   │   │   │   ├── ☕ PriceFetchException.java
 │   │   │   │   │   │   ├── 🔵 repository
@@ -75,6 +81,7 @@
 │   │   │   │   │   │   │   ├── ☕ MockPriceFetcher.java
 │   │   │   │   │   │   │   ├── ☕ PriceFetcher.java
 │   │   │   │   │   │   │   ├── ☕ PriceService.java
+│   │   │   │   │   │   │   ├── ☕ PriceTickConsumer.java
 │   │   ├── 🔵 resources
 │   │   │   ├── ⚙️ application-dev.properties
 │   │   │   ├── ⚙️ application.properties
@@ -117,6 +124,7 @@
 │   │   │   │   │   │   │   ├── ☕ PriceServiceGetLatestTicksTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceServiceIntegrationTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceServiceTest.java
+│   │   │   │   │   │   │   ├── ☕ PriceTickConsumerTest.java
 ```
 
 ---
@@ -132,6 +140,6 @@
 
 ---
 
-**Total Files:** 72
+**Total Files:** 78
 
-**Total Directories:** 42
+**Total Directories:** 44
