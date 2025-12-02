@@ -22,7 +22,7 @@ import java.util.Random;
  * Following KISS: Simple random number generation
  * Following YAGNI: No real HTTP calls yet (Phase 4)
  */
-@Component
+// @Component // Phase 4: Removed to replace with real fetchers
 public class MockPriceFetcher implements PriceFetcher {
 
     private final Exchange exchange;
