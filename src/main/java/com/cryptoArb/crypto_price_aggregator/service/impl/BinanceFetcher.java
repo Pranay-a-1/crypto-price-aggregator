@@ -8,7 +8,10 @@ import com.cryptoArb.crypto_price_aggregator.exception.PriceFetchException;
 import com.cryptoArb.crypto_price_aggregator.service.PriceFetcher;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -17,8 +20,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 /**
- * Professional implementation of Binance Fetcher (Phase 4).
+ * Professional implementation of Binance Fetcher (Phase 4 & 7).
  * Uses injected RestTemplate and ObjectMapper.
+ * Enhanced with Resilience4j (Circuit Breaker & Retry).
  */
 @Component
 public class BinanceFetcher implements PriceFetcher {
@@ -30,6 +34,10 @@ public class BinanceFetcher implements PriceFetcher {
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher eventPublisher;
 
+
+    @Value("${chaos.mode.enabled:false}")
+    private boolean chaosModeEnabled;
+
     @Autowired
     public BinanceFetcher(RestTemplate restTemplate, ObjectMapper objectMapper, ApplicationEventPublisher eventPublisher) {
         this.restTemplate = restTemplate;
@@ -38,7 +46,12 @@ public class BinanceFetcher implements PriceFetcher {
     }
 
     @Override
+    @CircuitBreaker(name = "binance")
+    @Retry(name = "binance")
     public PriceTick fetchPrice(CurrencyPair pair) throws PriceFetchException {
+        if (chaosModeEnabled) {
+            throw new PriceFetchException("Chaos Monkey: Simulating failure for Binance");
+        }
         // Ensure symbol is properly formatted for Binance API
         // Binance requires uppercase letters only and specific format
         String base = pair.getBase().toUpperCase();

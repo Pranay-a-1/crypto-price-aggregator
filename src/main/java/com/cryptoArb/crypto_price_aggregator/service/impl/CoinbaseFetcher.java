@@ -8,7 +8,10 @@ import com.cryptoArb.crypto_price_aggregator.exception.PriceFetchException;
 import com.cryptoArb.crypto_price_aggregator.service.PriceFetcher;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -17,8 +20,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 /**
- * Professional implementation of Coinbase Fetcher (Phase 4).
+ * Professional implementation of Coinbase Fetcher (Phase 4 & 7).
  * Uses injected RestTemplate and ObjectMapper.
+ * Enhanced with Resilience4j.
  */
 @Component
 public class CoinbaseFetcher implements PriceFetcher {
@@ -38,8 +42,17 @@ public class CoinbaseFetcher implements PriceFetcher {
         this.eventPublisher = eventPublisher;
     }
 
+    @Value("${chaos.mode.enabled:false}")
+    private boolean chaosModeEnabled;
+
     @Override
+    @CircuitBreaker(name = "coinbase")
+    @Retry(name = "coinbase")
     public PriceTick fetchPrice(CurrencyPair pair) throws PriceFetchException {
+        if (chaosModeEnabled) {
+            throw new PriceFetchException("Chaos Monkey: Simulating failure for Coinbase");
+        }
+
         // Coinbase uses hyphen: BTC-USD
         String symbol = pair.getBase() + "-" + pair.getQuote();
         String url = String.format(API_URL_TEMPLATE, symbol);

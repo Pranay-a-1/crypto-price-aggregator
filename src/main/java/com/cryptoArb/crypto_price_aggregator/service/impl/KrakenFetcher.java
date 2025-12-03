@@ -8,7 +8,10 @@ import com.cryptoArb.crypto_price_aggregator.exception.PriceFetchException;
 import com.cryptoArb.crypto_price_aggregator.service.PriceFetcher;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -21,6 +24,7 @@ import java.util.Map;
 /**
  * Professional implementation of Kraken Fetcher.
  * Uses injected RestTemplate and ObjectMapper.
+ * Enhanced with Resilience4j.
  */
 @Component
 public class KrakenFetcher implements PriceFetcher {
@@ -32,6 +36,9 @@ public class KrakenFetcher implements PriceFetcher {
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher eventPublisher;
 
+    @Value("${chaos.mode.enabled:false}")
+    private boolean chaosModeEnabled;
+
     @Autowired
     public KrakenFetcher(RestTemplate restTemplate, ObjectMapper objectMapper, ApplicationEventPublisher eventPublisher) {
         this.restTemplate = restTemplate;
@@ -40,7 +47,12 @@ public class KrakenFetcher implements PriceFetcher {
     }
 
     @Override
+    @CircuitBreaker(name = "kraken")
+    @Retry(name = "kraken")
     public PriceTick fetchPrice(CurrencyPair pair) throws PriceFetchException {
+        if (chaosModeEnabled) {
+            throw new PriceFetchException("Chaos Monkey: Simulating failure for Kraken");
+        }
         // Kraken uses XBT for BTC
         String base = pair.getBase();
         if ("BTC".equals(base)) {
