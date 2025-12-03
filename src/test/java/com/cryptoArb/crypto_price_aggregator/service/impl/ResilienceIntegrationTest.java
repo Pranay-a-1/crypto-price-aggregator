@@ -15,6 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @TestPropertySource(properties = {
         "chaos.mode.enabled=true",
+        "chaos.failure.rate=100",
+        "chaos.latency.min=0",
         "resilience4j.circuitbreaker.configs.default.slidingWindowSize=5",
         "resilience4j.circuitbreaker.configs.default.minimumNumberOfCalls=3",
         "resilience4j.circuitbreaker.configs.default.failureRateThreshold=50"

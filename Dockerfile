@@ -10,6 +10,7 @@ RUN ./mvnw dependency:go-offline
 # Copy source code and build
 COPY src ./src
 # RUN #./mvnw clean package -DskipTests
+#RUN ./mvnw clean package -Dtest=ResilienceIntegrationTest
 RUN ./mvnw clean package
 
 # Stage 2: Run the application

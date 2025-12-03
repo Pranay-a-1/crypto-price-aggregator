@@ -18,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Random;
 
 /**
  * Professional implementation of Binance Fetcher (Phase 4 & 7).
@@ -33,10 +34,16 @@ public class BinanceFetcher implements PriceFetcher {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher eventPublisher;
-
+    private final Random random = new Random();
 
     @Value("${chaos.mode.enabled:false}")
     private boolean chaosModeEnabled;
+
+    @Value("${chaos.latency.min:2000}")
+    private long chaosLatencyMin;
+
+    @Value("${chaos.failure.rate:50}")
+    private int chaosFailureRate;
 
     @Autowired
     public BinanceFetcher(RestTemplate restTemplate, ObjectMapper objectMapper, ApplicationEventPublisher eventPublisher) {
@@ -50,7 +57,7 @@ public class BinanceFetcher implements PriceFetcher {
     @Retry(name = "binance")
     public PriceTick fetchPrice(CurrencyPair pair) throws PriceFetchException {
         if (chaosModeEnabled) {
-            throw new PriceFetchException("Chaos Monkey: Simulating failure for Binance");
+            injectChaos();
         }
         // Ensure symbol is properly formatted for Binance API
         // Binance requires uppercase letters only and specific format
@@ -73,8 +80,7 @@ public class BinanceFetcher implements PriceFetcher {
         String url = API_URL + symbol;
 
         try {
-            // Artificial latency
-            Thread.sleep(500);
+
 
             String response = restTemplate.getForObject(url, String.class);
             JsonNode root = objectMapper.readTree(response);
@@ -86,11 +92,25 @@ public class BinanceFetcher implements PriceFetcher {
             eventPublisher.publishEvent(new PriceTickFetchedEvent(this, tick));
             return tick;
 
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new PriceFetchException("Interrupted while fetching from Binance", e);
         } catch (Exception e) {
             throw new PriceFetchException("Failed to fetch from Binance: " + e.getMessage(), e);
+        }
+    }
+
+
+
+    private void injectChaos() throws PriceFetchException {
+        try {
+            // Artificial random latency (min + random(0-500ms))
+            long latency = chaosLatencyMin + random.nextInt(500);
+            Thread.sleep(latency);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        // Random chance of failure
+        if (random.nextInt(100) < chaosFailureRate) {
+            throw new PriceFetchException("Chaos Monkey: Simulating failure for Binance");
         }
     }
 

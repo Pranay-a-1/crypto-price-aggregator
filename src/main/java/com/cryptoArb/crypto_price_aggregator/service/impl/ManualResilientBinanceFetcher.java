@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -40,6 +41,12 @@ public class ManualResilientBinanceFetcher implements PriceFetcher {
     private static final int MAX_RETRIES = 3;
     private static final long INITIAL_BACKOFF_MS = 500;
 
+    @Value("${chaos.latency.min:2000}")
+    private long chaosLatencyMin;
+
+    @Value("${chaos.failure.rate:50}")
+    private int chaosFailureRate;
+
     @Autowired
     public ManualResilientBinanceFetcher(RestTemplate restTemplate, ObjectMapper objectMapper, ApplicationEventPublisher eventPublisher) {
         this.restTemplate = restTemplate;
@@ -62,10 +69,9 @@ public class ManualResilientBinanceFetcher implements PriceFetcher {
         while (attempts <= MAX_RETRIES) {
             try {
                 attempts++;
-                injectChaos(); // Simulate random failures
+                injectChaos(); // Simulate random failures and latency
 
-                // Artificial latency
-                Thread.sleep(200);
+
 
                 String response = restTemplate.getForObject(url, String.class);
                 JsonNode root = objectMapper.readTree(response);
@@ -99,8 +105,16 @@ public class ManualResilientBinanceFetcher implements PriceFetcher {
     }
 
     private void injectChaos() {
-        // 30% chance of failure to demonstrate retry
-        if (random.nextInt(100) < 30) {
+        try {
+            // Artificial random latency (min 2000ms + random(0-500ms))
+            long latency = chaosLatencyMin + random.nextInt(500);
+            Thread.sleep(latency);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        // Random chance of failure
+        if (random.nextInt(100) < chaosFailureRate) {
             log.info("CHAOS: Simulating random fetch failure!");
             throw new RuntimeException("Chaos Monkey struck!");
         }
