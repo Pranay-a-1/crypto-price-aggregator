@@ -1,0 +1,46 @@
+# Phase 10: Arbitrage Detection, WebSockets, and Production Polish
+
+## Core Components
+
+### 1. Arbitrage Detection
+- [x] Domain model - [ArbitrageOpportunity.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/domain/ArbitrageOpportunity.java)
+- [x] Service interface - [ArbitrageService.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/service/ArbitrageService.java)
+- [x] Service implementation - [ArbitrageServiceImpl.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/service/impl/ArbitrageServiceImpl.java)
+- [x] Repository - [ArbitrageRepository.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/repository/ArbitrageRepository.java)
+- [x] Unit tests for arbitrage detection logic
+- [x] Integration tests for arbitrage service
+
+### 2. Input Validation
+- [ ] Create CurrencyPairValidator and annotation
+- [ ] Update PriceController with validation
+- [ ] Add exception handling for validation errors
+
+### 3. WebSocket Integration
+- [ ] Create ExchangeWebSocketClient interface
+- [ ] Implement BinanceWebSocketClient (stub/mock)
+- [ ] Implement CoinbaseWebSocketClient (stub/mock)
+- [ ] Implement WebSocketRateLimiter
+- [ ] Configure WebSocket beans
+
+### 4. Database Migrations (PRIORITY)
+- [x] Add Flyway dependency to [pom.xml](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/pom.xml)
+- [x] Create initial migration script for existing tables
+- [x] Create migration for arbitrage_opportunities table
+- [x] Update [application-prod.properties](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/resources/application-prod.properties) with Flyway configuration
+- [x] Test migrations with PostgreSQL
+
+### 5. Security Configuration
+- [ ] Add Spring Security dependency
+- [ ] Create SecurityConfig (Basic Auth)
+- [ ] Update tests for security
+
+## Testing Strategy
+- [ ] Unit tests for all new components
+- [ ] Integration tests for arbitrage detection
+- [ ] WebSocket client tests with mocks
+- [ ] End-to-end verification
+
+## Documentation
+- [ ] Update PROJECT_STRUCTURE.md
+- [ ] Create Phase 10 walkthrough
+- [ ] Create Phase 10 summary

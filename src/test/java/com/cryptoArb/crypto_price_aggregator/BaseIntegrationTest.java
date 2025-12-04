@@ -55,6 +55,9 @@ public abstract class BaseIntegrationTest {
         registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
 
+        // Disable Flyway in tests - we use Hibernate's create-drop for test isolation
+        registry.add("spring.flyway.enabled", () -> "false");
+
         // Disable RabbitMQ for integration tests if not needed
         registry.add("spring.rabbitmq.host", () -> "localhost");
     }

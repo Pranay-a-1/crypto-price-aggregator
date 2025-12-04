@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -31,6 +32,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/prices")
+@Validated
 public class PriceController {
 
     private static final Logger log = LoggerFactory.getLogger(PriceController.class);
@@ -48,7 +50,8 @@ public class PriceController {
 
     /**
      * Get AggregatedTopOfBookQuote for a currency pair.
-     * AggregatedTopOfBookQuote here means the best bestBid and bestAsk across all exchanges.
+     * AggregatedTopOfBookQuote here means the best bestBid and bestAsk across all
+     * exchanges.
      *
      * @param base  Base currency (e.g., BTC)
      * @param quote Quote currency (e.g., USD)
@@ -56,8 +59,8 @@ public class PriceController {
      */
     @GetMapping("/{base}/{quote}")
     public ResponseEntity<AggregatedTopOfBookQuote> getPrice(
-            @PathVariable String base,
-            @PathVariable String quote) {
+            @PathVariable @jakarta.validation.constraints.Pattern(regexp = "^[a-zA-Z]{3,4}$", message = "Base currency must be 3-4 letters") String base,
+            @PathVariable @jakarta.validation.constraints.Pattern(regexp = "^[a-zA-Z]{3,4}$", message = "Quote currency must be 3-4 letters") String quote) {
 
         log.info("GET /api/prices/{}/{}", base, quote);
 
@@ -72,8 +75,8 @@ public class PriceController {
                 return ResponseEntity.badRequest().build();
             }
 
-            // Create currency pair (validation happens in constructor)
-            CurrencyPair pair = new CurrencyPair(base, quote);
+            // Create currency pair (validation happens in factory method)
+            CurrencyPair pair = CurrencyPair.of(base, quote);
 
             // Fetch AggregatedTopOfBookQuote
             Optional<AggregatedTopOfBookQuote> price = priceService.getAggregatedTopOfBookQuote(pair);
@@ -101,7 +104,6 @@ public class PriceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
 
     /**
      * Get individual price ticks from all exchanges for a currency pair.

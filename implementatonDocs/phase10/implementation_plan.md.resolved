@@ -1,0 +1,331 @@
+# Phase 10: Arbitrage Detection, WebSockets, and Production Polish
+
+## Goal Description
+
+Phase 10 is the final phase of the CryptoPriceAggregator project, focusing on implementing core business logic (arbitrage detection), enhancing data ingestion with WebSocket streams, and adding production-ready features like input validation, database migrations, and basic security.
+
+**Previous State (Phase 9):** The application successfully migrated from H2 to PostgreSQL with Testcontainers integration, all tests passing with both dev (H2) and prod (PostgreSQL) profiles.
+
+**Target State (Phase 10):** The application will:
+- Detect and persist arbitrage opportunities across exchanges
+- Support WebSocket streaming from Binance and Coinbase (with rate limiting)
+- Validate API inputs with custom validators
+- Use Flyway for database schema migrations
+- Have basic security configuration in place
+
+This phase follows TDD, KISS, DRY, and YAGNI principles by building features incrementally, testing each component independently before integration.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Scope Clarification Needed**
+> 
+> The roadmap mentions "Basic security (`SecurityConfig` with OAuth2)" but implementing OAuth2 is complex and may be beyond YAGNI for this learning project. I propose implementing a simpler security configuration (HTTP Basic Auth or just security headers) unless you specifically want OAuth2 integration.
+> 
+> Please confirm:
+> 1. Should we implement OAuth2, or is basic security sufficient?
+> 2. For WebSocket clients, should they actually connect to live exchanges, or should we use mock/stub approaches for now?
+> 3. Do you want arbitrage opportunities exposed via a new REST endpoint, or just persisted to the database?
+
+> [!WARNING]
+> **Breaking Changes**
+> - Flyway will manage database schema going forward. Existing tables created by `spring.jpa.hibernate.ddl-auto=update` will need to be baseline-migrated.
+> - Security configuration may require authentication headers for all endpoints (can be disabled for development profile).
+
+## Proposed Changes
+
+### Component 1: Arbitrage Detection Domain & Repository
+
+Domain model for arbitrage opportunities, following the existing pattern established in [PriceTick.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/domain/PriceTick.java) and [AggregatedTopOfBookQuote.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/domain/AggregatedTopOfBookQuote.java).
+
+#### [NEW] [ArbitrageOpportunity.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/domain/ArbitrageOpportunity.java)
+
+JPA entity representing a detected arbitrage opportunity:
+- Fields: [id](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/domain/PriceTick.java#63-100), `currencyPair` (embedded), `buyExchange`, `sellExchange`, `buyPrice`, `sellPrice`, `profitPercentage`, `detectedAt`
+- Validation: Ensure `buyPrice < sellPrice` and `profitPercentage > 0`
+- Uses `BigDecimal` for financial precision
+
+#### [NEW] [ArbitrageRepository.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/repository/ArbitrageRepository.java)
+
+Spring Data JPA repository extending `JpaRepository<ArbitrageOpportunity, Long>`:
+- Query method: `findByCurrencyPair_BaseAndCurrencyPair_QuoteOrderByDetectedAtDesc`
+- Query method: `findByDetectedAtAfter(Instant timestamp)`
+
+---
+
+### Component 2: Arbitrage Detection Service
+
+Service layer for arbitrage detection logic, following the existing [PriceService](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/service/PriceService.java#10-29) pattern.
+
+#### [NEW] [ArbitrageService.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/service/ArbitrageService.java)
+
+Service interface:
+- `Optional<ArbitrageOpportunity> detectArbitrage(CurrencyPair pair)` - Detect arbitrage from latest price ticks
+- `List<ArbitrageOpportunity> getRecentOpportunities(CurrencyPair pair, int limit)` - Get recent opportunities
+
+#### [NEW] [ArbitrageServiceImpl.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/service/impl/ArbitrageServiceImpl.java)
+
+Implementation with manual profit calculation:
+- Inject [PriceService](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/service/PriceService.java#10-29) to get latest ticks
+- **Manual calculation**: Find max bid and min ask across exchanges, calculate profit percentage
+- If profitable (bid > ask across exchanges), create and persist `ArbitrageOpportunity`
+- Use `@Transactional` for persistence
+- Add `@Timed` metrics for observability
+
+---
+
+### Component 3: Input Validation
+
+Custom validator for currency pair validation, following Spring's validation framework.
+
+#### [NEW] [CurrencyPairValidator.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/validation/CurrencyPairValidator.java)
+
+Custom constraint validator:
+- Validate format: `BASE/QUOTE` (e.g., `BTC/USD`)
+- Validate supported currencies (whitelist approach)
+- Create `@ValidCurrencyPair` annotation
+
+#### [MODIFY] [PriceController.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/controller/PriceController.java)
+
+Add validation to existing endpoint:
+- Add `@Validated` at class level
+- Add `@ValidCurrencyPair` to `pair` parameter in `getPrice()` method
+- Handle `MethodArgumentNotValidException` with `@ControllerAdvice`
+
+---
+
+### Component 4: WebSocket Integration (Simplified)
+
+WebSocket client infrastructure for real-time price streaming. Following YAGNI, we'll create the structure but with stubbed/mock implementations for now.
+
+#### [NEW] [ExchangeWebSocketClient.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/websocket/ExchangeWebSocketClient.java)
+
+Abstract base class/interface:
+- Methods: `connect()`, `disconnect()`, `subscribe(CurrencyPair pair)`, `onMessage(Consumer<PriceTick> handler)`
+- Lifecycle management
+
+#### [NEW] [BinanceWebSocketClient.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/websocket/impl/BinanceWebSocketClient.java)
+
+Binance WebSocket implementation:
+- **Manual implementation first**: Use Java WebSocket API (`javax.websocket`) to demonstrate the pain points
+- Parse JSON messages into [PriceTick](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/domain/PriceTick.java#22-101) objects
+- Add artificial delays to simulate rate limiting needs
+
+#### [NEW] [CoinbaseWebSocketClient.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/websocket/impl/CoinbaseWebSocketClient.java)
+
+Coinbase WebSocket implementation (similar pattern to Binance)
+
+#### [NEW] [WebSocketRateLimiter.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/websocket/WebSocketRateLimiter.java)
+
+Simple rate limiter using token bucket algorithm:
+- Limit WebSocket message processing rate
+- Manual implementation with `AtomicInteger` and timestamps
+
+#### [NEW] [WebSocketConfig.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/config/WebSocketConfig.java)
+
+Spring configuration for WebSocket beans
+
+---
+
+### Component 5: Database Migrations with Flyway
+
+#### [MODIFY] [pom.xml](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/pom.xml)
+
+Add Flyway dependency:
+```xml
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-core</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-database-postgresql</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+
+#### [NEW] [V1__initial_schema.sql](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/resources/db/migration/V1__initial_schema.sql)
+
+Initial migration for `price_ticks` table (baseline existing schema)
+
+#### [NEW] [V2__create_arbitrage_opportunities.sql](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/resources/db/migration/V2__create_arbitrage_opportunities.sql)
+
+Migration for `arbitrage_opportunities` table:
+- Columns: [id](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/domain/PriceTick.java#63-100), `base_currency`, `quote_currency`, `buy_exchange`, `sell_exchange`, `buy_price`, `sell_price`, `profit_percentage`, `detected_at`
+- Indexes: On `detected_at` and [(base_currency, quote_currency)](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/domain/PriceTick.java#22-101)
+
+#### [MODIFY] [application-prod.properties](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/resources/application-prod.properties)
+
+Configure Flyway:
+- `spring.flyway.enabled=true`
+- `spring.flyway.baseline-on-migrate=true` (for existing schemas)
+- `spring.jpa.hibernate.ddl-auto=validate` (Flyway manages schema now)
+
+---
+
+### Component 6: Security Configuration
+
+#### [MODIFY] [pom.xml](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/pom.xml)
+
+Add Spring Security dependency:
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-test</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+#### [NEW] [SecurityConfig.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/main/java/com/cryptoArb/crypto_price_aggregator/config/SecurityConfig.java)
+
+Basic security configuration:
+- Permit all requests in dev/test profiles (via `@Profile("prod")`)
+- In prod: HTTP Basic auth for simplicity (not OAuth2, following YAGNI)
+- Permit actuator endpoints
+- CSRF disabled for REST API
+- Security headers enabled (XSS, frame options)
+
+---
+
+## Verification Plan
+
+### Automated Tests
+
+All tests will be run with Maven:
+
+```bash
+# Run all tests
+cd /home/pranay/anotherDrive/javaCodes/crypto-price-aggregator
+./mvnw clean test
+```
+
+#### 1. Arbitrage Domain & Repository Tests
+
+**New Test File**: `ArbitrageOpportunityTest.java`
+- Test: Valid arbitrage opportunity creation
+- Test: Validation - bid must be less than ask
+- Test: Validation - profit percentage must be positive
+- Test: Validation - all fields non-null
+
+**New Test File**: `ArbitrageRepositoryTest.java` (extends [BaseIntegrationTest](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/test/java/com/cryptoArb/crypto_price_aggregator/BaseIntegrationTest.java#25-62))
+- Test: Save and retrieve arbitrage opportunity
+- Test: Query by currency pair
+- Test: Query by timestamp after
+
+**Command**: `./mvnw test -Dtest=ArbitrageOpportunityTest,ArbitrageRepositoryTest`
+
+#### 2. Arbitrage Service Tests
+
+**New Test File**: `ArbitrageServiceTest.java` (unit test with mocks)
+- Test: Detect arbitrage when profitable (bestBid on one exchange > bestAsk on another)
+- Test: No arbitrage detected when not profitable
+- Test: Arbitrage opportunity is persisted when detected
+- Test: Calculate correct profit percentage
+
+**New Test File**: `ArbitrageServiceIntegrationTest.java` (extends [BaseIntegrationTest](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/test/java/com/cryptoArb/crypto_price_aggregator/BaseIntegrationTest.java#25-62))
+- Integration test: End-to-end arbitrage detection with real database
+
+**Command**: `./mvnw test -Dtest=ArbitrageServiceTest,ArbitrageServiceIntegrationTest`
+
+#### 3. Validation Tests
+
+**New Test File**: `CurrencyPairValidatorTest.java`
+- Test: Valid currency pairs pass validation
+- Test: Invalid format fails validation
+- Test: Unsupported currencies fail validation
+
+**Modified Test File**: [PriceControllerTest.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/test/java/com/cryptoArb/crypto_price_aggregator/controller/PriceControllerTest.java)
+- Test: Invalid currency pair returns 400 Bad Request
+- Test: Valid currency pair with validation passes
+
+**Command**: `./mvnw test -Dtest=CurrencyPairValidatorTest`
+
+#### 4. WebSocket Tests
+
+**New Test File**: `WebSocketRateLimiterTest.java`
+- Test: Rate limiter allows requests under limit
+- Test: Rate limiter blocks requests over limit
+- Test: Token bucket refills over time
+
+**New Test File**: `BinanceWebSocketClientTest.java` (with mocks)
+- Test: JSON message parsing
+- Test: Connection lifecycle
+- Test: Error handling
+
+**Command**: `./mvnw test -Dtest=WebSocketRateLimiterTest,BinanceWebSocketClientTest`
+
+#### 5. Flyway Migration Tests
+
+**Modified Test**: [PostgreSQLIntegrationTest.java](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/test/java/com/cryptoArb/crypto_price_aggregator/PostgreSQLIntegrationTest.java)
+- Test: Migrations run successfully on startup
+- Test: Schema version is correct after migrations
+
+**Command**: `./mvnw test -Dtest=PostgreSQLIntegrationTest`
+
+#### 6. Security Tests
+
+**New Test File**: `SecurityConfigTest.java`
+- Test: Dev profile permits all requests
+- Test: Prod profile requires authentication (if enabled)
+- Test: Actuator endpoints are accessible
+
+**Modified Tests**: Update existing controller tests to work with security
+- Use `@WithMockUser` for authenticated tests
+
+**Command**: `./mvnw test -Dtest=SecurityConfigTest`
+
+### Full Test Suite
+
+Run entire test suite to ensure no regressions:
+
+```bash
+./mvnw clean test
+```
+
+Expected: All tests pass (existing + new)
+
+### Manual Verification
+
+After automated tests pass, verify manually:
+
+1. **Start Application with Production Profile**:
+   ```bash
+   docker compose up -d db rabbitmq
+   ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
+   ```
+
+2. **Verify Flyway Migrations**:
+   - Check logs for Flyway migration success messages
+   - Connect to PostgreSQL and verify tables exist:
+     ```bash
+     docker exec -it crypto-price-aggregator-db-1 psql -U cryptouser -d cryptodb
+     \dt
+     SELECT * FROM flyway_schema_history;
+     ```
+
+3. **Test Arbitrage Detection** (via REST API or by checking database):
+   - Call existing `/api/prices/{pair}` endpoint to fetch prices
+   - Check database for arbitrage opportunities:
+     ```sql
+     SELECT * FROM arbitrage_opportunities ORDER BY detected_at DESC LIMIT 10;
+     ```
+
+4. **Test Input Validation**:
+   - Call API with invalid currency pair: `curl http://localhost:8080/api/prices/INVALID`
+   - Expected: 400 Bad Request with validation error message
+
+5. **Verify Security** (if enabled):
+   - Try accessing API without credentials (if prod profile with security enabled)
+   - Expected: 401 Unauthorized or 403 Forbidden
+
+## Notes
+
+- WebSocket clients are structured but may not connect to live exchanges initially (following YAGNI - implement when needed)
+- Security is minimal (HTTP Basic) rather than OAuth2 to avoid over-engineering
+- Flyway baseline migration handles existing schema without data loss
+- All new code follows existing patterns (`@Transactional`, `@Timed`, logging, etc.)
+- Tests use existing [BaseIntegrationTest](file:///home/pranay/anotherDrive/javaCodes/crypto-price-aggregator/src/test/java/com/cryptoArb/crypto_price_aggregator/BaseIntegrationTest.java#25-62) infrastructure with Testcontainers

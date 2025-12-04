@@ -1,6 +1,6 @@
 # Project Structure
 
-**Generated on:** December 04, 2025 at 03:18 PM
+**Generated on:** December 04, 2025 at 07:38 PM
 
 ```text
 .
@@ -10,6 +10,10 @@
 ├── 📦 .gitignore
 ├── 🔵 implementatonDocs
 │   ├── 🔵 phase1
+│   ├── 🔵 phase10
+│   │   ├── 📦 implementation_plan.md.resolved
+│   │   ├── 📦 task.md.resolved
+│   │   ├── 📦 walkthrough.md.resolved
 │   │   ├── 📄 implementation_plan.md
 │   │   ├── 📄 PHASE_1_SUMMARY.md
 │   │   ├── 📄 PROJECT_STRUCTURE_phase1.md
@@ -54,6 +58,7 @@
 │   ├── 🔵 phase9
 │   │   ├── 📄 implementation_plan.md
 │   │   ├── 📄 PHASE_9_SUMMARY.md
+│   │   ├── 📄 PROJECT_STRUCTURE_phase9.md
 │   │   ├── 📄 task.md
 │   │   ├── 📄 walkthrough.md
 ├── 🔵 .mvn
@@ -89,21 +94,26 @@
 │   │   │   │   │   │   ├── ☕ CryptoPriceAggregatorApplication.java
 │   │   │   │   │   │   ├── 🔵 domain
 │   │   │   │   │   │   │   ├── ☕ AggregatedTopOfBookQuote.java
+│   │   │   │   │   │   │   ├── ☕ ArbitrageOpportunity.java
 │   │   │   │   │   │   │   ├── ☕ CurrencyPair.java
 │   │   │   │   │   │   │   ├── ☕ Exchange.java
 │   │   │   │   │   │   │   ├── ☕ PriceTick.java
 │   │   │   │   │   │   ├── 🔵 event
 │   │   │   │   │   │   │   ├── ☕ PriceTickFetchedEvent.java
 │   │   │   │   │   │   ├── 🔵 exception
+│   │   │   │   │   │   │   ├── ☕ GlobalExceptionHandler.java
 │   │   │   │   │   │   │   ├── ☕ PriceFetchException.java
 │   │   │   │   │   │   ├── 🔵 filter
 │   │   │   │   │   │   │   ├── ☕ RequestLoggingFilter.java
 │   │   │   │   │   │   ├── 🔵 health
 │   │   │   │   │   │   │   ├── ☕ ExchangeHealthIndicator.java
 │   │   │   │   │   │   ├── 🔵 repository
+│   │   │   │   │   │   │   ├── ☕ ArbitrageRepository.java
 │   │   │   │   │   │   │   ├── ☕ PriceTickRepository.java
 │   │   │   │   │   │   ├── 🔵 service
+│   │   │   │   │   │   │   ├── ☕ ArbitrageService.java
 │   │   │   │   │   │   │   ├── 🔵 impl
+│   │   │   │   │   │   │   │   ├── ☕ ArbitrageServiceImpl.java
 │   │   │   │   │   │   │   │   ├── ☕ BinanceFetcher.java
 │   │   │   │   │   │   │   │   ├── ☕ CoinbaseFetcher.java
 │   │   │   │   │   │   │   │   ├── ☕ KrakenFetcher.java
@@ -118,10 +128,17 @@
 │   │   │   │   │   │   │   ├── ☕ PriceMessageProducer.java
 │   │   │   │   │   │   │   ├── ☕ PriceService.java
 │   │   │   │   │   │   │   ├── ☕ PriceTickConsumer.java
+│   │   │   │   │   │   ├── 🔵 validation
+│   │   │   │   │   │   │   ├── ☕ CurrencyPairValidator.java
+│   │   │   │   │   │   │   ├── ☕ ValidCurrencyPair.java
 │   │   ├── 🔵 resources
 │   │   │   ├── ⚙️ application-dev.properties
 │   │   │   ├── ⚙️ application-prod.properties
 │   │   │   ├── ⚙️ application.properties
+│   │   │   ├── 🔵 db
+│   │   │   │   ├── 🔵 migration
+│   │   │   │   │   ├── 📦 V1__initial_schema.sql
+│   │   │   │   │   ├── 📦 V2__create_arbitrage_opportunities.sql
 │   │   │   ├── 🔵 static
 │   │   │   ├── 🔵 templates
 │   ├── 🔵 test
@@ -146,17 +163,21 @@
 │   │   │   │   │   │   │   ├── ☕ PriceControllerTest.java
 │   │   │   │   │   │   ├── ☕ CryptoPriceAggregatorApplicationTests.java
 │   │   │   │   │   │   ├── 🔵 domain
+│   │   │   │   │   │   │   ├── ☕ ArbitrageOpportunityTest.java
 │   │   │   │   │   │   │   ├── ☕ CurrencyPairTest.java
 │   │   │   │   │   │   │   ├── ☕ ExchangeTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceTickTest.java
 │   │   │   │   │   │   ├── 🔵 filter
 │   │   │   │   │   │   │   ├── ☕ RequestLoggingFilterTest.java
+│   │   │   │   │   │   ├── ☕ FlywayMigrationTest.java
 │   │   │   │   │   │   ├── 🔵 health
 │   │   │   │   │   │   │   ├── ☕ ExchangeHealthIndicatorTest.java
 │   │   │   │   │   │   ├── ☕ PostgreSQLIntegrationTest.java
 │   │   │   │   │   │   ├── 🔵 repository
+│   │   │   │   │   │   │   ├── ☕ ArbitrageRepositoryTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceTickRepositoryTest.java
 │   │   │   │   │   │   ├── 🔵 service
+│   │   │   │   │   │   │   ├── ☕ ArbitrageServiceTest.java
 │   │   │   │   │   │   │   ├── 🔵 docs
 │   │   │   │   │   │   │   │   ├── 📄 COINBASE_TESTING_GUIDE.md
 │   │   │   │   │   │   │   │   ├── 📄 ManualConcurrentPriceEngineTest.md
@@ -177,6 +198,10 @@
 │   │   │   │   │   │   │   ├── ☕ PriceServiceIntegrationTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceServiceTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceTickConsumerTest.java
+│   │   │   │   │   │   ├── 🔵 validation
+│   │   │   │   │   │   │   ├── ☕ CurrencyPairValidatorTest.java
+│   │   ├── 🔵 resources
+│   │   │   ├── ⚙️ application-test.properties
 ```
 
 ---
@@ -192,6 +217,6 @@
 
 ---
 
-**Total Files:** 119
+**Total Files:** 138
 
-**Total Directories:** 55
+**Total Directories:** 61

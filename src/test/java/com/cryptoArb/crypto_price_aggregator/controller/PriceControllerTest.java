@@ -28,114 +28,114 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(PriceController.class)
 class PriceControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockitoBean
-    private PriceService priceService;
+        @MockitoBean
+        private PriceService priceService;
 
-    private AggregatedTopOfBookQuote aggregatedTopOfBookQuote;
+        private AggregatedTopOfBookQuote aggregatedTopOfBookQuote;
 
-    @BeforeEach
-    void setUp() {
-        CurrencyPair btcUsd = new CurrencyPair("BTC", "USD");
-        aggregatedTopOfBookQuote = new AggregatedTopOfBookQuote(
-                btcUsd,
-                new BigDecimal("50000.00"),
-                Exchange.BINANCE,
-                new BigDecimal("50100.00"),
-                Exchange.COINBASE,
-                Instant.now());
-    }
+        @BeforeEach
+        void setUp() {
+                CurrencyPair btcUsd = new CurrencyPair("BTC", "USD");
+                aggregatedTopOfBookQuote = new AggregatedTopOfBookQuote(
+                                btcUsd,
+                                new BigDecimal("50000.00"),
+                                Exchange.BINANCE,
+                                new BigDecimal("50100.00"),
+                                Exchange.COINBASE,
+                                Instant.now());
+        }
 
-    @Test
-    @DisplayName("Should return 200 OK with AggregatedTopOfBookQuote for valid request")
-    void shouldReturn200WithPriceForValidRequest() throws Exception {
-        // Arrange
-        when(priceService.getAggregatedTopOfBookQuote(any(CurrencyPair.class)))
-                .thenReturn(Optional.of(aggregatedTopOfBookQuote));
+        @Test
+        @DisplayName("Should return 200 OK with AggregatedTopOfBookQuote for valid request")
+        void shouldReturn200WithPriceForValidRequest() throws Exception {
+                // Arrange
+                when(priceService.getAggregatedTopOfBookQuote(any(CurrencyPair.class)))
+                                .thenReturn(Optional.of(aggregatedTopOfBookQuote));
 
-        // Act & Assert
-        mockMvc.perform(get("/api/prices/BTC/USD"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pair.base").value("BTC"))
-                .andExpect(jsonPath("$.pair.quote").value("USD"))
-                .andExpect(jsonPath("$.bestBid").value(50000.00))
-                .andExpect(jsonPath("$.bestBidExchange").value("BINANCE"))
-                .andExpect(jsonPath("$.bestAsk").value(50100.00))
-                .andExpect(jsonPath("$.bestAskExchange").value("COINBASE"))
-                .andExpect(jsonPath("$.timestamp").exists());
-    }
+                // Act & Assert
+                mockMvc.perform(get("/api/prices/BTC/USD"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.pair.base").value("BTC"))
+                                .andExpect(jsonPath("$.pair.quote").value("USD"))
+                                .andExpect(jsonPath("$.bestBid").value(50000.00))
+                                .andExpect(jsonPath("$.bestBidExchange").value("BINANCE"))
+                                .andExpect(jsonPath("$.bestAsk").value(50100.00))
+                                .andExpect(jsonPath("$.bestAskExchange").value("COINBASE"))
+                                .andExpect(jsonPath("$.timestamp").exists());
+        }
 
-    @Test
-    @DisplayName("Should return 404 NOT FOUND when price not available")
-    void shouldReturn404WhenPriceNotAvailable() throws Exception {
-        // Arrange
-        when(priceService.getAggregatedTopOfBookQuote(any(CurrencyPair.class)))
-                .thenReturn(Optional.empty());
+        @Test
+        @DisplayName("Should return 404 NOT FOUND when price not available")
+        void shouldReturn404WhenPriceNotAvailable() throws Exception {
+                // Arrange
+                when(priceService.getAggregatedTopOfBookQuote(any(CurrencyPair.class)))
+                                .thenReturn(Optional.empty());
 
-        // Act & Assert
-        mockMvc.perform(get("/api/prices/UNKNOWN/COIN"))
-                .andExpect(status().isNotFound());
-    }
+                // Act & Assert
+                mockMvc.perform(get("/api/prices/UNK/CN"))
+                                .andExpect(status().isNotFound());
+        }
 
-    @Test
-    @DisplayName("Should handle lowercase currency codes (CurrencyPair normalizes)")
-    void shouldHandleLowercaseCurrencyCodes() throws Exception {
-        // Arrange
-        when(priceService.getAggregatedTopOfBookQuote(any(CurrencyPair.class)))
-                .thenReturn(Optional.of(aggregatedTopOfBookQuote));
+        @Test
+        @DisplayName("Should handle lowercase currency codes (CurrencyPair normalizes)")
+        void shouldHandleLowercaseCurrencyCodes() throws Exception {
+                // Arrange
+                when(priceService.getAggregatedTopOfBookQuote(any(CurrencyPair.class)))
+                                .thenReturn(Optional.of(aggregatedTopOfBookQuote));
 
-        // Act & Assert
-        mockMvc.perform(get("/api/prices/btc/usd"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pair.base").value("BTC"))
-                .andExpect(jsonPath("$.pair.quote").value("USD"));
-    }
+                // Act & Assert
+                mockMvc.perform(get("/api/prices/btc/usd"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.pair.base").value("BTC"))
+                                .andExpect(jsonPath("$.pair.quote").value("USD"));
+        }
 
-    @Test
-    @DisplayName("Should return 400 BAD REQUEST for empty base currency")
-    void shouldReturn400ForEmptyBase() throws Exception {
-        // Act & Assert
-        mockMvc.perform(get("/api/prices/ /USD"))
-                .andExpect(status().isBadRequest());
-    }
+        @Test
+        @DisplayName("Should return 400 BAD REQUEST for empty base currency")
+        void shouldReturn400ForEmptyBase() throws Exception {
+                // Act & Assert
+                mockMvc.perform(get("/api/prices/ /USD"))
+                                .andExpect(status().isBadRequest());
+        }
 
-    @Test
-    @DisplayName("Should return 400 BAD REQUEST for empty quote currency")
-    void shouldReturn400ForEmptyQuote() throws Exception {
-        // Act & Assert
-        mockMvc.perform(get("/api/prices/BTC/ "))
-                .andExpect(status().isBadRequest());
-    }
+        @Test
+        @DisplayName("Should return 400 BAD REQUEST for empty quote currency")
+        void shouldReturn400ForEmptyQuote() throws Exception {
+                // Act & Assert
+                mockMvc.perform(get("/api/prices/BTC/ "))
+                                .andExpect(status().isBadRequest());
+        }
 
-    @Test
-    @DisplayName("Should return 500 INTERNAL SERVER ERROR when service throws unexpected exception")
-    void shouldReturn500WhenServiceThrowsException() throws Exception {
-        // Arrange
-        when(priceService.getAggregatedTopOfBookQuote(any(CurrencyPair.class)))
-                .thenThrow(new RuntimeException("Unexpected error"));
+        @Test
+        @DisplayName("Should return 500 INTERNAL SERVER ERROR when service throws unexpected exception")
+        void shouldReturn500WhenServiceThrowsException() throws Exception {
+                // Arrange
+                when(priceService.getAggregatedTopOfBookQuote(any(CurrencyPair.class)))
+                                .thenThrow(new RuntimeException("Unexpected error"));
 
-        // Act & Assert
-        mockMvc.perform(get("/api/prices/BTC/USD"))
-                .andExpect(status().isInternalServerError());
-    }
+                // Act & Assert
+                mockMvc.perform(get("/api/prices/BTC/USD"))
+                                .andExpect(status().isInternalServerError());
+        }
 
-    @Test
-    @DisplayName("Should accept various currency pairs")
-    void shouldAcceptVariousCurrencyPairs() throws Exception {
-        // Arrange
-        when(priceService.getAggregatedTopOfBookQuote(any(CurrencyPair.class)))
-                .thenReturn(Optional.of(aggregatedTopOfBookQuote));
+        @Test
+        @DisplayName("Should accept various currency pairs")
+        void shouldAcceptVariousCurrencyPairs() throws Exception {
+                // Arrange
+                when(priceService.getAggregatedTopOfBookQuote(any(CurrencyPair.class)))
+                                .thenReturn(Optional.of(aggregatedTopOfBookQuote));
 
-        // Act & Assert - Different pairs
-        mockMvc.perform(get("/api/prices/ETH/USD"))
-                .andExpect(status().isOk());
+                // Act & Assert - Different pairs
+                mockMvc.perform(get("/api/prices/ETH/USD"))
+                                .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/prices/BTC/EUR"))
-                .andExpect(status().isOk());
+                mockMvc.perform(get("/api/prices/BTC/EUR"))
+                                .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/prices/DOGE/BTC"))
-                .andExpect(status().isOk());
-    }
+                mockMvc.perform(get("/api/prices/DOGE/BTC"))
+                                .andExpect(status().isOk());
+        }
 }
