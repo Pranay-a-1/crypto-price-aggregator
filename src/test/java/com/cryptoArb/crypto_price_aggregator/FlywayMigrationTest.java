@@ -5,6 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.sql.DataSource;
 
@@ -15,17 +20,54 @@ import static org.junit.jupiter.api.Assertions.*;
  * 
  * Following TDD: Test that migrations execute successfully and create expected
  * schema.
- * Extends BaseIntegrationTest to use Testcontainers with PostgreSQL.
+ * 
+ * Note: This test deliberately does NOT extend BaseIntegrationTest because
+ * BaseIntegrationTest disables Flyway for all other integration tests.
+ * We need Flyway enabled to test the migration process.
  */
 @SpringBootTest
+@Testcontainers
 @ActiveProfiles("test")
-class FlywayMigrationTest extends BaseIntegrationTest {
+class FlywayMigrationTest {
+
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+            .withDatabaseName("cryptodb_test")
+            .withUsername("test")
+            .withPassword("test");
 
     @Autowired
     private DataSource dataSource;
 
     @Autowired(required = false)
     private Flyway flyway;
+
+    /**
+     * Configure Spring Boot properties for this Flyway-specific test.
+     * Unlike BaseIntegrationTest, we enable Flyway and set Hibernate to validate
+     * mode.
+     */
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        // Configure PostgreSQL datasource from Testcontainer
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
+
+        // CRITICAL: Enable Flyway and disable Hibernate DDL auto-generation
+        registry.add("spring.flyway.enabled", () -> "true");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+
+        // Flyway configuration
+        registry.add("spring.flyway.baseline-on-migrate", () -> "true");
+        registry.add("spring.flyway.baseline-version", () -> "0");
+        registry.add("spring.flyway.locations", () -> "classpath:db/migration");
+
+        // Disable RabbitMQ for this test
+        registry.add("spring.rabbitmq.host", () -> "rabbitmq");
+    }
 
     @Test
     void shouldHaveFlywayConfigured() {

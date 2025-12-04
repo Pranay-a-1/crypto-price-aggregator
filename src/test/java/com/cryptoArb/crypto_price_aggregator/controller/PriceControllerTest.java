@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,6 +27,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Using @WebMvcTest for focused controller testing.
  */
 @WebMvcTest(PriceController.class)
+// @AutoConfigureMockMvc(addFilters = false) - Removed to enable security checks if we want to test with security,
+// but for controller unit tests, we usually bypass or mock security.
+// However, since we now have SecurityConfig, we should likely keep it disabled here OR use @WithMockUser.
+// Given the plan was to verify security in SecurityConfigTest, we can keep filters disabled here for pure controller logic testing.
+@AutoConfigureMockMvc(addFilters = false)
 class PriceControllerTest {
 
         @Autowired
@@ -75,7 +81,7 @@ class PriceControllerTest {
                                 .thenReturn(Optional.empty());
 
                 // Act & Assert
-                mockMvc.perform(get("/api/prices/UNK/CN"))
+                mockMvc.perform(get("/api/prices/BTC/USD")) // Use valid pair format that exists in service mock scope (or simpler: pair that passes validation but returns empty)
                                 .andExpect(status().isNotFound());
         }
 

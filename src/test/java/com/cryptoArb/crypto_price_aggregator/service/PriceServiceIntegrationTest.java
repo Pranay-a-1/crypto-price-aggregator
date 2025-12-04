@@ -30,303 +30,306 @@ import static org.junit.jupiter.api.Assertions.*;
 @org.springframework.test.context.ActiveProfiles("test")
 class PriceServiceIntegrationTest {
 
-    @Autowired
-    private PriceService priceService;
+        @Autowired
+        private PriceService priceService;
 
-    @Autowired
-    private PriceTickRepository repository;
+        @Autowired
+        private PriceTickRepository repository;
 
-    @Autowired
-    private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+        @Autowired
+        private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
 
-    @Autowired
-    private PriceTickConsumer priceTickConsumer;
+        @Autowired
+        private PriceTickConsumer priceTickConsumer;
 
-    private CurrencyPair btcUsd;
-    private CurrencyPair ethUsd;
+        private CurrencyPair btcUsd;
+        private CurrencyPair ethUsd;
 
-    @BeforeEach
-    void setUp() {
-        btcUsd = CurrencyPair.of("BTC", "USD");
-        ethUsd = CurrencyPair.of("ETH", "USD");
+        @BeforeEach
+        void setUp() {
+                btcUsd = CurrencyPair.of("BTC", "USD");
+                ethUsd = CurrencyPair.of("ETH", "USD");
 
-        // Clear repository before each test
-        repository.deleteAll();
-    }
-
-    @AfterEach
-    void tearDown() {
-        repository.deleteAll();
-    }
-
-    @Test
-    @DisplayName("Integration: Should save fetched ticks to database")
-    void shouldSaveFetchedTicksToDatabase() {
-        // Mock the RabbitTemplate to simulate message delivery to consumer
-        org.mockito.Mockito.doAnswer(invocation -> {
-            Object msg = invocation.getArgument(2); // 3rd arg is the object
-            if (msg instanceof PriceTick) {
-                // Manually trigger consumer
-                priceTickConsumer.handlePriceTickMessage((PriceTick) msg);
-            }
-            return null;
-        }).when(rabbitTemplate).convertAndSend(org.mockito.ArgumentMatchers.anyString(),
-                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any(Object.class));
-
-        // Act: Fetch prices
-        // This will trigger fetchers, which publish ticks to RabbitMQ,
-        // which our mocked RabbitTemplate intercepts and directly calls the consumer.
-        priceService.getAggregatedTopOfBookQuote(btcUsd);
-
-        // Assert: Verify ticks were saved to database
-        List<PriceTick> savedTicks = repository.findByPair_BaseAndPair_Quote("BTC", "USD");
-
-        // With RabbitMQ mocked above, if any fetcher produced a tick, it should be in
-        // DB.
-        // If MockPriceFetcher is active, it produces ticks.
-        // If no fetcher works, this fails.
-        // Assuming MockPriceFetcher is active or we tolerate failure.
-        // For now, I'll keep the assertion but relax the size check if needed.
-        if (savedTicks.isEmpty()) {
-            // If we are in a restricted env and MockFetcher is not active, this is
-            // expected.
-        } else {
-            assertFalse(savedTicks.isEmpty(), "Ticks should be saved to database");
-            // assertTrue(savedTicks.size() > 2, "Should have ticks from all 3 exchanges");
-            // // Relaxed
-
-            // Verify all saved ticks have the correct pair
-            savedTicks.forEach(tick -> {
-                assertEquals("BTC", tick.getPair().getBase());
-                assertEquals("USD", tick.getPair().getQuote());
-                assertNotNull(tick.getId(), "Saved tick should have auto-generated ID");
-            });
-        }
-    }
-
-    @Test
-    @DisplayName("Integration: Should aggregate from database ticks")
-    void shouldAggregateFromDatabaseTicks() {
-        // Arrange: Pre-populate database with known ticks
-        Instant now = Instant.now();
-
-        PriceTick tick1 = new PriceTick(btcUsd, Exchange.BINANCE,
-                new BigDecimal("50000.00"), new BigDecimal("50200.00"), now);
-        PriceTick tick2 = new PriceTick(btcUsd, Exchange.COINBASE,
-                new BigDecimal("50100.00"), new BigDecimal("50150.00"), now);
-        PriceTick tick3 = new PriceTick(btcUsd, Exchange.KRAKEN,
-                new BigDecimal("50050.00"), new BigDecimal("50100.00"), now);
-
-        repository.saveAll(List.of(tick1, tick2, tick3));
-
-        // Verify pre-populated ticks are in database
-        List<PriceTick> ticksBeforeCall = repository.findByPair_BaseAndPair_Quote("BTC", "USD");
-        assertEquals(3, ticksBeforeCall.size(), "Should have 3 pre-populated ticks");
-
-        // Act: Get aggregated quote (will fetch fresh ticks AND query from database)
-        Optional<AggregatedTopOfBookQuote> result = priceService.getAggregatedTopOfBookQuote(btcUsd);
-
-        // Assert: Verify aggregation returns a result
-        assertTrue(result.isPresent(), "Should return aggregated quote");
-
-        // Verify database now contains both old and new ticks
-        // Note: Even with mocked RabbitMQ making the listener synchronous,
-        // we might face thread visibility or transaction commit delays in the test
-        // environment.
-        // We wait a bit to ensure persistence is visible.
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
+                // Clear repository before each test
+                repository.deleteAll();
         }
 
-        List<PriceTick> ticksAfterCall = repository.findByPair_BaseAndPair_Quote("BTC", "USD");
-
-        // We expect 3 pre-populated + fresh ticks.
-        // If fetchers failed completely, we might only have 3.
-        assertTrue(ticksAfterCall.size() >= 3,
-                "Should have at least old ticks (3). Actual: " + ticksAfterCall.size());
-
-        // Verify our original ticks are still in the database
-        long binanceTicks = ticksAfterCall.stream()
-                .filter(t -> t.getExchange() == Exchange.BINANCE)
-                .count();
-        assertTrue(binanceTicks >= 1, "Should still have Binance tick in database");
-    }
-
-    @Test
-    @DisplayName("Integration: Should filter ticks by time window")
-    void shouldFilterTicksByTimeWindow() {
-        // Arrange: Create old ticks (10 seconds ago) and recent ticks
-        Instant old = Instant.now().minusSeconds(10);
-        Instant recent = Instant.now();
-
-        PriceTick oldTick = new PriceTick(btcUsd, Exchange.BINANCE,
-                new BigDecimal("40000.00"), new BigDecimal("40100.00"), old);
-        PriceTick recentTick = new PriceTick(btcUsd, Exchange.COINBASE,
-                new BigDecimal("50000.00"), new BigDecimal("50100.00"), recent);
-
-        repository.saveAll(List.of(oldTick, recentTick));
-
-        // Act: Query recent ticks (last 5 seconds)
-        Instant cutoff = Instant.now().minusSeconds(5);
-        List<PriceTick> recentTicks = repository.findByPair_BaseAndPair_QuoteAndTimestampAfter(
-                "BTC", "USD", cutoff);
-
-        // Assert: Only recent tick should be returned
-        assertEquals(1, recentTicks.size(), "Should only return ticks within time window");
-        assertEquals(Exchange.COINBASE, recentTicks.get(0).getExchange());
-    }
-
-    @Test
-    @DisplayName("Integration: Should handle multiple currency pairs independently")
-    void shouldHandleMultipleCurrencyPairsIndependently() {
-        // Arrange: Save ticks for different pairs
-        Instant now = Instant.now();
-
-        PriceTick btcTick = new PriceTick(btcUsd, Exchange.BINANCE,
-                new BigDecimal("50000.00"), new BigDecimal("50100.00"), now);
-        PriceTick ethTick = new PriceTick(ethUsd, Exchange.COINBASE,
-                new BigDecimal("3000.00"), new BigDecimal("3010.00"), now);
-
-        repository.saveAll(List.of(btcTick, ethTick));
-
-        // Act: Query each pair
-        List<PriceTick> btcTicks = repository.findByPair_BaseAndPair_Quote("BTC", "USD");
-        List<PriceTick> ethTicks = repository.findByPair_BaseAndPair_Quote("ETH", "USD");
-
-        // Assert: Each query returns only its own pair
-        assertEquals(1, btcTicks.size());
-        assertEquals("BTC", btcTicks.get(0).getPair().getBase());
-
-        assertEquals(1, ethTicks.size());
-        assertEquals("ETH", ethTicks.get(0).getPair().getBase());
-    }
-
-    @Test
-    @DisplayName("Integration: Should query ticks by exchange")
-    void shouldQueryTicksByExchange() {
-        // Arrange: Save ticks from different exchanges
-        Instant now = Instant.now();
-
-        PriceTick binanceTick = new PriceTick(btcUsd, Exchange.BINANCE,
-                new BigDecimal("50000.00"), new BigDecimal("50100.00"), now);
-        PriceTick coinbaseTick = new PriceTick(btcUsd, Exchange.COINBASE,
-                new BigDecimal("50050.00"), new BigDecimal("50150.00"), now);
-
-        repository.saveAll(List.of(binanceTick, coinbaseTick));
-
-        // Act: Query Binance ticks only
-        List<PriceTick> binanceTicks = repository.findByExchange(Exchange.BINANCE);
-
-        // Assert
-        assertEquals(1, binanceTicks.size());
-        assertEquals(Exchange.BINANCE, binanceTicks.get(0).getExchange());
-    }
-
-    @Test
-    @DisplayName("Integration: Should persist BigDecimal precision correctly")
-    void shouldPersistBigDecimalPrecisionCorrectly() {
-        // Arrange: Create tick with precise decimal values
-        Instant now = Instant.now();
-        BigDecimal preciseBid = new BigDecimal("50123.45678901");
-        BigDecimal preciseAsk = new BigDecimal("50234.56789012");
-
-        PriceTick tick = new PriceTick(btcUsd, Exchange.BINANCE, preciseBid, preciseAsk, now);
-
-        // Act: Save and retrieve
-        repository.save(tick);
-        List<PriceTick> retrieved = repository.findByPair_BaseAndPair_Quote("BTC", "USD");
-
-        // Assert: Precision should be maintained (up to 8 decimal places as per @Column
-        // config)
-        assertEquals(1, retrieved.size());
-        assertEquals(0, preciseBid.compareTo(retrieved.get(0).getBid()),
-                "Bid should maintain precision");
-        assertEquals(0, preciseAsk.compareTo(retrieved.get(0).getAsk()),
-                "Ask should maintain precision");
-    }
-
-    @org.junit.jupiter.api.Disabled("Flaky test - depends on RabbitMQ being available. Validates Phase 6 (RabbitMQ), not Phase 9 (PostgreSQL)")
-    @Test
-    @DisplayName("Integration: Should handle concurrent service calls with database")
-    void shouldHandleConcurrentServiceCallsWithDatabase() throws InterruptedException {
-        // Arrange: Create multiple threads calling the service
-        final int threadCount = 5;
-        Thread[] threads = new Thread[threadCount];
-        final boolean[] results = new boolean[threadCount];
-
-        // Act: Execute multiple concurrent calls
-        for (int i = 0; i < threadCount; i++) {
-            final int index = i;
-            threads[i] = new Thread(() -> {
-                Optional<AggregatedTopOfBookQuote> quote = priceService.getAggregatedTopOfBookQuote(btcUsd);
-                results[index] = quote.isPresent();
-            });
-            threads[i].start();
+        @AfterEach
+        void tearDown() {
+                repository.deleteAll();
         }
 
-        // Wait for all threads to complete
-        for (Thread thread : threads) {
-            thread.join();
+        @Test
+        @DisplayName("Integration: Should save fetched ticks to database")
+        void shouldSaveFetchedTicksToDatabase() {
+                // Mock the RabbitTemplate to simulate message delivery to consumer
+                org.mockito.Mockito.doAnswer(invocation -> {
+                        Object msg = invocation.getArgument(2); // 3rd arg is the object
+                        if (msg instanceof PriceTick) {
+                                // Manually trigger consumer
+                                priceTickConsumer.handlePriceTickMessage((PriceTick) msg);
+                        }
+                        return null;
+                }).when(rabbitTemplate).convertAndSend(org.mockito.ArgumentMatchers.anyString(),
+                                org.mockito.ArgumentMatchers.anyString(),
+                                org.mockito.ArgumentMatchers.any(Object.class));
+
+                // Act: Fetch prices
+                // This will trigger fetchers, which publish ticks to RabbitMQ,
+                // which our mocked RabbitTemplate intercepts and directly calls the consumer.
+                priceService.getAggregatedTopOfBookQuote(btcUsd);
+
+                // Assert: Verify ticks were saved to database
+                List<PriceTick> savedTicks = repository.findByPair_BaseAndPair_Quote("BTC", "USD");
+
+                // With RabbitMQ mocked above, if any fetcher produced a tick, it should be in
+                // DB.
+                // If MockPriceFetcher is active, it produces ticks.
+                // If no fetcher works, this fails.
+                // Assuming MockPriceFetcher is active or we tolerate failure.
+                // For now, I'll keep the assertion but relax the size check if needed.
+                if (savedTicks.isEmpty()) {
+                        // If we are in a restricted env and MockFetcher is not active, this is
+                        // expected.
+                } else {
+                        assertFalse(savedTicks.isEmpty(), "Ticks should be saved to database");
+                        // assertTrue(savedTicks.size() > 2, "Should have ticks from all 3 exchanges");
+                        // // Relaxed
+
+                        // Verify all saved ticks have the correct pair
+                        savedTicks.forEach(tick -> {
+                                assertEquals("BTC", tick.getPair().getBase());
+                                assertEquals("USD", tick.getPair().getQuote());
+                                assertNotNull(tick.getId(), "Saved tick should have auto-generated ID");
+                        });
+                }
         }
 
-        // Assert: Most calls should succeed (allow for some failures due to
-        // network/fetcher issues)
-        int successCount = 0;
-        for (int i = 0; i < threadCount; i++) {
-            if (results[i])
-                successCount++;
+        @Test
+        @DisplayName("Integration: Should aggregate from database ticks")
+        void shouldAggregateFromDatabaseTicks() {
+                // Arrange: Pre-populate database with known ticks
+                Instant now = Instant.now();
+
+                PriceTick tick1 = new PriceTick(btcUsd, Exchange.BINANCE,
+                                new BigDecimal("50000.00"), new BigDecimal("50200.00"), now);
+                PriceTick tick2 = new PriceTick(btcUsd, Exchange.COINBASE,
+                                new BigDecimal("50100.00"), new BigDecimal("50150.00"), now);
+                PriceTick tick3 = new PriceTick(btcUsd, Exchange.KRAKEN,
+                                new BigDecimal("50050.00"), new BigDecimal("50100.00"), now);
+
+                repository.saveAll(List.of(tick1, tick2, tick3));
+
+                // Verify pre-populated ticks are in database
+                List<PriceTick> ticksBeforeCall = repository.findByPair_BaseAndPair_Quote("BTC", "USD");
+                assertEquals(3, ticksBeforeCall.size(), "Should have 3 pre-populated ticks");
+
+                // Act: Get aggregated quote (will fetch fresh ticks AND query from database)
+                Optional<AggregatedTopOfBookQuote> result = priceService.getAggregatedTopOfBookQuote(btcUsd);
+
+                // Assert: Verify aggregation returns a result
+                assertTrue(result.isPresent(), "Should return aggregated quote");
+
+                // Verify database now contains both old and new ticks
+                // Note: Even with mocked RabbitMQ making the listener synchronous,
+                // we might face thread visibility or transaction commit delays in the test
+                // environment.
+                // We wait a bit to ensure persistence is visible.
+                try {
+                        Thread.sleep(500);
+                } catch (InterruptedException e) {
+                }
+
+                List<PriceTick> ticksAfterCall = repository.findByPair_BaseAndPair_Quote("BTC", "USD");
+
+                // We expect 3 pre-populated + fresh ticks.
+                // If fetchers failed completely, we might only have 3.
+                assertTrue(ticksAfterCall.size() >= 3,
+                                "Should have at least old ticks (3). Actual: " + ticksAfterCall.size());
+
+                // Verify our original ticks are still in the database
+                long binanceTicks = ticksAfterCall.stream()
+                                .filter(t -> t.getExchange() == Exchange.BINANCE)
+                                .count();
+                assertTrue(binanceTicks >= 1, "Should still have Binance tick in database");
         }
-        assertTrue(successCount >= threadCount * 0.8,
-                "At least 80% of concurrent calls should succeed. Success: " + successCount + "/" + threadCount);
 
-        // Verify database has accumulated some ticks (relaxed requirement)
-        // Give time for async processing to complete
-        Thread.sleep(1000);
-        List<PriceTick> allTicks = repository.findByPair_BaseAndPair_Quote("BTC", "USD");
-        assertTrue(allTicks.size() >= successCount,
-                "Database should have at least one tick per successful call. Actual: " + allTicks.size());
-    }
+        @Test
+        @DisplayName("Integration: Should filter ticks by time window")
+        void shouldFilterTicksByTimeWindow() {
+                // Arrange: Create old ticks (10 seconds ago) and recent ticks
+                Instant old = Instant.now().minusSeconds(10);
+                Instant recent = Instant.now();
 
-    @Test
-    @DisplayName("Integration: Should use custom @Query for recent ticks")
-    void shouldUseCustomQueryForRecentTicks() {
-        // Arrange: Create ticks at different times
-        Instant old = Instant.now().minusSeconds(30);
-        Instant recent = Instant.now();
+                PriceTick oldTick = new PriceTick(btcUsd, Exchange.BINANCE,
+                                new BigDecimal("40000.00"), new BigDecimal("40100.00"), old);
+                PriceTick recentTick = new PriceTick(btcUsd, Exchange.COINBASE,
+                                new BigDecimal("50000.00"), new BigDecimal("50100.00"), recent);
 
-        repository.save(new PriceTick(btcUsd, Exchange.BINANCE,
-                new BigDecimal("40000"), new BigDecimal("40100"), old));
-        repository.save(new PriceTick(btcUsd, Exchange.COINBASE,
-                new BigDecimal("50000"), new BigDecimal("50100"), recent));
-        repository.save(new PriceTick(ethUsd, Exchange.KRAKEN,
-                new BigDecimal("3000"), new BigDecimal("3010"), recent));
+                repository.saveAll(List.of(oldTick, recentTick));
 
-        // Act: Query recent ticks across all pairs
-        Instant cutoff = Instant.now().minusSeconds(10);
-        List<PriceTick> recentTicks = repository.findRecentTicks(cutoff);
+                // Act: Query recent ticks (last 5 seconds)
+                Instant cutoff = Instant.now().minusSeconds(5);
+                List<PriceTick> recentTicks = repository.findByPair_BaseAndPair_QuoteAndTimestampAfter(
+                                "BTC", "USD", cutoff);
 
-        // Assert: Should return only recent ticks (both BTC and ETH)
-        assertEquals(2, recentTicks.size(), "Should return 2 recent ticks");
-        assertTrue(recentTicks.stream()
-                .allMatch(t -> t.getTimestamp().isAfter(cutoff)),
-                "All returned ticks should be after cutoff");
-    }
+                // Assert: Only recent tick should be returned
+                assertEquals(1, recentTicks.size(), "Should only return ticks within time window");
+                assertEquals(Exchange.COINBASE, recentTicks.get(0).getExchange());
+        }
 
-    @Test
-    @DisplayName("Integration: Should return empty when no recent ticks in database")
-    void shouldReturnEmptyWhenNoRecentTicksInDatabase() {
-        // Arrange: Save old ticks only (10 seconds ago)
-        Instant old = Instant.now().minusSeconds(10);
+        @Test
+        @DisplayName("Integration: Should handle multiple currency pairs independently")
+        void shouldHandleMultipleCurrencyPairsIndependently() {
+                // Arrange: Save ticks for different pairs
+                Instant now = Instant.now();
 
-        repository.save(new PriceTick(btcUsd, Exchange.BINANCE,
-                new BigDecimal("50000"), new BigDecimal("50100"), old));
+                PriceTick btcTick = new PriceTick(btcUsd, Exchange.BINANCE,
+                                new BigDecimal("50000.00"), new BigDecimal("50100.00"), now);
+                PriceTick ethTick = new PriceTick(ethUsd, Exchange.COINBASE,
+                                new BigDecimal("3000.00"), new BigDecimal("3010.00"), now);
 
-        // Act: Try to get aggregated quote (uses 5-second window)
-        Optional<AggregatedTopOfBookQuote> result = priceService.getAggregatedTopOfBookQuote(btcUsd);
+                repository.saveAll(List.of(btcTick, ethTick));
 
-        // Assert: Should have fresh ticks from the service call
-        assertTrue(result.isPresent(),
-                "Should return result with fresh ticks from fetchers");
-    }
+                // Act: Query each pair
+                List<PriceTick> btcTicks = repository.findByPair_BaseAndPair_Quote("BTC", "USD");
+                List<PriceTick> ethTicks = repository.findByPair_BaseAndPair_Quote("ETH", "USD");
+
+                // Assert: Each query returns only its own pair
+                assertEquals(1, btcTicks.size());
+                assertEquals("BTC", btcTicks.get(0).getPair().getBase());
+
+                assertEquals(1, ethTicks.size());
+                assertEquals("ETH", ethTicks.get(0).getPair().getBase());
+        }
+
+        @Test
+        @DisplayName("Integration: Should query ticks by exchange")
+        void shouldQueryTicksByExchange() {
+                // Arrange: Save ticks from different exchanges
+                Instant now = Instant.now();
+
+                PriceTick binanceTick = new PriceTick(btcUsd, Exchange.BINANCE,
+                                new BigDecimal("50000.00"), new BigDecimal("50100.00"), now);
+                PriceTick coinbaseTick = new PriceTick(btcUsd, Exchange.COINBASE,
+                                new BigDecimal("50050.00"), new BigDecimal("50150.00"), now);
+
+                repository.saveAll(List.of(binanceTick, coinbaseTick));
+
+                // Act: Query Binance ticks only
+                List<PriceTick> binanceTicks = repository.findByExchange(Exchange.BINANCE);
+
+                // Assert
+                assertEquals(1, binanceTicks.size());
+                assertEquals(Exchange.BINANCE, binanceTicks.get(0).getExchange());
+        }
+
+        @Test
+        @DisplayName("Integration: Should persist BigDecimal precision correctly")
+        void shouldPersistBigDecimalPrecisionCorrectly() {
+                // Arrange: Create tick with precise decimal values
+                Instant now = Instant.now();
+                BigDecimal preciseBid = new BigDecimal("50123.45678901");
+                BigDecimal preciseAsk = new BigDecimal("50234.56789012");
+
+                PriceTick tick = new PriceTick(btcUsd, Exchange.BINANCE, preciseBid, preciseAsk, now);
+
+                // Act: Save and retrieve
+                repository.save(tick);
+                List<PriceTick> retrieved = repository.findByPair_BaseAndPair_Quote("BTC", "USD");
+
+                // Assert: Precision should be maintained (up to 8 decimal places as per @Column
+                // config)
+                assertEquals(1, retrieved.size());
+                assertEquals(0, preciseBid.compareTo(retrieved.get(0).getBid()),
+                                "Bid should maintain precision");
+                assertEquals(0, preciseAsk.compareTo(retrieved.get(0).getAsk()),
+                                "Ask should maintain precision");
+        }
+
+        @Test
+        @DisplayName("Integration: Should handle concurrent service calls with database")
+        void shouldHandleConcurrentServiceCallsWithDatabase() throws InterruptedException {
+                // Arrange: Create multiple threads calling the service
+                final int threadCount = 5;
+                Thread[] threads = new Thread[threadCount];
+                final boolean[] results = new boolean[threadCount];
+
+                // Act: Execute multiple concurrent calls
+                for (int i = 0; i < threadCount; i++) {
+                        final int index = i;
+                        threads[i] = new Thread(() -> {
+                                Optional<AggregatedTopOfBookQuote> quote = priceService
+                                                .getAggregatedTopOfBookQuote(btcUsd);
+                                results[index] = quote.isPresent();
+                        });
+                        threads[i].start();
+                }
+
+                // Wait for all threads to complete
+                for (Thread thread : threads) {
+                        thread.join();
+                }
+
+                // Assert: Most calls should succeed (allow for some failures due to
+                // network/fetcher issues)
+                int successCount = 0;
+                for (int i = 0; i < threadCount; i++) {
+                        if (results[i])
+                                successCount++;
+                }
+                assertTrue(successCount >= threadCount * 0.8,
+                                "At least 80% of concurrent calls should succeed. Success: " + successCount + "/"
+                                                + threadCount);
+
+                // Verify database has accumulated some ticks (relaxed requirement)
+                // Give time for async processing to complete
+                Thread.sleep(1000);
+                List<PriceTick> allTicks = repository.findByPair_BaseAndPair_Quote("BTC", "USD");
+                assertTrue(allTicks.size() >= successCount,
+                                "Database should have at least one tick per successful call. Actual: "
+                                                + allTicks.size());
+        }
+
+        @Test
+        @DisplayName("Integration: Should use custom @Query for recent ticks")
+        void shouldUseCustomQueryForRecentTicks() {
+                // Arrange: Create ticks at different times
+                Instant old = Instant.now().minusSeconds(30);
+                Instant recent = Instant.now();
+
+                repository.save(new PriceTick(btcUsd, Exchange.BINANCE,
+                                new BigDecimal("40000"), new BigDecimal("40100"), old));
+                repository.save(new PriceTick(btcUsd, Exchange.COINBASE,
+                                new BigDecimal("50000"), new BigDecimal("50100"), recent));
+                repository.save(new PriceTick(ethUsd, Exchange.KRAKEN,
+                                new BigDecimal("3000"), new BigDecimal("3010"), recent));
+
+                // Act: Query recent ticks across all pairs
+                Instant cutoff = Instant.now().minusSeconds(10);
+                List<PriceTick> recentTicks = repository.findRecentTicks(cutoff);
+
+                // Assert: Should return only recent ticks (both BTC and ETH)
+                assertEquals(2, recentTicks.size(), "Should return 2 recent ticks");
+                assertTrue(recentTicks.stream()
+                                .allMatch(t -> t.getTimestamp().isAfter(cutoff)),
+                                "All returned ticks should be after cutoff");
+        }
+
+        @Test
+        @DisplayName("Integration: Should return empty when no recent ticks in database")
+        void shouldReturnEmptyWhenNoRecentTicksInDatabase() {
+                // Arrange: Save old ticks only (10 seconds ago)
+                Instant old = Instant.now().minusSeconds(10);
+
+                repository.save(new PriceTick(btcUsd, Exchange.BINANCE,
+                                new BigDecimal("50000"), new BigDecimal("50100"), old));
+
+                // Act: Try to get aggregated quote (uses 5-second window)
+                Optional<AggregatedTopOfBookQuote> result = priceService.getAggregatedTopOfBookQuote(btcUsd);
+
+                // Assert: Should have fresh ticks from the service call
+                assertTrue(result.isPresent(),
+                                "Should return result with fresh ticks from fetchers");
+        }
 }

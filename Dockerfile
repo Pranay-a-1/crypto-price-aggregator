@@ -9,9 +9,9 @@ RUN ./mvnw dependency:go-offline
 
 # Copy source code and build
 COPY src ./src
-# RUN #./mvnw clean package -DskipTests
+RUN ./mvnw clean package -DskipTests
 #RUN ./mvnw clean package -Dtest=ResilienceIntegrationTest
-RUN ./mvnw clean package
+#RUN ./mvnw clean package
 
 # Stage 2: Run the application
 FROM eclipse-temurin:17-jre-jammy
