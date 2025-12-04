@@ -1,6 +1,6 @@
 # Project Structure
 
-**Generated on:** December 04, 2025 at 03:18 PM
+**Generated on:** December 04, 2025 at 01:21 AM
 
 ```text
 .
@@ -46,16 +46,6 @@
 │   │   ├── 📄 task.md
 │   │   ├── 📄 walkthrough.md
 │   ├── 🔵 phase8
-│   │   ├── 📄 implementation_plan.md
-│   │   ├── 📄 PHASE_8_SUMMARY.md
-│   │   ├── 📄 PROJECT_STRUCTURE_phase8.md
-│   │   ├── 📄 task.md
-│   │   ├── 📄 walkthrough.md
-│   ├── 🔵 phase9
-│   │   ├── 📄 implementation_plan.md
-│   │   ├── 📄 PHASE_9_SUMMARY.md
-│   │   ├── 📄 task.md
-│   │   ├── 📄 walkthrough.md
 ├── 🔵 .mvn
 ├── 📦 mvnw
 ├── 📜 mvnw.cmd
@@ -120,7 +110,6 @@
 │   │   │   │   │   │   │   ├── ☕ PriceTickConsumer.java
 │   │   ├── 🔵 resources
 │   │   │   ├── ⚙️ application-dev.properties
-│   │   │   ├── ⚙️ application-prod.properties
 │   │   │   ├── ⚙️ application.properties
 │   │   │   ├── 🔵 static
 │   │   │   ├── 🔵 templates
@@ -131,7 +120,6 @@
 │   │   │   │   │   ├── 🔵 crypto_price_aggregator
 │   │   │   │   │   │   ├── 🔵 aspect
 │   │   │   │   │   │   │   ├── ☕ LoggingAspectTest.java
-│   │   │   │   │   │   ├── ☕ BaseIntegrationTest.java
 │   │   │   │   │   │   ├── 🔵 benchmark
 │   │   │   │   │   │   │   ├── ☕ BenchmarkRunnerTest.java
 │   │   │   │   │   │   │   ├── 📄 BenchmarkTest.md
@@ -153,7 +141,6 @@
 │   │   │   │   │   │   │   ├── ☕ RequestLoggingFilterTest.java
 │   │   │   │   │   │   ├── 🔵 health
 │   │   │   │   │   │   │   ├── ☕ ExchangeHealthIndicatorTest.java
-│   │   │   │   │   │   ├── ☕ PostgreSQLIntegrationTest.java
 │   │   │   │   │   │   ├── 🔵 repository
 │   │   │   │   │   │   │   ├── ☕ PriceTickRepositoryTest.java
 │   │   │   │   │   │   ├── 🔵 service
@@ -192,6 +179,6 @@
 
 ---
 
-**Total Files:** 119
+**Total Files:** 107
 
-**Total Directories:** 55
+**Total Directories:** 54

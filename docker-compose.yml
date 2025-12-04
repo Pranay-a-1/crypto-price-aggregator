@@ -1,4 +1,21 @@
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: crypto-postgres
+    environment:
+      POSTGRES_DB: cryptodb
+      POSTGRES_USER: cryptouser
+      POSTGRES_PASSWORD: cryptopass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cryptouser -d cryptodb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   rabbitmq:
     image: rabbitmq:3-management
     ports:
@@ -15,10 +32,17 @@ services:
     ports:
       - "8080:8080"
     depends_on:
+      db:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/cryptodb
+      - SPRING_DATASOURCE_USERNAME=cryptouser
+      - SPRING_DATASOURCE_PASSWORD=cryptopass
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      # Enable active profiles if needed (e.g. dev)
-      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_PROFILES_ACTIVE=prod # dev
+
+volumes:
+  postgres_data:

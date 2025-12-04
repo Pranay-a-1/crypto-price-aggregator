@@ -9,16 +9,23 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Consumer that listens for PriceTick messages from RabbitMQ and handles processing.
+ * Consumer that listens for PriceTick messages from RabbitMQ and handles
+ * processing.
  * <p>
  * Initially, this just persists the tick to the database.
  * <p>
- * <b>Phase 6 Update:</b> Migrated from @EventListener (Spring internal) to @RabbitListener (External MQ).
+ * <b>Phase 6 Update:</b> Migrated from @EventListener (Spring internal)
+ * to @RabbitListener (External MQ).
+ * <p>
+ * <b>Phase 9 Update:</b> Added @Transactional to ensure atomicity with
+ * PostgreSQL.
  *
  */
 @Component
+@Transactional
 public class PriceTickConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(PriceTickConsumer.class);
