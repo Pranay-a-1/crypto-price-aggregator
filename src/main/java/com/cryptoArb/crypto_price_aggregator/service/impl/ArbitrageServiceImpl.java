@@ -2,7 +2,6 @@ package com.cryptoArb.crypto_price_aggregator.service.impl;
 
 import com.cryptoArb.crypto_price_aggregator.domain.ArbitrageOpportunity;
 import com.cryptoArb.crypto_price_aggregator.domain.CurrencyPair;
-import com.cryptoArb.crypto_price_aggregator.domain.Exchange;
 import com.cryptoArb.crypto_price_aggregator.domain.PriceTick;
 import com.cryptoArb.crypto_price_aggregator.repository.ArbitrageRepository;
 import com.cryptoArb.crypto_price_aggregator.service.ArbitrageService;

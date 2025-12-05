@@ -42,7 +42,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=cryptopass
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_PROFILES_ACTIVE=dev #prod # dev
+      - SPRING_PROFILES_ACTIVE=prod # dev
 
 volumes:
   postgres_data:

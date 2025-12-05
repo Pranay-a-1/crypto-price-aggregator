@@ -6,8 +6,6 @@ import com.cryptoArb.crypto_price_aggregator.domain.PriceTick;
 import com.cryptoArb.crypto_price_aggregator.event.PriceTickFetchedEvent;
 import com.cryptoArb.crypto_price_aggregator.exception.PriceFetchException;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;

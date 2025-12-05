@@ -18,10 +18,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 /**
  * Professional implementation of Kraken Fetcher.
