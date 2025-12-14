@@ -5,6 +5,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -41,6 +42,7 @@ public abstract class BaseIntegrationTest {
     }
 
     static PostgreSQLContainer<?> postgres;
+    static RabbitMQContainer rabbitMQ;
 
     static {
         if (USE_TESTCONTAINERS) {
@@ -50,6 +52,11 @@ public abstract class BaseIntegrationTest {
                     .withPassword("test")
                     .withReuse(true);
             postgres.start();
+
+            rabbitMQ = new RabbitMQContainer("rabbitmq:3-management")
+                    .withExposedPorts(5672, 15672)
+                    .withReuse(true);
+            rabbitMQ.start();
         }
     }
 
@@ -63,12 +70,20 @@ public abstract class BaseIntegrationTest {
             registry.add("spring.datasource.url", postgres::getJdbcUrl);
             registry.add("spring.datasource.username", postgres::getUsername);
             registry.add("spring.datasource.password", postgres::getPassword);
+
+            registry.add("spring.rabbitmq.host", rabbitMQ::getHost);
+            registry.add("spring.rabbitmq.port", rabbitMQ::getAmqpPort);
+            registry.add("spring.rabbitmq.username", rabbitMQ::getAdminUsername);
+            registry.add("spring.rabbitmq.password", rabbitMQ::getAdminPassword);
         } else {
             // Configuration for external DB (docker-compose)
             // Assumes running inside docker network where 'db' resolves
             registry.add("spring.datasource.url", () -> "jdbc:postgresql://db:5432/cryptodb");
             registry.add("spring.datasource.username", () -> "cryptouser");
             registry.add("spring.datasource.password", () -> "cryptopass");
+
+            registry.add("spring.rabbitmq.host", () -> "rabbitmq");
+            registry.add("spring.rabbitmq.port", () -> "5672");
         }
 
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
@@ -77,9 +92,6 @@ public abstract class BaseIntegrationTest {
 
         // Disable Flyway in tests - we use Hibernate's create-drop for test isolation
         registry.add("spring.flyway.enabled", () -> "false");
-
-        // Disable RabbitMQ for integration tests if not needed
-        registry.add("spring.rabbitmq.host", () -> "rabbitmq"); // Default to rabbitmq service name
     }
 
 }
