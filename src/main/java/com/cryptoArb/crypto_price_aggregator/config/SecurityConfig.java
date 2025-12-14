@@ -26,7 +26,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/actuator/**").permitAll() // Allow monitoring
                                                 .requestMatchers("/h2-console/**").permitAll() // Allow H2 console
                                                 .requestMatchers("/frontend/**").permitAll() // Allow frontend static files
-                                                .requestMatchers("/api/**").authenticated() // Secure API
+                                                .requestMatchers("/api/prices/**").permitAll() // Allow public price API access
+                                                .requestMatchers("/api/**").authenticated() // Secure other API endpoints
                                                 .anyRequest().authenticated())
                                 .httpBasic(Customizer.withDefaults()) // Enable Basic Auth
                                 .headers(headers -> headers.frameOptions(frame -> frame.disable())); // For H2 console
@@ -73,3 +74,4 @@ public class SecurityConfig {
          * spring.security.oauth2.client.registration.github.client-secret=...
          */
 }
+

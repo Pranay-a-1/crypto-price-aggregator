@@ -25,7 +25,7 @@ import java.util.Random;
  * Demonstrates manual retry logic and chaos injection.
  * This fetcher mimics Binance fetching behavior but adds explicit "painful" manual retry loops.
  */
-@Component("manualResilientBinanceFetcher")
+// @Component("manualResilientBinanceFetcher")
 public class ManualResilientBinanceFetcher implements PriceFetcher {
 
     private static final Logger log = LoggerFactory.getLogger(ManualResilientBinanceFetcher.class);

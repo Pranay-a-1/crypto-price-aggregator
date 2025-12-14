@@ -6,6 +6,9 @@ const CONFIG = {
     AUTO_REFRESH_INTERVAL: 5000, // 5 seconds
     CHART_UPDATE_INTERVAL: 10000, // 10 seconds
     MAX_ARBITRAGE_LIMIT: 10,
+    // Basic Auth credentials (default from Spring Security)
+    AUTH_USERNAME: 'user',
+    AUTH_PASSWORD: 'password',
 };
 
 // ===================================
@@ -53,11 +56,24 @@ const elements = {
 // ===================================
 const api = {
     /**
+     * Get authentication headers for API requests
+     */
+    getAuthHeaders() {
+        const credentials = btoa(`${CONFIG.AUTH_USERNAME}:${CONFIG.AUTH_PASSWORD}`);
+        return {
+            'Authorization': `Basic ${credentials}`,
+            'Content-Type': 'application/json'
+        };
+    },
+
+    /**
      * Fetch aggregated price for a currency pair
      */
     async getAggregatedPrice(base, quote) {
         const url = `${CONFIG.API_BASE_URL}/prices/${base}/${quote}`;
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: this.getAuthHeaders()
+        });
 
         if (response.status === 404) {
             return null; // No price available
@@ -75,7 +91,9 @@ const api = {
      */
     async getExchangePrices(base, quote) {
         const url = `${CONFIG.API_BASE_URL}/prices/${base}/${quote}/exchanges`;
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: this.getAuthHeaders()
+        });
 
         if (!response.ok) {
             throw new Error(`Failed to fetch exchange prices: ${response.statusText}`);
@@ -89,7 +107,9 @@ const api = {
      */
     async getArbitrageOpportunities(base, quote, limit = CONFIG.MAX_ARBITRAGE_LIMIT) {
         const url = `${CONFIG.API_BASE_URL}/arbitrage/${base}/${quote}?limit=${limit}`;
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: this.getAuthHeaders()
+        });
 
         if (!response.ok) {
             throw new Error(`Failed to fetch arbitrage opportunities: ${response.statusText}`);
@@ -107,7 +127,7 @@ const ui = {
      * Update aggregated price card
      */
     updateAggregatedPrice(data) {
-        if (!data) {
+        if (!data || data.bestBid === undefined || data.bestBid === null || data.bestAsk === undefined || data.bestAsk === null) {
             elements.bestBid.textContent = 'N/A';
             elements.bestBidExchange.textContent = 'No data available';
             elements.bestAsk.textContent = 'N/A';
@@ -118,7 +138,7 @@ const ui = {
         }
 
         // Update best bid
-        const prevBid = parseFloat(elements.bestBid.textContent) || 0;
+        const prevBid = parseFloat(elements.bestBid.textContent.replace('$', '').replace(/,/g, '')) || 0;
         elements.bestBid.textContent = `$${data.bestBid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         elements.bestBidExchange.textContent = data.bestBidExchange || 'Unknown';
 
@@ -134,7 +154,7 @@ const ui = {
         }
 
         // Update best ask
-        const prevAsk = parseFloat(elements.bestAsk.textContent) || 0;
+        const prevAsk = parseFloat(elements.bestAsk.textContent.replace('$', '').replace(/,/g, '')) || 0;
         elements.bestAsk.textContent = `$${data.bestAsk.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         elements.bestAskExchange.textContent = data.bestAskExchange || 'Unknown';
 
@@ -180,8 +200,18 @@ const ui = {
         exchanges.forEach(exchangeName => {
             const price = exchangePrices[exchangeName];
 
+            // Skip if price data is invalid
+            if (!price || typeof price !== 'object') {
+                return;
+            }
+
             const card = document.createElement('div');
             card.className = 'exchange-card glass-card';
+
+            const bid = (price.bid !== undefined && price.bid !== null) ? price.bid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A';
+            const ask = (price.ask !== undefined && price.ask !== null) ? price.ask.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A';
+            const lastPrice = (price.lastPrice !== undefined && price.lastPrice !== null) ? price.lastPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A';
+            const volume = (price.volume24h !== undefined && price.volume24h !== null) ? price.volume24h.toLocaleString('en-US', { maximumFractionDigits: 0 }) : 'N/A';
 
             card.innerHTML = `
                 <div class="exchange-header">
@@ -191,19 +221,19 @@ const ui = {
                 <div class="exchange-prices">
                     <div class="exchange-price-row">
                         <span class="exchange-price-label">Bid</span>
-                        <span class="exchange-price-value">$${price.bid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span class="exchange-price-value">${bid !== 'N/A' ? '$' + bid : bid}</span>
                     </div>
                     <div class="exchange-price-row">
                         <span class="exchange-price-label">Ask</span>
-                        <span class="exchange-price-value">$${price.ask.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span class="exchange-price-value">${ask !== 'N/A' ? '$' + ask : ask}</span>
                     </div>
                     <div class="exchange-price-row">
                         <span class="exchange-price-label">Last</span>
-                        <span class="exchange-price-value">$${price.lastPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span class="exchange-price-value">${lastPrice !== 'N/A' ? '$' + lastPrice : lastPrice}</span>
                     </div>
                     <div class="exchange-price-row">
                         <span class="exchange-price-label">Volume</span>
-                        <span class="exchange-price-value">${price.volume24h.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                        <span class="exchange-price-value">${volume}</span>
                     </div>
                 </div>
             `;
@@ -225,21 +255,29 @@ const ui = {
         elements.noArbitrageMessage.style.display = 'none';
 
         const rows = opportunities.map(opp => {
-            const profitPercent = opp.profitPercentage.toFixed(2);
-            const timestamp = new Date(opp.timestamp).toLocaleString('en-US', {
+            // Skip invalid opportunities
+            if (!opp || typeof opp !== 'object') {
+                return '';
+            }
+
+            const profitPercent = (opp.profitPercentage !== undefined && opp.profitPercentage !== null) ? opp.profitPercentage.toFixed(2) : '0.00';
+            const timestamp = opp.timestamp ? new Date(opp.timestamp).toLocaleString('en-US', {
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit'
-            });
+            }) : 'N/A';
+
+            const buyPrice = (opp.buyPrice !== undefined && opp.buyPrice !== null) ? opp.buyPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A';
+            const sellPrice = (opp.sellPrice !== undefined && opp.sellPrice !== null) ? opp.sellPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A';
 
             return `
                 <tr>
-                    <td>${opp.buyExchange}</td>
-                    <td>$${opp.buyPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td>${opp.sellExchange}</td>
-                    <td>$${opp.sellPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>${opp.buyExchange || 'Unknown'}</td>
+                    <td>${buyPrice !== 'N/A' ? '$' + buyPrice : buyPrice}</td>
+                    <td>${opp.sellExchange || 'Unknown'}</td>
+                    <td>${sellPrice !== 'N/A' ? '$' + sellPrice : sellPrice}</td>
                     <td class="profit-positive">+${profitPercent}%</td>
                     <td>${timestamp}</td>
                 </tr>
@@ -373,11 +411,17 @@ const chart = {
      * Update chart with exchange prices
      */
     update(exchangePrices) {
-        if (!priceChart) return;
+        if (!priceChart || !exchangePrices || typeof exchangePrices !== 'object') return;
 
         const exchanges = Object.keys(exchangePrices);
-        const bidPrices = exchanges.map(ex => exchangePrices[ex].bid);
-        const askPrices = exchanges.map(ex => exchangePrices[ex].ask);
+        const bidPrices = exchanges.map(ex => {
+            const price = exchangePrices[ex];
+            return (price && price.bid !== undefined && price.bid !== null) ? price.bid : 0;
+        });
+        const askPrices = exchanges.map(ex => {
+            const price = exchangePrices[ex];
+            return (price && price.ask !== undefined && price.ask !== null) ? price.ask : 0;
+        });
 
         priceChart.data.labels = exchanges;
         priceChart.data.datasets[0].data = bidPrices;

@@ -53,10 +53,33 @@ public class PriceServiceImpl implements PriceService {
 
     // Time window for considering "recent" ticks (5 seconds)
     private static final int RECENT_TICKS_WINDOW_SECONDS = 5;
+    
+    // Minimum interval between external API calls (5 seconds) to avoid rate limiting
+    private static final long CACHE_VALIDITY_MS = 5000;
 
     private final List<PriceFetcher> fetchers;
     private final ManualConcurrentPriceEngine executionEngine;
     private final PriceTickRepository repository;
+    
+    // Simple in-memory cache to rate-limit external API calls
+    private final Map<CurrencyPair, CachedPriceTicks> priceCache = new java.util.concurrent.ConcurrentHashMap<>();
+    
+    /**
+     * Simple cache entry holding price ticks and their fetch timestamp.
+     */
+    private static class CachedPriceTicks {
+        final List<PriceTick> ticks;
+        final long fetchedAtMs;
+        
+        CachedPriceTicks(List<PriceTick> ticks) {
+            this.ticks = ticks;
+            this.fetchedAtMs = System.currentTimeMillis();
+        }
+        
+        boolean isExpired() {
+            return System.currentTimeMillis() - fetchedAtMs > CACHE_VALIDITY_MS;
+        }
+    }
 
     /**
      * Constructor that receives runtime dependencies.
@@ -80,6 +103,37 @@ public class PriceServiceImpl implements PriceService {
                 "PriceServiceImpl initialized with {} fetchers, ManualConcurrentPriceEngine (pool={}), and PriceTickRepository",
                 this.fetchers.size(), poolSize);
     }
+    
+    /**
+     * Fetches price ticks using a cache to rate-limit external API calls.
+     * External APIs are only called if the cache is expired (>5 seconds old).
+     * This prevents hitting third-party APIs too frequently and avoids rate limits.
+     *
+     * @param pair The currency pair to fetch prices for
+     * @return List of price ticks (may be from cache)
+     */
+    private List<PriceTick> getCachedPriceTicks(CurrencyPair pair) {
+        CachedPriceTicks cached = priceCache.get(pair);
+        
+        // If cache exists and is not expired, use cached data
+        if (cached != null && !cached.isExpired()) {
+            log.debug("Using cached price ticks for {} (age: {}ms)", 
+                    pair, System.currentTimeMillis() - cached.fetchedAtMs);
+            return cached.ticks;
+        }
+        
+        // Cache is expired or doesn't exist - fetch fresh data
+        log.debug("Cache miss or expired for {}, fetching from external APIs", pair);
+        List<PriceTick> freshTicks = executionEngine.fetchPrices(fetchers, pair);
+        
+        // Only cache if we got valid data
+        if (!freshTicks.isEmpty()) {
+            priceCache.put(pair, new CachedPriceTicks(freshTicks));
+            log.debug("Cached {} price ticks for {}", freshTicks.size(), pair);
+        }
+        
+        return freshTicks;
+    }
 
     @Override
     public Optional<AggregatedTopOfBookQuote> getAggregatedTopOfBookQuote(CurrencyPair pair) {
@@ -89,11 +143,9 @@ public class PriceServiceImpl implements PriceService {
 
         log.debug("Fetching AggregatedTopOfBookQuote for {}", pair);
 
-        // PHASE 3: Fetch prices in parallel using the engine
-        // Phase 5 Update: We no longer save explicitely. Fetchers publish events, and PriceTickConsumer saves them.
-        // Phase 6 Update: Persistence is now async via RabbitMQ. We use the returned fresh ticks for immediate aggregation
-        // to avoid race conditions with DB latency. The ticks are still sent to the DB in the background.
-        List<PriceTick> freshTicks = executionEngine.fetchPrices(fetchers, pair);
+        // Use cached price ticks to avoid rate limiting from external APIs
+        // Fresh API calls are only made if cache is expired (>5 seconds old)
+        List<PriceTick> freshTicks = getCachedPriceTicks(pair);
 
         if (freshTicks.isEmpty()) {
             // Fallback to DB if live fetch fails? Or just return empty?
@@ -145,14 +197,15 @@ public class PriceServiceImpl implements PriceService {
 
         log.debug("Fetching latest price ticks for {}", pair);
 
-        // Fetch prices using the engine (same as getAggregatedTopOfBookQuote)
-        List<PriceTick> freshTicks = executionEngine.fetchPrices(fetchers, pair);
+        // Use cached price ticks to avoid rate limiting from external APIs
+        List<PriceTick> freshTicks = getCachedPriceTicks(pair);
 
         // Convert to Map<ExchangeName, PriceTick>
         return freshTicks.stream()
                 .collect(Collectors.toMap(
                         tick -> tick.getExchange().name(),
-                        tick -> tick
+                        tick -> tick,
+                        (existing, replacement) -> replacement // Keep the latest/last one if duplicates exist
                 ));
     }
 
