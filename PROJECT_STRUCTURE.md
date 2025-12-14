@@ -1,6 +1,6 @@
 # Project Structure
 
-**Generated on:** December 04, 2025 at 07:38 PM
+**Generated on:** December 15, 2025 at 12:05 AM
 
 ```text
 .
@@ -67,9 +67,6 @@
 │   ├── 🔵 wrapper
 │   │   ├── ⚙️ maven-wrapper.properties
 ├── ⚙️ pom.xml
-├── 🔵 .qodo
-│   ├── 🔵 agents
-│   ├── 🔵 workflows
 ├── 🔵 src
 │   ├── 🔵 main
 │   │   ├── 🔵 java
@@ -89,7 +86,10 @@
 │   │   │   │   │   │   │   ├── ☕ JpaConfig.java
 │   │   │   │   │   │   │   ├── ☕ MetricsConfig.java
 │   │   │   │   │   │   │   ├── ☕ RabbitMqConfig.java
+│   │   │   │   │   │   │   ├── ☕ SecurityConfig.java
+│   │   │   │   │   │   │   ├── ☕ WebSocketConfig.java
 │   │   │   │   │   │   ├── 🔵 controller
+│   │   │   │   │   │   │   ├── ☕ ArbitrageController.java
 │   │   │   │   │   │   │   ├── ☕ PriceController.java
 │   │   │   │   │   │   ├── ☕ CryptoPriceAggregatorApplication.java
 │   │   │   │   │   │   ├── 🔵 domain
@@ -131,6 +131,11 @@
 │   │   │   │   │   │   ├── 🔵 validation
 │   │   │   │   │   │   │   ├── ☕ CurrencyPairValidator.java
 │   │   │   │   │   │   │   ├── ☕ ValidCurrencyPair.java
+│   │   │   │   │   │   ├── 🔵 websocket
+│   │   │   │   │   │   │   ├── ☕ ExchangeWebSocketClient.java
+│   │   │   │   │   │   │   ├── 🔵 impl
+│   │   │   │   │   │   │   │   ├── ☕ MockWebSocketClient.java
+│   │   │   │   │   │   │   ├── ☕ WebSocketRateLimiter.java
 │   │   ├── 🔵 resources
 │   │   │   ├── ⚙️ application-dev.properties
 │   │   │   ├── ⚙️ application-prod.properties
@@ -139,8 +144,6 @@
 │   │   │   │   ├── 🔵 migration
 │   │   │   │   │   ├── 📦 V1__initial_schema.sql
 │   │   │   │   │   ├── 📦 V2__create_arbitrage_opportunities.sql
-│   │   │   ├── 🔵 static
-│   │   │   ├── 🔵 templates
 │   ├── 🔵 test
 │   │   ├── 🔵 java
 │   │   │   ├── 🔵 com
@@ -158,7 +161,9 @@
 │   │   │   │   │   │   ├── 🔵 config
 │   │   │   │   │   │   │   ├── ☕ MetricsConfigTest.java
 │   │   │   │   │   │   │   ├── ☕ RabbitMqConfigTest.java
+│   │   │   │   │   │   │   ├── ☕ SecurityConfigTest.java
 │   │   │   │   │   │   ├── 🔵 controller
+│   │   │   │   │   │   │   ├── ☕ ArbitrageControllerTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceControllerGetExchangesTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceControllerTest.java
 │   │   │   │   │   │   ├── ☕ CryptoPriceAggregatorApplicationTests.java
@@ -170,6 +175,7 @@
 │   │   │   │   │   │   ├── 🔵 filter
 │   │   │   │   │   │   │   ├── ☕ RequestLoggingFilterTest.java
 │   │   │   │   │   │   ├── ☕ FlywayMigrationTest.java
+│   │   │   │   │   │   ├── 📄 flywayMigrationTest_walkthrough.md
 │   │   │   │   │   │   ├── 🔵 health
 │   │   │   │   │   │   │   ├── ☕ ExchangeHealthIndicatorTest.java
 │   │   │   │   │   │   ├── ☕ PostgreSQLIntegrationTest.java
@@ -217,6 +223,6 @@
 
 ---
 
-**Total Files:** 138
+**Total Files:** 147
 
-**Total Directories:** 61
+**Total Directories:** 58
