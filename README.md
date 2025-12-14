@@ -1,5 +1,7 @@
 # Crypto Price Aggregator (CPA)
 
+![Java CI with Maven](https://github.com/Pranay-a-1/crypto-price-aggregator/actions/workflows/maven.yml/badge.svg)
+
 A robust Java Spring Boot application designed to aggregate real-time cryptocurrency prices from multiple exchanges and identify profitable arbitrage opportunities.
 
 ## 🚀 Features
