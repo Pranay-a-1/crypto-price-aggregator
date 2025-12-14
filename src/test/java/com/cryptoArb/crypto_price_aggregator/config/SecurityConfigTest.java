@@ -12,6 +12,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = PriceController.class)
@@ -55,5 +58,17 @@ class SecurityConfigTest {
                         throw new AssertionError("Status was " + status + " but expected authorized access (even if 404)");
                     }
                 });
+
+    }
+
+    @Test
+    @DisplayName("Should return CORS headers for allowed origin")
+    void shouldReturnCorsHeaders() throws Exception {
+        mockMvc.perform(options("/api/prices/BTC/USD")
+                .header("Origin", "https://pranay-a-1.github.io")
+                .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://pranay-a-1.github.io"))
+                .andExpect(header().string("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS"));
     }
 }
