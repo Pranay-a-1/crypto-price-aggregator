@@ -75,7 +75,7 @@ This project follows a standard Maven directory layout. For a detailed file tree
 This starts the application along with the required PostgreSQL and RabbitMQ containers.
 
 ```bash
-docker-compose up --build
+sudo docker compose up --build
 ```
 
 **Option 2: Running Locally**
