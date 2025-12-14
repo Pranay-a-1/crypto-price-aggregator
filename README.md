@@ -104,6 +104,26 @@ The frontend provides a premium dashboard with:
 - Interactive price comparison charts
 - Auto-refresh capabilities
 
+## 🚀 Deployment
+
+The project supports deployment to **GitHub Pages** for the frontend with the backend hosted separately.
+
+### Quick Deploy to GitHub Pages
+
+1. Push your code to GitHub
+2. Enable GitHub Pages in repository settings (Source: GitHub Actions)
+3. The workflow will automatically deploy on push to `main`
+4. Access at: `https://<username>.github.io/<repo-name>/`
+
+### Backend Hosting Options
+
+Since GitHub Pages only hosts static files, deploy the backend to:
+- **Local PC with ngrok/localtunnel** (for testing)
+- **Render/Railway/Fly.io** (free tiers available)
+- **AWS/GCP/Azure** (for production)
+
+For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ## 🧪 Testing
 
 The project maintains a high standard of code quality with extensive tests.

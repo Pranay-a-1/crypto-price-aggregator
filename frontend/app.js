@@ -2,7 +2,10 @@
 // Application Configuration
 // ===================================
 const CONFIG = {
-    API_BASE_URL: 'http://localhost:8080/api',
+    // Support environment-based API URL configuration
+    // In production, this can be overridden by creating a config.js file
+    // that sets window.API_CONFIG = { API_BASE_URL: 'https://your-backend-url.com/api' }
+    API_BASE_URL: (window.API_CONFIG && window.API_CONFIG.API_BASE_URL) || 'http://localhost:8080/api',
     AUTO_REFRESH_INTERVAL: 5000, // 5 seconds
     CHART_UPDATE_INTERVAL: 10000, // 10 seconds
     MAX_ARBITRAGE_LIMIT: 10,

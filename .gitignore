@@ -40,3 +40,6 @@ CPA_roadmap_new.md
 
 .editorconfig
 .qodo/
+
+# Frontend configuration (may contain production API URLs)
+frontend/config.js

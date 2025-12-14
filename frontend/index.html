@@ -1,23 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Real-time cryptocurrency price aggregation across multiple exchanges with arbitrage opportunity detection">
+    <meta name="description"
+        content="Real-time cryptocurrency price aggregation across multiple exchanges with arbitrage opportunity detection">
     <meta name="keywords" content="crypto, bitcoin, ethereum, arbitrage, price aggregator, binance, coinbase, kraken">
     <title>Crypto Price Aggregator | Real-Time Exchange Monitoring</title>
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
-    
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Optional: API Configuration (create config.js to override API URL) -->
+    <script src="config.js"></script>
 </head>
+
 <body>
     <!-- Header -->
     <header class="header">
@@ -25,18 +31,18 @@
             <div class="header-content">
                 <div class="logo">
                     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="16" cy="16" r="14" stroke="url(#gradient)" stroke-width="2"/>
-                        <path d="M16 8L20 16L16 24L12 16L16 8Z" fill="url(#gradient)"/>
+                        <circle cx="16" cy="16" r="14" stroke="url(#gradient)" stroke-width="2" />
+                        <path d="M16 8L20 16L16 24L12 16L16 8Z" fill="url(#gradient)" />
                         <defs>
                             <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32">
-                                <stop offset="0%" stop-color="#8B5CF6"/>
-                                <stop offset="100%" stop-color="#06B6D4"/>
+                                <stop offset="0%" stop-color="#8B5CF6" />
+                                <stop offset="100%" stop-color="#06B6D4" />
                             </linearGradient>
                         </defs>
                     </svg>
                     <h1>Crypto Price Aggregator</h1>
                 </div>
-                
+
                 <div class="header-controls">
                     <div class="currency-selector">
                         <label for="currencyPair">Currency Pair:</label>
@@ -49,7 +55,7 @@
                             <option value="XRP/USD">XRP/USD</option>
                         </select>
                     </div>
-                    
+
                     <div class="auto-refresh-toggle">
                         <label class="toggle-label">
                             <input type="checkbox" id="autoRefresh" checked>
@@ -57,11 +63,13 @@
                             <span class="toggle-text">Auto-Refresh</span>
                         </label>
                     </div>
-                    
+
                     <button id="refreshBtn" class="btn-primary">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            <path d="M11 14L8 14L8 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            <path d="M11 14L8 14L8 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
                         </svg>
                         Refresh
                     </button>
@@ -162,8 +170,8 @@
                 </div>
                 <div id="noArbitrageMessage" class="no-data-message" style="display: none;">
                     <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" opacity="0.2"/>
-                        <path d="M24 28V24M24 20H24.02" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" opacity="0.2" />
+                        <path d="M24 28V24M24 20H24.02" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                     </svg>
                     <p>No arbitrage opportunities found at this time</p>
                 </div>
@@ -190,4 +198,5 @@
     <!-- Application Script -->
     <script src="app.js"></script>
 </body>
+
 </html>
