@@ -1,12 +1,15 @@
 # Project Structure
 
-**Generated on:** December 15, 2025 at 12:05 AM
+**Generated on:** December 15, 2025 at 12:40 AM
 
 ```text
 .
 ├── ⚙️ docker-compose.yml
 ├── 📦 Dockerfile
 ├── 📦 .gitattributes
+├── 🔵 .github
+│   ├── 🔵 workflows
+│   │   ├── ⚙️ maven.yml
 ├── 📦 .gitignore
 ├── 🔵 implementatonDocs
 │   ├── 🔵 phase1
@@ -67,6 +70,8 @@
 │   ├── 🔵 wrapper
 │   │   ├── ⚙️ maven-wrapper.properties
 ├── ⚙️ pom.xml
+├── ⚙️ qodana.yaml
+├── 📄 README.md
 ├── 🔵 src
 │   ├── 🔵 main
 │   │   ├── 🔵 java
@@ -223,6 +228,6 @@
 
 ---
 
-**Total Files:** 147
+**Total Files:** 150
 
-**Total Directories:** 58
+**Total Directories:** 60
