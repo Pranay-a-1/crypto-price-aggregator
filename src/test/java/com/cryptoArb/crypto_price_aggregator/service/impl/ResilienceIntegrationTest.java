@@ -1,18 +1,17 @@
 package com.cryptoArb.crypto_price_aggregator.service.impl;
 
+import com.cryptoArb.crypto_price_aggregator.BaseIntegrationTest;
 import com.cryptoArb.crypto_price_aggregator.domain.CurrencyPair;
 import com.cryptoArb.crypto_price_aggregator.exception.PriceFetchException;
 import com.cryptoArb.crypto_price_aggregator.service.PriceFetcher;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest
 @TestPropertySource(properties = {
         "chaos.mode.enabled=true",
         "chaos.failure.rate=100",
@@ -21,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         "resilience4j.circuitbreaker.configs.default.minimumNumberOfCalls=3",
         "resilience4j.circuitbreaker.configs.default.failureRateThreshold=50"
 })
-class ResilienceIntegrationTest {
+class ResilienceIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private BinanceFetcher binanceFetcher;
