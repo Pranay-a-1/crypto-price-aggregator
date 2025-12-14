@@ -25,6 +25,7 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/actuator/**").permitAll() // Allow monitoring
                                                 .requestMatchers("/h2-console/**").permitAll() // Allow H2 console
+                                                .requestMatchers("/frontend/**").permitAll() // Allow frontend static files
                                                 .requestMatchers("/api/**").authenticated() // Secure API
                                                 .anyRequest().authenticated())
                                 .httpBasic(Customizer.withDefaults()) // Enable Basic Auth

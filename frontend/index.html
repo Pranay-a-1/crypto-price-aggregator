@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Real-time cryptocurrency price aggregation across multiple exchanges with arbitrage opportunity detection">
+    <meta name="keywords" content="crypto, bitcoin, ethereum, arbitrage, price aggregator, binance, coinbase, kraken">
+    <title>Crypto Price Aggregator | Real-Time Exchange Monitoring</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="16" cy="16" r="14" stroke="url(#gradient)" stroke-width="2"/>
+                        <path d="M16 8L20 16L16 24L12 16L16 8Z" fill="url(#gradient)"/>
+                        <defs>
+                            <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32">
+                                <stop offset="0%" stop-color="#8B5CF6"/>
+                                <stop offset="100%" stop-color="#06B6D4"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <h1>Crypto Price Aggregator</h1>
+                </div>
+                
+                <div class="header-controls">
+                    <div class="currency-selector">
+                        <label for="currencyPair">Currency Pair:</label>
+                        <select id="currencyPair" class="select-input">
+                            <option value="BTC/USD" selected>BTC/USD</option>
+                            <option value="BTC/USDT">BTC/USDT</option>
+                            <option value="ETH/USD">ETH/USD</option>
+                            <option value="ETH/USDT">ETH/USDT</option>
+                            <option value="SOL/USD">SOL/USD</option>
+                            <option value="XRP/USD">XRP/USD</option>
+                        </select>
+                    </div>
+                    
+                    <div class="auto-refresh-toggle">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="autoRefresh" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Auto-Refresh</span>
+                        </label>
+                    </div>
+                    
+                    <button id="refreshBtn" class="btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M11 14L8 14L8 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="status-label">Last Updated:</span>
+                    <span id="lastUpdated" class="status-value">Never</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Status:</span>
+                    <span id="connectionStatus" class="status-value status-connected">Connected</span>
+                </div>
+            </div>
+
+            <!-- Aggregated Price Card -->
+            <div class="aggregated-price-card glass-card" id="aggregatedCard">
+                <div class="card-header">
+                    <h2>Best Prices Across All Exchanges</h2>
+                    <span class="badge">Live</span>
+                </div>
+                <div class="card-content">
+                    <div class="price-grid">
+                        <div class="price-item">
+                            <div class="price-label">Best Bid</div>
+                            <div id="bestBid" class="price-value loading">--</div>
+                            <div id="bestBidExchange" class="price-exchange">Loading...</div>
+                        </div>
+                        <div class="price-separator"></div>
+                        <div class="price-item">
+                            <div class="price-label">Best Ask</div>
+                            <div id="bestAsk" class="price-value loading">--</div>
+                            <div id="bestAskExchange" class="price-exchange">Loading...</div>
+                        </div>
+                        <div class="price-separator"></div>
+                        <div class="price-item">
+                            <div class="price-label">Spread</div>
+                            <div id="spread" class="price-value loading">--</div>
+                            <div id="spreadPercent" class="price-exchange">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exchange Prices Grid -->
+            <div class="section-header">
+                <h2>Exchange Prices</h2>
+                <p>Individual prices from each exchange</p>
+            </div>
+            <div class="exchange-grid" id="exchangeGrid">
+                <!-- Will be populated dynamically -->
+                <div class="exchange-card glass-card skeleton">
+                    <div class="skeleton-header"></div>
+                    <div class="skeleton-content"></div>
+                </div>
+                <div class="exchange-card glass-card skeleton">
+                    <div class="skeleton-header"></div>
+                    <div class="skeleton-content"></div>
+                </div>
+                <div class="exchange-card glass-card skeleton">
+                    <div class="skeleton-header"></div>
+                    <div class="skeleton-content"></div>
+                </div>
+            </div>
+
+            <!-- Arbitrage Opportunities -->
+            <div class="section-header">
+                <h2>Arbitrage Opportunities</h2>
+                <p>Profitable trading opportunities detected</p>
+            </div>
+            <div class="arbitrage-section glass-card" id="arbitrageSection">
+                <div class="table-container">
+                    <table class="arbitrage-table" id="arbitrageTable">
+                        <thead>
+                            <tr>
+                                <th>Buy Exchange</th>
+                                <th>Buy Price</th>
+                                <th>Sell Exchange</th>
+                                <th>Sell Price</th>
+                                <th>Profit %</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="arbitrageTableBody">
+                            <tr class="loading-row">
+                                <td colspan="6" class="text-center">Loading arbitrage opportunities...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noArbitrageMessage" class="no-data-message" style="display: none;">
+                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+                        <path d="M24 28V24M24 20H24.02" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <p>No arbitrage opportunities found at this time</p>
+                </div>
+            </div>
+
+            <!-- Price Chart -->
+            <div class="section-header">
+                <h2>Price Comparison Chart</h2>
+                <p>Visual comparison across exchanges</p>
+            </div>
+            <div class="chart-section glass-card">
+                <canvas id="priceChart"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Crypto Price Aggregator | Real-time data from Binance, Coinbase, and Kraken</p>
+        </div>
+    </footer>
+
+    <!-- Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>

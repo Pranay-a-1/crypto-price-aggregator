@@ -1,38 +1,47 @@
 # Project Structure
 
-**Generated on:** December 15, 2025 at 12:40 AM
+**Generated on:** December 15, 2025 at 01:01 AM
 
 ```text
 .
-├── ⚙️ docker-compose.yml
-├── 📦 Dockerfile
 ├── 📦 .gitattributes
 ├── 🔵 .github
 │   ├── 🔵 workflows
 │   │   ├── ⚙️ maven.yml
 ├── 📦 .gitignore
+├── 🔵 .mvn
+│   ├── 🔵 wrapper
+│   │   ├── ⚙️ maven-wrapper.properties
+├── 📦 Dockerfile
+├── 📄 README.md
+├── ⚙️ docker-compose.yml
+├── 🔵 frontend
+│   ├── 📄 README.md
+│   ├── 📦 app.js
+│   ├── 📦 index.html
+│   ├── 📦 styles.css
 ├── 🔵 implementatonDocs
 │   ├── 🔵 phase1
+│   │   ├── 📄 PHASE_1_SUMMARY.md
+│   │   ├── 📄 PROJECT_STRUCTURE_phase1.md
+│   │   ├── 📄 implementation_plan.md
+│   │   ├── 📄 task.md
+│   │   ├── 📄 walkthrough.md
 │   ├── 🔵 phase10
 │   │   ├── 📦 implementation_plan.md.resolved
 │   │   ├── 📦 task.md.resolved
 │   │   ├── 📦 walkthrough.md.resolved
-│   │   ├── 📄 implementation_plan.md
-│   │   ├── 📄 PHASE_1_SUMMARY.md
-│   │   ├── 📄 PROJECT_STRUCTURE_phase1.md
-│   │   ├── 📄 task.md
-│   │   ├── 📄 walkthrough.md
 │   ├── 🔵 phase2
 │   │   ├── 📄 PHASE_2_SUMMARY.md
 │   │   ├── 📄 PROJECT_STRUCTURE_phase2.md
 │   │   ├── 📄 task.md
 │   ├── 🔵 phase3
-│   │   ├── 📄 implementation_plan.md
 │   │   ├── 📄 PHASE_3_SUMMARY.md
 │   │   ├── 📄 PROJECT_STRUCTURE_phase3.md
+│   │   ├── 📄 implementation_plan.md
 │   │   ├── 📄 task.md
-│   │   ├── 📄 walkthrough2.md
 │   │   ├── 📄 walkthrough.md
+│   │   ├── 📄 walkthrough2.md
 │   ├── 🔵 phase4
 │   │   ├── 📄 PROJECT_STRUCTURE_phase4.md
 │   │   ├── 📄 walkthrough.md
@@ -41,43 +50,40 @@
 │   │   ├── 📄 PROJECT_STRUCTURE_phase6.md
 │   │   ├── 📄 walkthrough.md
 │   ├── 🔵 phase6
+│   │   ├── 📄 PROJECT_STRUCTURE_phase6.md
 │   │   ├── 📄 implementation_plan.md
 │   │   ├── 📄 phase_6_summary.md
-│   │   ├── 📄 PROJECT_STRUCTURE_phase6.md
 │   │   ├── 📄 tasks.md
 │   │   ├── 📄 walkthrough.md
 │   ├── 🔵 phase7
+│   │   ├── 📄 PROJECT_STRUCTURE_phase7.md
 │   │   ├── 📄 implementation_plan.md
 │   │   ├── 📄 phase_7_summary.md
-│   │   ├── 📄 PROJECT_STRUCTURE_phase7.md
 │   │   ├── 📄 task.md
 │   │   ├── 📄 walkthrough.md
 │   ├── 🔵 phase8
-│   │   ├── 📄 implementation_plan.md
 │   │   ├── 📄 PHASE_8_SUMMARY.md
 │   │   ├── 📄 PROJECT_STRUCTURE_phase8.md
+│   │   ├── 📄 implementation_plan.md
 │   │   ├── 📄 task.md
 │   │   ├── 📄 walkthrough.md
 │   ├── 🔵 phase9
-│   │   ├── 📄 implementation_plan.md
 │   │   ├── 📄 PHASE_9_SUMMARY.md
 │   │   ├── 📄 PROJECT_STRUCTURE_phase9.md
+│   │   ├── 📄 implementation_plan.md
 │   │   ├── 📄 task.md
 │   │   ├── 📄 walkthrough.md
-├── 🔵 .mvn
 ├── 📦 mvnw
 ├── 📜 mvnw.cmd
-│   ├── 🔵 wrapper
-│   │   ├── ⚙️ maven-wrapper.properties
 ├── ⚙️ pom.xml
 ├── ⚙️ qodana.yaml
-├── 📄 README.md
 ├── 🔵 src
 │   ├── 🔵 main
 │   │   ├── 🔵 java
 │   │   │   ├── 🔵 com
 │   │   │   │   ├── 🔵 cryptoArb
 │   │   │   │   │   ├── 🔵 crypto_price_aggregator
+│   │   │   │   │   │   ├── ☕ CryptoPriceAggregatorApplication.java
 │   │   │   │   │   │   ├── 🔵 aspect
 │   │   │   │   │   │   │   ├── ☕ LoggingAspect.java
 │   │   │   │   │   │   ├── 🔵 benchmark
@@ -96,7 +102,6 @@
 │   │   │   │   │   │   ├── 🔵 controller
 │   │   │   │   │   │   │   ├── ☕ ArbitrageController.java
 │   │   │   │   │   │   │   ├── ☕ PriceController.java
-│   │   │   │   │   │   ├── ☕ CryptoPriceAggregatorApplication.java
 │   │   │   │   │   │   ├── 🔵 domain
 │   │   │   │   │   │   │   ├── ☕ AggregatedTopOfBookQuote.java
 │   │   │   │   │   │   │   ├── ☕ ArbitrageOpportunity.java
@@ -117,14 +122,6 @@
 │   │   │   │   │   │   │   ├── ☕ PriceTickRepository.java
 │   │   │   │   │   │   ├── 🔵 service
 │   │   │   │   │   │   │   ├── ☕ ArbitrageService.java
-│   │   │   │   │   │   │   ├── 🔵 impl
-│   │   │   │   │   │   │   │   ├── ☕ ArbitrageServiceImpl.java
-│   │   │   │   │   │   │   │   ├── ☕ BinanceFetcher.java
-│   │   │   │   │   │   │   │   ├── ☕ CoinbaseFetcher.java
-│   │   │   │   │   │   │   │   ├── ☕ KrakenFetcher.java
-│   │   │   │   │   │   │   │   ├── ☕ ManualResilientBinanceFetcher.java
-│   │   │   │   │   │   │   │   ├── ☕ PriceServiceImpl.java
-│   │   │   │   │   │   │   │   ├── 📄 PriceServiceImpl.md
 │   │   │   │   │   │   │   ├── ☕ ManualConcurrentPriceEngine.java
 │   │   │   │   │   │   │   ├── 📄 ManualConcurrentPriceEngine.md
 │   │   │   │   │   │   │   ├── ☕ ManualPriceMessageProducer.java
@@ -133,14 +130,22 @@
 │   │   │   │   │   │   │   ├── ☕ PriceMessageProducer.java
 │   │   │   │   │   │   │   ├── ☕ PriceService.java
 │   │   │   │   │   │   │   ├── ☕ PriceTickConsumer.java
+│   │   │   │   │   │   │   ├── 🔵 impl
+│   │   │   │   │   │   │   │   ├── ☕ ArbitrageServiceImpl.java
+│   │   │   │   │   │   │   │   ├── ☕ BinanceFetcher.java
+│   │   │   │   │   │   │   │   ├── ☕ CoinbaseFetcher.java
+│   │   │   │   │   │   │   │   ├── ☕ KrakenFetcher.java
+│   │   │   │   │   │   │   │   ├── ☕ ManualResilientBinanceFetcher.java
+│   │   │   │   │   │   │   │   ├── ☕ PriceServiceImpl.java
+│   │   │   │   │   │   │   │   ├── 📄 PriceServiceImpl.md
 │   │   │   │   │   │   ├── 🔵 validation
 │   │   │   │   │   │   │   ├── ☕ CurrencyPairValidator.java
 │   │   │   │   │   │   │   ├── ☕ ValidCurrencyPair.java
 │   │   │   │   │   │   ├── 🔵 websocket
 │   │   │   │   │   │   │   ├── ☕ ExchangeWebSocketClient.java
+│   │   │   │   │   │   │   ├── ☕ WebSocketRateLimiter.java
 │   │   │   │   │   │   │   ├── 🔵 impl
 │   │   │   │   │   │   │   │   ├── ☕ MockWebSocketClient.java
-│   │   │   │   │   │   │   ├── ☕ WebSocketRateLimiter.java
 │   │   ├── 🔵 resources
 │   │   │   ├── ⚙️ application-dev.properties
 │   │   │   ├── ⚙️ application-prod.properties
@@ -154,9 +159,12 @@
 │   │   │   ├── 🔵 com
 │   │   │   │   ├── 🔵 cryptoArb
 │   │   │   │   │   ├── 🔵 crypto_price_aggregator
+│   │   │   │   │   │   ├── ☕ BaseIntegrationTest.java
+│   │   │   │   │   │   ├── ☕ CryptoPriceAggregatorApplicationTests.java
+│   │   │   │   │   │   ├── ☕ FlywayMigrationTest.java
+│   │   │   │   │   │   ├── ☕ PostgreSQLIntegrationTest.java
 │   │   │   │   │   │   ├── 🔵 aspect
 │   │   │   │   │   │   │   ├── ☕ LoggingAspectTest.java
-│   │   │   │   │   │   ├── ☕ BaseIntegrationTest.java
 │   │   │   │   │   │   ├── 🔵 benchmark
 │   │   │   │   │   │   │   ├── ☕ BenchmarkRunnerTest.java
 │   │   │   │   │   │   │   ├── 📄 BenchmarkTest.md
@@ -171,7 +179,6 @@
 │   │   │   │   │   │   │   ├── ☕ ArbitrageControllerTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceControllerGetExchangesTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceControllerTest.java
-│   │   │   │   │   │   ├── ☕ CryptoPriceAggregatorApplicationTests.java
 │   │   │   │   │   │   ├── 🔵 domain
 │   │   │   │   │   │   │   ├── ☕ ArbitrageOpportunityTest.java
 │   │   │   │   │   │   │   ├── ☕ CurrencyPairTest.java
@@ -179,16 +186,23 @@
 │   │   │   │   │   │   │   ├── ☕ PriceTickTest.java
 │   │   │   │   │   │   ├── 🔵 filter
 │   │   │   │   │   │   │   ├── ☕ RequestLoggingFilterTest.java
-│   │   │   │   │   │   ├── ☕ FlywayMigrationTest.java
 │   │   │   │   │   │   ├── 📄 flywayMigrationTest_walkthrough.md
 │   │   │   │   │   │   ├── 🔵 health
 │   │   │   │   │   │   │   ├── ☕ ExchangeHealthIndicatorTest.java
-│   │   │   │   │   │   ├── ☕ PostgreSQLIntegrationTest.java
 │   │   │   │   │   │   ├── 🔵 repository
 │   │   │   │   │   │   │   ├── ☕ ArbitrageRepositoryTest.java
 │   │   │   │   │   │   │   ├── ☕ PriceTickRepositoryTest.java
 │   │   │   │   │   │   ├── 🔵 service
 │   │   │   │   │   │   │   ├── ☕ ArbitrageServiceTest.java
+│   │   │   │   │   │   │   ├── ☕ ManualConcurrentPriceEngineTest.java
+│   │   │   │   │   │   │   ├── ☕ ManualFetcherIntegrationTest.java
+│   │   │   │   │   │   │   ├── ☕ ManualPriceMessageProducerTest.java
+│   │   │   │   │   │   │   ├── ☕ MockPriceFetcherTest.java
+│   │   │   │   │   │   │   ├── ☕ PriceMessageProducerTest.java
+│   │   │   │   │   │   │   ├── ☕ PriceServiceGetLatestTicksTest.java
+│   │   │   │   │   │   │   ├── ☕ PriceServiceIntegrationTest.java
+│   │   │   │   │   │   │   ├── ☕ PriceServiceTest.java
+│   │   │   │   │   │   │   ├── ☕ PriceTickConsumerTest.java
 │   │   │   │   │   │   │   ├── 🔵 docs
 │   │   │   │   │   │   │   │   ├── 📄 COINBASE_TESTING_GUIDE.md
 │   │   │   │   │   │   │   │   ├── 📄 ManualConcurrentPriceEngineTest.md
@@ -200,15 +214,6 @@
 │   │   │   │   │   │   │   │   ├── ☕ KrakenFetcherTest.java
 │   │   │   │   │   │   │   │   ├── ☕ ManualResilientBinanceFetcherTest.java
 │   │   │   │   │   │   │   │   ├── ☕ ResilienceIntegrationTest.java
-│   │   │   │   │   │   │   ├── ☕ ManualConcurrentPriceEngineTest.java
-│   │   │   │   │   │   │   ├── ☕ ManualFetcherIntegrationTest.java
-│   │   │   │   │   │   │   ├── ☕ ManualPriceMessageProducerTest.java
-│   │   │   │   │   │   │   ├── ☕ MockPriceFetcherTest.java
-│   │   │   │   │   │   │   ├── ☕ PriceMessageProducerTest.java
-│   │   │   │   │   │   │   ├── ☕ PriceServiceGetLatestTicksTest.java
-│   │   │   │   │   │   │   ├── ☕ PriceServiceIntegrationTest.java
-│   │   │   │   │   │   │   ├── ☕ PriceServiceTest.java
-│   │   │   │   │   │   │   ├── ☕ PriceTickConsumerTest.java
 │   │   │   │   │   │   ├── 🔵 validation
 │   │   │   │   │   │   │   ├── ☕ CurrencyPairValidatorTest.java
 │   │   ├── 🔵 resources
@@ -228,6 +233,6 @@
 
 ---
 
-**Total Files:** 150
+**Total Files:** 154
 
-**Total Directories:** 60
+**Total Directories:** 61
