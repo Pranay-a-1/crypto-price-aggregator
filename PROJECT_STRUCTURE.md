@@ -1,9 +1,10 @@
 # Project Structure
 
-**Generated on:** December 15, 2025 at 01:03 PM
+**Generated on:** December 15, 2025 at 08:52 PM
 
 ```text
 .
+├── 📦 .env.example
 ├── 📦 .gitattributes
 ├── 🔵 .github
 │   ├── 🔵 workflows
@@ -13,10 +14,14 @@
 ├── 🔵 .mvn
 │   ├── 🔵 wrapper
 │   │   ├── ⚙️ maven-wrapper.properties
-├── 📄 DEPLOYMENT.md
 ├── 📦 Dockerfile
 ├── 📄 README.md
 ├── ⚙️ docker-compose.yml
+├── 🔵 docs
+│   ├── 📄 DEPLOYMENT.md
+│   ├── 📄 DESIGN.md
+│   ├── 📄 TECHNICAL_DEEPDIVE.md
+│   ├── 📄 implementation_ngrok.md
 ├── 🔵 frontend
 │   ├── 📄 README.md
 │   ├── 📦 app.js
@@ -24,8 +29,9 @@
 │   ├── 📦 index.html
 │   ├── 📦 styles.css
 │   ├── 📄 walkthrough.md
-├── 📄 implementation_ngrok.md
 ├── 🔵 implementatonDocs
+│   ├── 🔵 oauth2
+│   │   ├── 📦 walkthrough.md.resolved
 │   ├── 🔵 phase1
 │   │   ├── 📄 PHASE_1_SUMMARY.md
 │   │   ├── 📄 PROJECT_STRUCTURE_phase1.md
@@ -106,6 +112,7 @@
 │   │   │   │   │   │   │   ├── ☕ WebSocketConfig.java
 │   │   │   │   │   │   ├── 🔵 controller
 │   │   │   │   │   │   │   ├── ☕ ArbitrageController.java
+│   │   │   │   │   │   │   ├── ☕ AuthController.java
 │   │   │   │   │   │   │   ├── ☕ PriceController.java
 │   │   │   │   │   │   ├── 🔵 domain
 │   │   │   │   │   │   │   ├── ☕ AggregatedTopOfBookQuote.java
@@ -113,6 +120,7 @@
 │   │   │   │   │   │   │   ├── ☕ CurrencyPair.java
 │   │   │   │   │   │   │   ├── ☕ Exchange.java
 │   │   │   │   │   │   │   ├── ☕ PriceTick.java
+│   │   │   │   │   │   │   ├── ☕ User.java
 │   │   │   │   │   │   ├── 🔵 event
 │   │   │   │   │   │   │   ├── ☕ PriceTickFetchedEvent.java
 │   │   │   │   │   │   ├── 🔵 exception
@@ -125,8 +133,10 @@
 │   │   │   │   │   │   ├── 🔵 repository
 │   │   │   │   │   │   │   ├── ☕ ArbitrageRepository.java
 │   │   │   │   │   │   │   ├── ☕ PriceTickRepository.java
+│   │   │   │   │   │   │   ├── ☕ UserRepository.java
 │   │   │   │   │   │   ├── 🔵 service
 │   │   │   │   │   │   │   ├── ☕ ArbitrageService.java
+│   │   │   │   │   │   │   ├── ☕ CustomOAuth2UserService.java
 │   │   │   │   │   │   │   ├── ☕ ManualConcurrentPriceEngine.java
 │   │   │   │   │   │   │   ├── 📄 ManualConcurrentPriceEngine.md
 │   │   │   │   │   │   │   ├── ☕ ManualPriceMessageProducer.java
@@ -159,6 +169,7 @@
 │   │   │   │   ├── 🔵 migration
 │   │   │   │   │   ├── 📦 V1__initial_schema.sql
 │   │   │   │   │   ├── 📦 V2__create_arbitrage_opportunities.sql
+│   │   │   │   │   ├── 📦 V3__create_oauth2_users.sql
 │   ├── 🔵 test
 │   │   ├── 🔵 java
 │   │   │   ├── 🔵 com
@@ -238,6 +249,6 @@
 
 ---
 
-**Total Files:** 159
+**Total Files:** 168
 
-**Total Directories:** 61
+**Total Directories:** 63

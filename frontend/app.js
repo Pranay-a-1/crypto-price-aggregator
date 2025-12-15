@@ -23,6 +23,8 @@ const state = {
     lastUpdate: null,
     priceHistory: [],
     refreshInterval: null,
+    isAuthenticated: false,
+    user: null,
 };
 
 // ===================================
@@ -52,6 +54,14 @@ const elements = {
 
     // Chart
     priceChart: document.getElementById('priceChart'),
+
+    // Authentication Elements
+    loginContainer: document.getElementById('loginContainer'),
+    userProfileContainer: document.getElementById('userProfileContainer'),
+    userAvatar: document.getElementById('userAvatar'),
+    userName: document.getElementById('userName'),
+    userUsername: document.getElementById('userUsername'),
+    logoutBtn: document.getElementById('logoutBtn'),
 };
 
 // ===================================
@@ -62,10 +72,11 @@ const api = {
      * Get authentication headers for API requests
      */
     getAuthHeaders() {
-        const credentials = btoa(`${CONFIG.AUTH_USERNAME}:${CONFIG.AUTH_PASSWORD}`);
+        // When using OAuth2 session, we don't need to send explicit auth headers
+        // The session cookie will be sent automatically
         return {
-            'Authorization': `Basic ${credentials}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'credentials': 'include' // Include cookies in requests
         };
     },
 
@@ -75,7 +86,8 @@ const api = {
     async getAggregatedPrice(base, quote) {
         const url = `${CONFIG.API_BASE_URL}/prices/${base}/${quote}`;
         const response = await fetch(url, {
-            headers: this.getAuthHeaders()
+            headers: this.getAuthHeaders(),
+            credentials: 'include' // Include cookies
         });
 
         if (response.status === 404) {
@@ -95,7 +107,8 @@ const api = {
     async getExchangePrices(base, quote) {
         const url = `${CONFIG.API_BASE_URL}/prices/${base}/${quote}/exchanges`;
         const response = await fetch(url, {
-            headers: this.getAuthHeaders()
+            headers: this.getAuthHeaders(),
+            credentials: 'include' // Include cookies
         });
 
         if (!response.ok) {
@@ -111,7 +124,8 @@ const api = {
     async getArbitrageOpportunities(base, quote, limit = CONFIG.MAX_ARBITRAGE_LIMIT) {
         const url = `${CONFIG.API_BASE_URL}/arbitrage/${base}/${quote}?limit=${limit}`;
         const response = await fetch(url, {
-            headers: this.getAuthHeaders()
+            headers: this.getAuthHeaders(),
+            credentials: 'include' // Include cookies
         });
 
         if (!response.ok) {
@@ -119,6 +133,37 @@ const api = {
         }
 
         return await response.json();
+    },
+
+    /**
+     * Check if user is authenticated  
+     */
+    async checkAuth() {
+        const url = `${CONFIG.API_BASE_URL}/auth/user`;
+        const response = await fetch(url, {
+            credentials: 'include' // Include session cookies
+        });
+
+        if (response.ok) {
+            return await response.json();
+        }
+        return null;
+    },
+
+    /**
+     * Logout user
+     */
+    async logout() {
+        const url = `${CONFIG.API_BASE_URL}/auth/logout`;
+        const response = await fetch(url, {
+            method: 'POST',
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            // Redirect to login or home page
+            window.location.href = '/frontend/index.html';
+        }
     },
 };
 
@@ -511,13 +556,68 @@ function stopAutoRefresh() {
 }
 
 // ===================================
+// Authentication Functions
+// ===================================
+async function checkAuthentication() {
+    try {
+        const userInfo = await api.checkAuth();
+
+        if (userInfo && userInfo.authenticated) {
+            // User is authenticated
+            state.isAuthenticated = true;
+            state.user = userInfo;
+
+            // Show user profile
+            elements.loginContainer.style.display = 'none';
+            elements.userProfileContainer.style.display = 'flex';
+
+            // Update user info
+            elements.userAvatar.src = userInfo.avatarUrl || 'https://via.placeholder.com/40';
+            elements.userName.textContent = userInfo.name || userInfo.username;
+            elements.userUsername.textContent = '@' + userInfo.username;
+
+            console.log('✅ User authenticated:', userInfo.username);
+        } else {
+            // User not authenticated
+            state.isAuthenticated = false;
+            state.user = null;
+
+            // Show login button
+            elements.loginContainer.style.display = 'block';
+            elements.userProfileContainer.style.display = 'none';
+
+            console.log('ℹ️ User not authenticated');
+        }
+    } catch (error) {
+        console.error('Error checking authentication:', error);
+        // Show login button on error
+        elements.loginContainer.style.display = 'block';
+        elements.userProfileContainer.style.display = 'none';
+    }
+}
+
+async function handleLogout() {
+    try {
+        await api.logout();
+    } catch (error) {
+        console.error('Logout error:', error);
+        // Force redirect even on error
+        window.location.href = '/frontend/index.html';
+    }
+}
+
+// ===================================
 // Initialization
 // ===================================
-function init() {
+async function init() {
+    // Check authentication status first
+    await checkAuthentication();
+
     // Set up event listeners
     elements.currencyPair.addEventListener('change', handleCurrencyPairChange);
     elements.autoRefresh.addEventListener('change', handleAutoRefreshToggle);
     elements.refreshBtn.addEventListener('click', handleManualRefresh);
+    elements.logoutBtn.addEventListener('click', handleLogout);
 
     // Initialize chart
     chart.init();

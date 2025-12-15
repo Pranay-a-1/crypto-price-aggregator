@@ -653,3 +653,126 @@ h3 { font-size: var(--font-size-lg); }
         padding: var(--spacing-md);
     }
 }
+
+/* ===================================
+   Authentication Styles
+   =================================== */
+
+/* Auth Section Container */
+.auth-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+/* Login Button (GitHub) */
+.btn-github {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    background: #24292e;
+    color: white;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: 0 4px 12px rgba(36, 41, 46, 0.4);
+}
+
+.btn-github:hover {
+    background: #2f363d;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(36, 41, 46, 0.5);
+}
+
+.btn-github svg {
+    flex-shrink: 0;
+}
+
+/* User Profile Container */
+.user-profile-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-xs);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding-right: var(--spacing-md);
+    border-right: 1px solid var(--glass-border);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--glass-border);
+    object-fit: cover;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-name {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.user-username {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    line-height: 1.2;
+}
+
+/* Logout Button */
+.btn-logout {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border: none;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-logout:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
+}
+
+/* Responsive Auth Styles */
+@media (max-width: 768px) {
+    .user-profile-container {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .auth-section {
+        width: 100%;
+    }
+    
+    .btn-github {
+        width: 100%;
+        justify-content: center;
+    }
+}
+

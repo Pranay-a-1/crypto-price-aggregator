@@ -5,7 +5,7 @@ WORKDIR /app
 # Copy maven wrapper and pom.xml first to leverage cache
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
-RUN ./mvnw dependency:go-offline
+RUN --mount=type=cache,target=/root/.m2 ./mvnw dependency:go-offline
 
 # Copy source code
 COPY src ./src
@@ -15,7 +15,7 @@ RUN mkdir -p ./src/main/resources/static/frontend
 COPY frontend/*.html frontend/*.css frontend/*.js frontend/*.md ./src/main/resources/static/frontend/
 
 # Build the application
-RUN ./mvnw clean package -DskipTests
+RUN --mount=type=cache,target=/root/.m2 ./mvnw clean package -DskipTests
 #RUN ./mvnw clean package -Dtest=ResilienceIntegrationTest
 #RUN ./mvnw clean package
 

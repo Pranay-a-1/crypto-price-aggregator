@@ -1,5 +1,7 @@
 package com.cryptoArb.crypto_price_aggregator.config;
 
+import com.cryptoArb.crypto_price_aggregator.service.CustomOAuth2UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -20,7 +22,10 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+        private final CustomOAuth2UserService customOAuth2UserService;
 
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -30,11 +35,34 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/actuator/**").permitAll() // Allow monitoring
                                                 .requestMatchers("/h2-console/**").permitAll() // Allow H2 console
-                                                .requestMatchers("/frontend/**").permitAll() // Allow frontend static files
-                                                .requestMatchers("/api/prices/**").permitAll() // Allow public price API access
-                                                .requestMatchers("/api/**").authenticated() // Secure other API endpoints
+                                                .requestMatchers("/frontend/**").permitAll() // Allow frontend static
+                                                                                             // files
+                                                .requestMatchers("/api/prices/**").permitAll() // Allow public price API
+                                                                                               // access
+                                                .requestMatchers("/api/arbitrage/**").permitAll() // Allow public
+                                                                                                  // arbitrage API
+                                                                                                  // access
+                                                .requestMatchers("/api/auth/**").permitAll() // Allow auth endpoints
+                                                .requestMatchers("/login/**", "/oauth2/**").permitAll() // Allow OAuth2
+                                                                                                        // endpoints
+                                                .requestMatchers("/api/**").authenticated() // Secure other API
+                                                                                            // endpoints
                                                 .anyRequest().authenticated())
-                                .httpBasic(Customizer.withDefaults()) // Enable Basic Auth
+                                // .httpBasic(Customizer.withDefaults()) // Enable Basic Auth for API access
+                                .oauth2Login(oauth2 -> oauth2
+                                                .loginPage("/frontend/index.html") // Redirect to frontend login page
+                                                .defaultSuccessUrl("/frontend/index.html", true) // Redirect after
+                                                                                                 // successful login
+                                                .userInfoEndpoint(userInfo -> userInfo
+                                                                .userService(customOAuth2UserService) // Use custom
+                                                                                                      // OAuth2 user
+                                                                                                      // service
+                                                ))
+                                .logout(logout -> logout
+                                                .logoutUrl("/logout")
+                                                .logoutSuccessUrl("/frontend/index.html")
+                                                .invalidateHttpSession(true)
+                                                .deleteCookies("JSESSIONID"))
                                 .headers(headers -> headers.frameOptions(frame -> frame.disable())); // For H2 console
 
                 return http.build();
@@ -65,7 +93,11 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOrigins(List.of("https://pranay-a-1.github.io", "http://localhost:8080")); // Allow frontend origins
+                configuration.setAllowedOrigins(List.of(
+                                "https://pranay-a-1.github.io",
+                                "http://localhost:8080",
+                                "http://localhost:4040" // ngrok web interface
+                ));
                 configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "*"));
                 configuration.setAllowCredentials(true);
@@ -74,22 +106,4 @@ public class SecurityConfig {
                 source.registerCorsConfiguration("/**", configuration);
                 return source;
         }
-
-        /*
-         * OAuth2 Showcase (Deferred/Advanced)
-         * 
-         * To enable OAuth2, you would typically add:
-         * 
-         * .oauth2Login(oauth2 -> oauth2
-         * .loginPage("/login/oauth2")
-         * .userInfoEndpoint(userInfo -> userInfo
-         * .userService(this.oauth2UserService())
-         * )
-         * )
-         * 
-         * And configure application.properties with:
-         * spring.security.oauth2.client.registration.github.client-id=...
-         * spring.security.oauth2.client.registration.github.client-secret=...
-         */
 }
-
