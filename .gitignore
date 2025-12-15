@@ -43,3 +43,5 @@ CPA_roadmap_new.md
 
 # Frontend configuration (may contain production API URLs)
 frontend/config.js
+
+.env
