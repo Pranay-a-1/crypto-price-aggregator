@@ -176,6 +176,16 @@ The application includes a premium web interface built with vanilla HTML/CSS/Jav
 
 For detailed frontend documentation, see [frontend/README.md](frontend/README.md).
 
+## 📐 Design Documentation
+
+Comprehensive design documents for understanding the project architecture and preparing for technical interviews:
+
+- **[DESIGN.md](docs/DESIGN.md)**: System architecture, component design, data models, and deployment
+- **[TECHNICAL_DEEPDIVE.md](docs/TECHNICAL_DEEPDIVE.md)**: Implementation details, concurrency patterns, and code architecture
+- **[DESIGN_DOCS_README.md](docs/DESIGN_DOCS_README.md)**: Overview of all design documents and how to use them
+
+These documents cover architectural decisions, design patterns, scalability considerations.
+
 ## 📖 Documentation
 
 Detailed implementation logs and summaries for the project's development phases can be found in the `implementatonDocs/` directory.
