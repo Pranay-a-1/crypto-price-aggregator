@@ -9,6 +9,7 @@ A robust Java Spring Boot application designed to aggregate real-time cryptocurr
 *   **Multi-Exchange Integration:** Fetches real-time market data from major exchanges including **Binance**, **Coinbase**, and **Kraken**.
 *   **Arbitrage Detection:** Continuously analyzes price disparities across exchanges to detect and persist arbitrage opportunities.
 *   **Premium Web Frontend:** Modern, responsive dashboard with real-time price monitoring, exchange comparison, and arbitrage visualization.
+*   **External Access:** Integrated **ngrok** tunneling for instant public URL generation - share your local app with anyone, anywhere.
 *   **High Concurrency:** Utilizes concurrent fetching strategies and `ManualConcurrentPriceEngine` for optimized performance.
 *   **Event-Driven Architecture:** Leverages **RabbitMQ** for asynchronous price tick processing and system decoupling.
 *   **Real-Time Data:** Supports WebSocket connections for low-latency updates (with rate limiting).
@@ -24,6 +25,7 @@ A robust Java Spring Boot application designed to aggregate real-time cryptocurr
 *   **Database:** PostgreSQL
 *   **Messaging:** RabbitMQ
 *   **Containerization:** Docker, Docker Compose
+*   **External Access:** Ngrok (integrated with Docker Compose)
 *   **Testing:** JUnit 5, Mockito, Testcontainers
 
 **Frontend:**
@@ -54,6 +56,7 @@ This project follows a standard Maven directory layout. For a detailed file tree
 *   Java 17 SDK
 *   Docker & Docker Compose
 *   Maven (Wrapper script `mvnw` is provided)
+*   Ngrok account (optional, for external access via public URL)
 
 ### Installation
 
@@ -70,15 +73,40 @@ This project follows a standard Maven directory layout. For a detailed file tree
 
 ### Running the Application
 
-**Option 1: Using Docker Compose (Recommended)**
+**Option 1: Using Docker Compose with Ngrok (Recommended)**
 
-This starts the application along with the required PostgreSQL and RabbitMQ containers.
+This starts the application along with PostgreSQL, RabbitMQ, and an ngrok tunnel for external access.
+
+1. **Set up your ngrok auth token:**
+   
+   Create a `.env` file in the project root (already exists):
+   ```bash
+   NGROK_AUTHTOKEN=your_ngrok_token_here
+   ```
+   
+   Get your free ngrok token at [ngrok.com](https://ngrok.com/) after signing up.
+
+2. **Start all services:**
+   ```bash
+   sudo docker compose up --build
+   ```
+
+3. **Access the application:**
+   - **Local access:** `http://localhost:8080/frontend/index.html`
+   - **Public ngrok URL:** Check the ngrok web interface at `http://localhost:4040` to get your public URL
+   - **Ngrok API:** `curl http://localhost:4040/api/tunnels` to view tunnel details
+
+The application will be accessible both locally and via a public ngrok URL, making it easy to share and test from anywhere.
+
+**Option 2: Using Docker Compose without Ngrok**
+
+If you don't need external access, you can start just the core services:
 
 ```bash
-sudo docker compose up --build
+sudo docker compose up --build db rabbitmq app
 ```
 
-**Option 2: Running Locally**
+**Option 3: Running Locally**
 
 Ensure you have PostgreSQL and RabbitMQ running locally, or configure `application.properties` to point to your instances.
 

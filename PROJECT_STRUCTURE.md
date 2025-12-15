@@ -1,25 +1,30 @@
 # Project Structure
 
-**Generated on:** December 15, 2025 at 01:01 AM
+**Generated on:** December 15, 2025 at 01:03 PM
 
 ```text
 .
 ├── 📦 .gitattributes
 ├── 🔵 .github
 │   ├── 🔵 workflows
+│   │   ├── ⚙️ deploy.yml
 │   │   ├── ⚙️ maven.yml
 ├── 📦 .gitignore
 ├── 🔵 .mvn
 │   ├── 🔵 wrapper
 │   │   ├── ⚙️ maven-wrapper.properties
+├── 📄 DEPLOYMENT.md
 ├── 📦 Dockerfile
 ├── 📄 README.md
 ├── ⚙️ docker-compose.yml
 ├── 🔵 frontend
 │   ├── 📄 README.md
 │   ├── 📦 app.js
+│   ├── 📦 config.example.js
 │   ├── 📦 index.html
 │   ├── 📦 styles.css
+│   ├── 📄 walkthrough.md
+├── 📄 implementation_ngrok.md
 ├── 🔵 implementatonDocs
 │   ├── 🔵 phase1
 │   │   ├── 📄 PHASE_1_SUMMARY.md
@@ -76,7 +81,6 @@
 ├── 📦 mvnw
 ├── 📜 mvnw.cmd
 ├── ⚙️ pom.xml
-├── ⚙️ qodana.yaml
 ├── 🔵 src
 │   ├── 🔵 main
 │   │   ├── 🔵 java
@@ -98,6 +102,7 @@
 │   │   │   │   │   │   │   ├── ☕ MetricsConfig.java
 │   │   │   │   │   │   │   ├── ☕ RabbitMqConfig.java
 │   │   │   │   │   │   │   ├── ☕ SecurityConfig.java
+│   │   │   │   │   │   │   ├── ☕ WebConfig.java
 │   │   │   │   │   │   │   ├── ☕ WebSocketConfig.java
 │   │   │   │   │   │   ├── 🔵 controller
 │   │   │   │   │   │   │   ├── ☕ ArbitrageController.java
@@ -233,6 +238,6 @@
 
 ---
 
-**Total Files:** 154
+**Total Files:** 159
 
 **Total Directories:** 61
