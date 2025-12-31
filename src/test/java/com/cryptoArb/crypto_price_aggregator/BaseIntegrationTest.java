@@ -25,8 +25,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * <p>
  * * Supports two modes:
  * 1. Testcontainers (Default): Uses ephemeral PostgreSQL container.
- * 2. External DB (Profile "docker-env"): Uses external DB (e.g., from docker-compose).
- *    Set active profile to "docker-env" or "test-docker" to bypass Testcontainers.
+ * 2. External DB (Profile "docker-env"): Uses external DB (e.g., from
+ * docker-compose).
+ * Set active profile to "docker-env" or "test-docker" to bypass Testcontainers.
  */
 @SpringBootTest
 @Testcontainers
@@ -77,12 +78,12 @@ public abstract class BaseIntegrationTest {
             registry.add("spring.rabbitmq.password", rabbitMQ::getAdminPassword);
         } else {
             // Configuration for external DB (docker-compose)
-            // Assumes running inside docker network where 'db' resolves
-            registry.add("spring.datasource.url", () -> "jdbc:postgresql://db:5432/cryptodb");
+            // Connects to Docker services exposed on localhost via port mapping
+            registry.add("spring.datasource.url", () -> "jdbc:postgresql://localhost:5432/cryptodb");
             registry.add("spring.datasource.username", () -> "cryptouser");
             registry.add("spring.datasource.password", () -> "cryptopass");
 
-            registry.add("spring.rabbitmq.host", () -> "rabbitmq");
+            registry.add("spring.rabbitmq.host", () -> "localhost");
             registry.add("spring.rabbitmq.port", () -> "5672");
         }
 

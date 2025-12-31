@@ -1,6 +1,6 @@
 # Project Structure
 
-**Generated on:** December 15, 2025 at 08:52 PM
+**Generated on:** December 31, 2025 at 04:18 PM
 
 ```text
 .
@@ -20,6 +20,7 @@
 ├── 🔵 docs
 │   ├── 📄 DEPLOYMENT.md
 │   ├── 📄 DESIGN.md
+│   ├── 📄 SONARQUBE_WORKFLOW.md
 │   ├── 📄 TECHNICAL_DEEPDIVE.md
 │   ├── 📄 implementation_ngrok.md
 ├── 🔵 frontend
@@ -210,6 +211,7 @@
 │   │   │   │   │   │   │   ├── ☕ PriceTickRepositoryTest.java
 │   │   │   │   │   │   ├── 🔵 service
 │   │   │   │   │   │   │   ├── ☕ ArbitrageServiceTest.java
+│   │   │   │   │   │   │   ├── ☕ CustomOAuth2UserServiceTest.java
 │   │   │   │   │   │   │   ├── ☕ ManualConcurrentPriceEngineTest.java
 │   │   │   │   │   │   │   ├── ☕ ManualFetcherIntegrationTest.java
 │   │   │   │   │   │   │   ├── ☕ ManualPriceMessageProducerTest.java
@@ -249,6 +251,6 @@
 
 ---
 
-**Total Files:** 168
+**Total Files:** 170
 
 **Total Directories:** 63

@@ -15,7 +15,7 @@ RUN mkdir -p ./src/main/resources/static/frontend
 COPY frontend/*.html frontend/*.css frontend/*.js frontend/*.md ./src/main/resources/static/frontend/
 
 # Build the application
-RUN --mount=type=cache,target=/root/.m2 ./mvnw clean package -DskipTests
+RUN --mount=type=cache,target=/root/.m2 ./mvnw clean package
 #RUN ./mvnw clean package -Dtest=ResilienceIntegrationTest
 #RUN ./mvnw clean package
 

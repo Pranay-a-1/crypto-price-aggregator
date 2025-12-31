@@ -30,11 +30,25 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 class FlywayMigrationTest {
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("cryptodb_test")
-            .withUsername("test")
-            .withPassword("test");
+    static final boolean USE_TESTCONTAINERS;
+
+    static {
+        // Check if we should skip testcontainers (e.g. running with external DB)
+        String useExternalDb = System.getProperty("use.external.db");
+        USE_TESTCONTAINERS = !Boolean.parseBoolean(useExternalDb);
+    }
+
+    static PostgreSQLContainer<?> postgres;
+
+    static {
+        if (USE_TESTCONTAINERS) {
+            postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+                    .withDatabaseName("cryptodb_test")
+                    .withUsername("test")
+                    .withPassword("test");
+            postgres.start();
+        }
+    }
 
     @Autowired
     private DataSource dataSource;
@@ -49,10 +63,19 @@ class FlywayMigrationTest {
      */
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        // Configure PostgreSQL datasource from Testcontainer
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
+        if (USE_TESTCONTAINERS) {
+            // Configure PostgreSQL datasource from Testcontainer
+            registry.add("spring.datasource.url", postgres::getJdbcUrl);
+            registry.add("spring.datasource.username", postgres::getUsername);
+            registry.add("spring.datasource.password", postgres::getPassword);
+        } else {
+            // Configuration for external DB (docker-compose)
+            // Connects to Docker services exposed on localhost via port mapping
+            registry.add("spring.datasource.url", () -> "jdbc:postgresql://localhost:5432/cryptodb");
+            registry.add("spring.datasource.username", () -> "cryptouser");
+            registry.add("spring.datasource.password", () -> "cryptopass");
+        }
+
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
 
@@ -65,8 +88,12 @@ class FlywayMigrationTest {
         registry.add("spring.flyway.baseline-version", () -> "0");
         registry.add("spring.flyway.locations", () -> "classpath:db/migration");
 
-        // Disable RabbitMQ for this test
-        registry.add("spring.rabbitmq.host", () -> "rabbitmq");
+        // RabbitMQ configuration
+        if (USE_TESTCONTAINERS) {
+            registry.add("spring.rabbitmq.host", () -> "rabbitmq");
+        } else {
+            registry.add("spring.rabbitmq.host", () -> "localhost");
+        }
     }
 
     @Test
