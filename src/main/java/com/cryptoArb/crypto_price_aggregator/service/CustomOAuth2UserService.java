@@ -33,7 +33,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         // Load user from GitHub
         OAuth2User oauth2User = super.loadUser(userRequest);
+        return processUser(oauth2User);
+    }
 
+    public OAuth2User processUser(OAuth2User oauth2User) {
         // Extract user attributes from GitHub response
         Map<String, Object> attributes = oauth2User.getAttributes();
 

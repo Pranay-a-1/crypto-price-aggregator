@@ -1,6 +1,7 @@
 package com.cryptoArb.crypto_price_aggregator.config;
 
 import com.cryptoArb.crypto_price_aggregator.controller.PriceController;
+import com.cryptoArb.crypto_price_aggregator.service.CustomOAuth2UserService;
 import com.cryptoArb.crypto_price_aggregator.service.PriceService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,10 @@ class SecurityConfigTest {
 
     @MockBean
     private PriceService priceService;
+
+
+    @MockBean
+    private CustomOAuth2UserService customOAuth2UserService;
 
     @Test
     @DisplayName("Should return 200 OK (or 404/others) when accessing API with valid credentials")
