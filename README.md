@@ -15,6 +15,7 @@ A robust Java Spring Boot application designed to aggregate real-time cryptocurr
 *   **Real-Time Data:** Supports WebSocket connections for low-latency updates (with rate limiting).
 *   **Persistence:** Stores market data and arbitrage events in **PostgreSQL**, with schema management handled by **Flyway**.
 *   **Resilience & Monitoring:** Includes custom health indicators, metrics configuration, and fault-tolerant fetching logic.
+*   **Code Quality:** Integrated **SonarQube** for continuous code quality analysis, security scanning, and technical debt tracking.
 *   **Dockerized:** Fully containerized environment with `Docker` and `docker-compose`.
 
 ## 🛠 Technology Stack
@@ -26,6 +27,7 @@ A robust Java Spring Boot application designed to aggregate real-time cryptocurr
 *   **Messaging:** RabbitMQ
 *   **Containerization:** Docker, Docker Compose
 *   **External Access:** Ngrok (integrated with Docker Compose)
+*   **Code Quality:** SonarQube, JaCoCo (code coverage)
 *   **Testing:** JUnit 5, Mockito, Testcontainers
 
 **Frontend:**
@@ -183,8 +185,45 @@ Comprehensive design documents for understanding the project architecture and pr
 - **[DESIGN.md](docs/DESIGN.md)**: System architecture, component design, data models, and deployment
 - **[TECHNICAL_DEEPDIVE.md](docs/TECHNICAL_DEEPDIVE.md)**: Implementation details, concurrency patterns, and code architecture
 - **[DESIGN_DOCS_README.md](docs/DESIGN_DOCS_README.md)**: Overview of all design documents and how to use them
+- **[SONARQUBE_WORKFLOW.md](docs/SONARQUBE_WORKFLOW.md)**: Guide for running code quality analysis with SonarQube
 
 These documents cover architectural decisions, design patterns, scalability considerations.
+
+## 🔍 Code Quality Analysis
+
+This project uses **SonarQube** for continuous code quality monitoring and security analysis.
+
+### Running SonarQube Analysis
+
+1. **Start SonarQube:**
+   ```bash
+   sudo docker compose up -d sonarqube-db sonarqube
+   ```
+
+2. **Access Dashboard:**
+   ```
+   http://localhost:9000
+   ```
+   Default credentials: `admin` / `admin` (change on first login)
+
+3. **Run Analysis:**
+   ```bash
+   ./mvnw clean verify sonar:sonar -Dsonar.token=YOUR_TOKEN
+   ```
+
+4. **View Results:**
+   ```
+   http://localhost:9000/dashboard?id=crypto-price-aggregator
+   ```
+
+For detailed instructions, see [SONARQUBE_WORKFLOW.md](docs/SONARQUBE_WORKFLOW.md).
+
+**What's Analyzed:**
+- Code quality metrics and maintainability
+- Security vulnerabilities and hotspots
+- Code coverage (via JaCoCo)
+- Bugs and code smells
+- Technical debt estimation
 
 ## 📖 Documentation
 
